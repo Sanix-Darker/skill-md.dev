@@ -1,0 +1,36 @@
+{{define "nav.html"}}
+<nav class="border-b border-terminal-border">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="flex items-center justify-between h-16">
+            <!-- Logo -->
+            <a href="/" class="flex items-center space-x-2 text-terminal-accent hover:opacity-80 transition-opacity">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span class="font-semibold text-lg">Skill Forge</span>
+            </a>
+
+            <!-- Desktop Nav -->
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="/convert" class="text-terminal-text hover:text-terminal-accent transition-colors">Convert</a>
+                <a href="/merge" class="text-terminal-text hover:text-terminal-accent transition-colors">Merge</a>
+                <a href="/browse" class="text-terminal-text hover:text-terminal-accent transition-colors">Browse</a>
+            </div>
+
+            <!-- Mobile menu button -->
+            <button class="md:hidden p-2 text-terminal-text hover:text-terminal-accent" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile Nav -->
+        <div id="mobile-menu" class="hidden md:hidden pb-4 space-y-2">
+            <a href="/convert" class="block py-2 text-terminal-text hover:text-terminal-accent transition-colors">Convert</a>
+            <a href="/merge" class="block py-2 text-terminal-text hover:text-terminal-accent transition-colors">Merge</a>
+            <a href="/browse" class="block py-2 text-terminal-text hover:text-terminal-accent transition-colors">Browse</a>
+        </div>
+    </div>
+</nav>
+{{end}}

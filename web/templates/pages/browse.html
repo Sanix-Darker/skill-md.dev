@@ -1,0 +1,39 @@
+{{define "browse.html"}}
+<div class="max-w-6xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-semibold mb-6">
+        <span class="text-terminal-accent">&gt;</span> Browse Skills
+    </h1>
+
+    <!-- Search and Filters -->
+    <div class="mb-8 flex flex-col md:flex-row gap-4">
+        <div class="flex-1">
+            <input type="text"
+                   id="search-input"
+                   name="q"
+                   value="{{.Query}}"
+                   placeholder="Search skills..."
+                   hx-get="/api/skills/search"
+                   hx-trigger="keyup changed delay:300ms"
+                   hx-target="#skills-list"
+                   hx-include="this"
+                   class="w-full bg-terminal-bg border border-terminal-border px-4 py-2 focus:border-terminal-accent focus:outline-none">
+        </div>
+
+        {{if .Tags}}
+        <div class="flex flex-wrap gap-2">
+            {{range $tag, $count := .Tags}}
+            <a href="/browse?tag={{$tag}}"
+               class="px-3 py-1 border {{if eq $.Tag $tag}}border-terminal-accent text-terminal-accent{{else}}border-terminal-border text-terminal-muted hover:border-terminal-text hover:text-terminal-text{{end}} text-sm transition-colors">
+                {{$tag}} <span class="opacity-50">({{$count}})</span>
+            </a>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+
+    <!-- Skills List -->
+    <div id="skills-list">
+        {{template "skill-list.html" .}}
+    </div>
+</div>
+{{end}}
