@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <meta name="description" content="{{if .Description}}{{.Description}}{{else}}Convert technical specs to SKILL.md format for AI agents{{end}}">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link href="/static/css/app.css" rel="stylesheet">
+
+    <!-- HTMX -->
+    <script src="/static/js/htmx.min.js"></script>
+</head>
+<body class="bg-terminal-bg text-terminal-text font-mono min-h-screen flex flex-col">
+    {{template "nav.html" .}}
+
+    <main class="flex-1">
+        {{if eq .Page "home.html"}}
+            {{template "home.html" .}}
+        {{else if eq .Page "convert.html"}}
+            {{template "convert.html" .}}
+        {{else if eq .Page "merge.html"}}
+            {{template "merge.html" .}}
+        {{else if eq .Page "browse.html"}}
+            {{template "browse.html" .}}
+        {{else if eq .Page "skill.html"}}
+            {{template "skill.html" .}}
+        {{end}}
+    </main>
+
+    <footer class="border-t border-terminal-border py-6 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 text-center text-terminal-muted text-sm">
+            &copy; 2026 sanixdk. Built with Go, HTMX, and TailwindCSS.
+        </div>
+    </footer>
+
+    <!-- LLM Enhancement Script -->
+    <script src="/static/js/enhance.js"></script>
+</body>
+</html>

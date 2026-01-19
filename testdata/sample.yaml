@@ -1,0 +1,76 @@
+openapi: "3.0.0"
+info:
+  title: Sample API
+  description: A sample API for testing Skill Forge
+  version: "1.0.0"
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: MIT
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+paths:
+  /users:
+    get:
+      summary: List all users
+      description: Returns a list of users
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of users to return
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A list of users
+    post:
+      summary: Create a user
+      description: Creates a new user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        "201":
+          description: User created
+  /users/{id}:
+    get:
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User details
+        "404":
+          description: User not found
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        id:
+          type: string
+          description: Unique user identifier
+        name:
+          type: string
+          description: User's full name
+        email:
+          type: string
+          description: User's email address
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT authentication

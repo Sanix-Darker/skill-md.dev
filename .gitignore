@@ -1,0 +1,32 @@
+# Binaries
+skillforge
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage.out
+coverage.html
+
+# Temp files
+*.tmp
+*.log
+
+# SSH keys
+.ssh/

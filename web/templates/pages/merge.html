@@ -1,0 +1,108 @@
+{{define "merge.html"}}
+<div class="max-w-6xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-semibold mb-6">
+        <span class="text-terminal-accent">&gt;</span> Merge Skills
+    </h1>
+
+    <div class="grid lg:grid-cols-2 gap-6">
+        <!-- Input Panel -->
+        <div class="border border-terminal-border bg-terminal-surface">
+            <div class="border-b border-terminal-border px-4 py-3">
+                <span class="text-sm font-medium">Input Files</span>
+            </div>
+
+            <form id="merge-form"
+                  hx-post="/api/merge"
+                  hx-target="#merge-output"
+                  hx-swap="innerHTML"
+                  hx-encoding="multipart/form-data"
+                  class="p-4">
+
+                <!-- File Upload -->
+                <div id="merge-upload" class="border-2 border-dashed border-terminal-border hover:border-terminal-accent transition-colors p-8 text-center mb-4 cursor-pointer"
+                     onclick="document.getElementById('merge-files').click()">
+                    <svg class="w-10 h-10 mx-auto mb-3 text-terminal-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <p class="text-terminal-muted text-sm">Click to select SKILL.md files</p>
+                    <p class="text-terminal-muted text-xs mt-1">Select 2 or more files to merge</p>
+                    <input type="file" id="merge-files" name="files" class="hidden" accept=".md,.txt" multiple>
+                </div>
+
+                <!-- File List -->
+                <div id="file-list" class="space-y-2 mb-4"></div>
+
+                <!-- Options -->
+                <div class="space-y-4">
+                    <input type="text" name="name" placeholder="Merged skill name (optional)"
+                           class="w-full bg-terminal-bg border border-terminal-border px-3 py-2 text-sm focus:border-terminal-accent focus:outline-none">
+
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" name="dedupe" class="w-4 h-4 bg-terminal-bg border border-terminal-border checked:bg-terminal-accent">
+                        <span class="text-sm">Deduplicate similar content</span>
+                    </label>
+
+                    <button type="submit" class="w-full px-6 py-2 bg-terminal-accent text-terminal-bg font-medium hover:opacity-90 transition-opacity">
+                        Merge Skills
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="border border-terminal-border bg-terminal-surface">
+            <div class="border-b border-terminal-border px-4 py-3 flex items-center justify-between">
+                <span class="text-sm font-medium">Merged Output</span>
+                <button id="merge-copy-btn" onclick="copyMergeOutput()" class="text-sm text-terminal-muted hover:text-terminal-accent transition-colors hidden">
+                    Copy
+                </button>
+            </div>
+            <div id="merge-output" class="p-4 min-h-[400px] overflow-auto">
+                <p class="text-terminal-muted text-sm">Select 2 or more SKILL.md files to merge.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('merge-files').addEventListener('change', function(e) {
+    const fileList = document.getElementById('file-list');
+    fileList.innerHTML = '';
+
+    Array.from(e.target.files).forEach((file, index) => {
+        const item = document.createElement('div');
+        item.className = 'p-2 bg-terminal-bg border border-terminal-border text-sm flex items-center justify-between';
+        item.innerHTML = `
+            <span class="flex items-center">
+                <svg class="w-4 h-4 mr-2 text-terminal-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                ${file.name}
+            </span>
+            <span class="text-terminal-muted">${(file.size / 1024).toFixed(1)} KB</span>
+        `;
+        fileList.appendChild(item);
+    });
+
+    if (e.target.files.length > 0) {
+        document.getElementById('merge-upload').classList.add('hidden');
+    }
+});
+
+function copyMergeOutput() {
+    const content = document.getElementById('merge-output').querySelector('pre')?.textContent;
+    if (content) {
+        navigator.clipboard.writeText(content);
+        const btn = document.getElementById('merge-copy-btn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy', 2000);
+    }
+}
+
+document.body.addEventListener('htmx:afterSwap', function(e) {
+    if (e.detail.target.id === 'merge-output') {
+        document.getElementById('merge-copy-btn').classList.remove('hidden');
+    }
+});
+</script>
+{{end}}

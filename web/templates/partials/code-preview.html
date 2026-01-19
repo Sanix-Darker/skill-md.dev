@@ -1,0 +1,21 @@
+{{define "code-preview.html"}}
+<div class="relative code-preview fade-in">
+    {{if .Error}}
+    <div class="p-4 border border-red-500 bg-red-500/10 text-red-400">
+        <p class="font-medium">Error</p>
+        <p class="text-sm mt-1">{{.Error}}</p>
+    </div>
+    {{else}}
+    {{if .Name}}
+    <div class="mb-2 text-sm text-terminal-muted">
+        <span class="text-terminal-accent">{{.Name}}</span>
+        {{if .Format}} <span class="ml-2 px-1 py-0.5 border border-terminal-border text-xs">{{.Format}}</span>{{end}}
+    </div>
+    {{end}}
+    <pre class="text-sm whitespace-pre-wrap overflow-auto max-h-[600px] bg-terminal-bg p-3 border border-terminal-border">{{.Content}}</pre>
+
+    <!-- AI Enhancement Controls -->
+    {{template "enhance-button.html" .}}
+    {{end}}
+</div>
+{{end}}

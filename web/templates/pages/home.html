@@ -1,0 +1,106 @@
+{{define "home.html"}}
+<div class="max-w-6xl mx-auto px-4 py-16">
+    <!-- Hero -->
+    <div class="text-center mb-16">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+            <span class="text-terminal-accent">&gt;_</span> Skill Forge
+        </h1>
+        <p class="text-xl text-terminal-muted max-w-2xl mx-auto">
+            Convert technical specifications into SKILL.md format that AI agents understand and use.
+        </p>
+    </div>
+
+    <!-- Feature Grid -->
+    <div class="grid md:grid-cols-3 gap-6 mb-16">
+        <!-- Convert -->
+        <div class="border border-terminal-border bg-terminal-surface p-6 hover:border-terminal-accent transition-colors">
+            <div class="text-terminal-accent mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">Convert</h3>
+            <p class="text-terminal-muted text-sm mb-4">
+                Transform OpenAPI, GraphQL, Postman, and other specs into SKILL.md format.
+            </p>
+            <a href="/convert" class="inline-flex items-center text-terminal-accent hover:underline">
+                Start converting
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+
+        <!-- Merge -->
+        <div class="border border-terminal-border bg-terminal-surface p-6 hover:border-terminal-accent transition-colors">
+            <div class="text-terminal-accent mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">Merge</h3>
+            <p class="text-terminal-muted text-sm mb-4">
+                Combine multiple SKILL.md files into a single comprehensive skill with deduplication.
+            </p>
+            <a href="/merge" class="inline-flex items-center text-terminal-accent hover:underline">
+                Start merging
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+
+        <!-- Browse -->
+        <div class="border border-terminal-border bg-terminal-surface p-6 hover:border-terminal-accent transition-colors">
+            <div class="text-terminal-accent mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">Browse</h3>
+            <p class="text-terminal-muted text-sm mb-4">
+                Discover and search through the skill registry to find existing skills.
+            </p>
+            <a href="/browse" class="inline-flex items-center text-terminal-accent hover:underline">
+                Browse skills
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="border border-terminal-border bg-terminal-surface p-8">
+        <h2 class="text-2xl font-semibold mb-6 text-center">How it works</h2>
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="w-12 h-12 rounded-full border-2 border-terminal-accent flex items-center justify-center mx-auto mb-4 text-terminal-accent font-bold">1</div>
+                <h4 class="font-semibold mb-2">Upload your spec</h4>
+                <p class="text-sm text-terminal-muted">Upload OpenAPI, GraphQL, Postman, or plain text specifications.</p>
+            </div>
+            <div class="text-center">
+                <div class="w-12 h-12 rounded-full border-2 border-terminal-accent flex items-center justify-center mx-auto mb-4 text-terminal-accent font-bold">2</div>
+                <h4 class="font-semibold mb-2">Convert to SKILL.md</h4>
+                <p class="text-sm text-terminal-muted">Our converters transform your spec into structured SKILL.md format.</p>
+            </div>
+            <div class="text-center">
+                <div class="w-12 h-12 rounded-full border-2 border-terminal-accent flex items-center justify-center mx-auto mb-4 text-terminal-accent font-bold">3</div>
+                <h4 class="font-semibold mb-2">Use with AI agents</h4>
+                <p class="text-sm text-terminal-muted">Download or share the skill for your AI agents to understand and use.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supported formats -->
+    <div class="mt-12 text-center">
+        <p class="text-terminal-muted mb-4">Supported formats</p>
+        <div class="flex flex-wrap justify-center gap-4">
+            <span class="px-3 py-1 border border-terminal-border text-sm">OpenAPI 3.x</span>
+            <span class="px-3 py-1 border border-terminal-border text-sm">GraphQL</span>
+            <span class="px-3 py-1 border border-terminal-border text-sm">Postman</span>
+            <span class="px-3 py-1 border border-terminal-border text-sm">Plain Text</span>
+        </div>
+    </div>
+</div>
+{{end}}

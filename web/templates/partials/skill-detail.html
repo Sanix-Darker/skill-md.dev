@@ -1,0 +1,9 @@
+{{define "skill-detail.html"}}
+<div class="p-4">
+    <h3 class="font-medium mb-2">{{.Skill.Name}}</h3>
+    {{if .Skill.Description}}
+    <p class="text-sm text-terminal-muted mb-4">{{.Skill.Description}}</p>
+    {{end}}
+    <pre class="text-sm whitespace-pre-wrap overflow-auto max-h-[400px] bg-terminal-bg p-3 border border-terminal-border">{{.Skill.Content}}</pre>
+</div>
+{{end}}

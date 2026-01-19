@@ -1,0 +1,60 @@
+{{define "skill-list.html"}}
+{{if .Skills}}
+<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    {{range .Skills}}
+    <a href="/skill/{{.Slug}}" class="block border border-terminal-border bg-terminal-surface p-4 hover:border-terminal-accent transition-colors">
+        <h3 class="font-medium mb-2 truncate">{{.Name}}</h3>
+        {{if .Description}}
+        <p class="text-sm text-terminal-muted mb-3 line-clamp-2">{{truncate .Description 100}}</p>
+        {{end}}
+        <div class="flex items-center justify-between text-xs text-terminal-muted">
+            <span>v{{.Version}}</span>
+            <span>{{.ViewCount}} views</span>
+        </div>
+        {{if .Tags}}
+        <div class="flex flex-wrap gap-1 mt-2">
+            {{range .Tags}}
+            <span class="px-1.5 py-0.5 bg-terminal-bg border border-terminal-border text-xs">{{.}}</span>
+            {{end}}
+        </div>
+        {{end}}
+    </a>
+    {{end}}
+</div>
+
+<!-- Pagination -->
+{{if or .HasPrev .HasNext}}
+<div class="flex justify-center gap-4 mt-8">
+    {{if .HasPrev}}
+    <a href="?page={{.PrevPage}}{{if .Query}}&q={{.Query}}{{end}}{{if .Tag}}&tag={{.Tag}}{{end}}"
+       hx-get="/api/skills?page={{.PrevPage}}{{if .Query}}&q={{.Query}}{{end}}{{if .Tag}}&tag={{.Tag}}{{end}}"
+       hx-target="#skills-list"
+       class="px-4 py-2 border border-terminal-border hover:border-terminal-accent text-sm transition-colors">
+        Previous
+    </a>
+    {{end}}
+    <span class="px-4 py-2 text-terminal-muted text-sm">Page {{.Page}}</span>
+    {{if .HasNext}}
+    <a href="?page={{.NextPage}}{{if .Query}}&q={{.Query}}{{end}}{{if .Tag}}&tag={{.Tag}}{{end}}"
+       hx-get="/api/skills?page={{.NextPage}}{{if .Query}}&q={{.Query}}{{end}}{{if .Tag}}&tag={{.Tag}}{{end}}"
+       hx-target="#skills-list"
+       class="px-4 py-2 border border-terminal-border hover:border-terminal-accent text-sm transition-colors">
+        Next
+    </a>
+    {{end}}
+</div>
+{{end}}
+
+{{else}}
+<div class="text-center py-12 text-terminal-muted">
+    <svg class="w-12 h-12 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+    <p class="text-lg mb-2">No skills found</p>
+    <p class="text-sm">{{if .Query}}Try a different search term.{{else}}Be the first to add a skill!{{end}}</p>
+    <a href="/convert" class="inline-block mt-4 px-4 py-2 border border-terminal-accent text-terminal-accent hover:bg-terminal-accent hover:text-terminal-bg transition-colors">
+        Convert a spec
+    </a>
+</div>
+{{end}}
+{{end}}
