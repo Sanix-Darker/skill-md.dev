@@ -11,13 +11,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+
     <!-- Styles -->
     <link href="/static/css/app.css" rel="stylesheet">
 
     <!-- HTMX -->
     <script src="/static/js/htmx.min.js"></script>
 </head>
-<body class="bg-terminal-bg text-terminal-text font-mono min-h-screen flex flex-col">
+<body hx-boost="true" class="bg-terminal-bg text-terminal-text font-mono min-h-screen flex flex-col">
+    <!-- Loading bar -->
+    <div id="loading-bar" class="fixed top-0 left-0 right-0 h-0.5 bg-terminal-accent scale-x-0 origin-left transition-transform duration-300 z-50"></div>
+
     {{template "nav.html" .}}
 
     <main class="flex-1">
@@ -31,6 +37,8 @@
             {{template "browse.html" .}}
         {{else if eq .Page "skill.html"}}
             {{template "skill.html" .}}
+        {{else if eq .Page "skill-external.html"}}
+            {{template "skill-external.html" .}}
         {{end}}
     </main>
 
@@ -42,5 +50,21 @@
 
     <!-- LLM Enhancement Script -->
     <script src="/static/js/enhance.js"></script>
+
+    <!-- Loading bar control -->
+    <script>
+    document.body.addEventListener('htmx:beforeRequest', function() {
+        document.getElementById('loading-bar').style.transform = 'scaleX(0.7)';
+    });
+    document.body.addEventListener('htmx:afterRequest', function() {
+        const bar = document.getElementById('loading-bar');
+        bar.style.transform = 'scaleX(1)';
+        setTimeout(() => {
+            bar.style.transition = 'none';
+            bar.style.transform = 'scaleX(0)';
+            setTimeout(() => bar.style.transition = '', 50);
+        }, 200);
+    });
+    </script>
 </body>
 </html>

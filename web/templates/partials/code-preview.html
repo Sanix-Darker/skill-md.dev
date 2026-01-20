@@ -6,12 +6,18 @@
         <p class="text-sm mt-1">{{.Error}}</p>
     </div>
     {{else}}
-    {{if .Name}}
-    <div class="mb-2 text-sm text-terminal-muted">
-        <span class="text-terminal-accent">{{.Name}}</span>
-        {{if .Format}} <span class="ml-2 px-1 py-0.5 border border-terminal-border text-xs">{{.Format}}</span>{{end}}
+    <div class="mb-2 text-sm text-terminal-muted flex items-center justify-between">
+        <div>
+            {{if .Name}}<span class="text-terminal-accent">{{.Name}}</span>{{end}}
+            {{if .Format}} <span class="ml-2 px-1 py-0.5 border border-terminal-border text-xs">{{.Format}}</span>{{end}}
+        </div>
+        <button onclick="downloadOutput()" class="tooltip tooltip-left flex items-center gap-1 text-terminal-muted hover:text-terminal-accent transition-colors" data-tooltip="Download as SKILL.md file" aria-label="Download as SKILL.md file">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            <span class="text-xs">Download</span>
+        </button>
     </div>
-    {{end}}
     <pre class="text-sm whitespace-pre-wrap overflow-auto max-h-[600px] bg-terminal-bg p-3 border border-terminal-border">{{.Content}}</pre>
 
     <!-- AI Enhancement Controls -->

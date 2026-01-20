@@ -10,15 +10,21 @@ import (
 	"github.com/sanixdarker/skillforge/internal/converter"
 	"github.com/sanixdarker/skillforge/internal/merger"
 	"github.com/sanixdarker/skillforge/internal/registry"
+	"github.com/sanixdarker/skillforge/internal/sources"
 	"github.com/sanixdarker/skillforge/internal/storage"
 )
 
 // Config holds application configuration.
 type Config struct {
-	Port       int
-	DBPath     string
-	StaticPath string
-	Debug      bool
+	Port              int
+	DBPath            string
+	StaticPath        string
+	Debug             bool
+	GitHubToken       string
+	GitLabToken       string
+	BitbucketUsername string
+	BitbucketPassword string
+	CodebergToken     string
 }
 
 // DefaultConfig returns the default configuration.
@@ -38,6 +44,7 @@ type App struct {
 	ConverterManager *converter.Manager
 	Merger           *merger.Merger
 	RegistryService  *registry.Service
+	FederatedSource  *sources.FederatedSource
 }
 
 // New creates a new application instance.
@@ -72,6 +79,29 @@ func New(cfg *Config) (*App, error) {
 	repo := registry.NewRepository(db)
 	registryService := registry.NewService(repo)
 
+	// Initialize federated source
+	federatedSource := sources.NewFederatedSource(logger)
+
+	// Register local source
+	localSource := sources.NewLocalSource(registryService)
+	federatedSource.RegisterSource(localSource)
+
+	// Register external sources
+	skillsshSource := sources.NewSkillsSHSource()
+	federatedSource.RegisterSource(skillsshSource)
+
+	githubSource := sources.NewGitHubSource(cfg.GitHubToken)
+	federatedSource.RegisterSource(githubSource)
+
+	gitlabSource := sources.NewGitLabSource(cfg.GitLabToken)
+	federatedSource.RegisterSource(gitlabSource)
+
+	bitbucketSource := sources.NewBitbucketSource(cfg.BitbucketUsername, cfg.BitbucketPassword)
+	federatedSource.RegisterSource(bitbucketSource)
+
+	codebergSource := sources.NewCodebergSource(cfg.CodebergToken)
+	federatedSource.RegisterSource(codebergSource)
+
 	return &App{
 		Config:           cfg,
 		DB:               db,
@@ -79,6 +109,7 @@ func New(cfg *Config) (*App, error) {
 		ConverterManager: converterManager,
 		Merger:           mergerInstance,
 		RegistryService:  registryService,
+		FederatedSource:  federatedSource,
 	}, nil
 }
 

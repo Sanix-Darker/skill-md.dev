@@ -1,0 +1,183 @@
+#%RAML 1.0
+title: User Management API
+version: v1
+baseUri: https://api.example.com/{version}
+mediaType: application/json
+
+documentation:
+  - title: Overview
+    content: |
+      The User Management API provides endpoints for managing users,
+      authentication, and user profiles.
+
+types:
+  User:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Unique user identifier
+      email:
+        type: string
+        description: User's email address
+      name:
+        type: string
+        description: User's full name
+      role:
+        type: string
+        enum: [admin, user, guest]
+        description: User's role
+      createdAt:
+        type: datetime
+        description: When the user was created
+    example:
+      id: "user-123"
+      email: "user@example.com"
+      name: "John Doe"
+      role: "user"
+      createdAt: "2024-01-15T10:30:00Z"
+
+  UserCreate:
+    type: object
+    properties:
+      email:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      password:
+        type: string
+        required: true
+      role:
+        type: string
+        enum: [admin, user, guest]
+        default: user
+
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+      details:
+        type: string
+
+securitySchemes:
+  oauth_2_0:
+    type: OAuth 2.0
+    description: OAuth 2.0 authentication
+    settings:
+      authorizationUri: https://auth.example.com/authorize
+      accessTokenUri: https://auth.example.com/token
+      authorizationGrants: [authorization_code, client_credentials]
+
+traits:
+  paginated:
+    queryParameters:
+      page:
+        type: integer
+        default: 1
+        description: Page number
+      limit:
+        type: integer
+        default: 20
+        maximum: 100
+        description: Items per page
+
+/users:
+  displayName: Users
+  description: User management endpoints
+
+  get:
+    displayName: List Users
+    description: Retrieve a paginated list of users
+    is: [paginated]
+    securedBy: [oauth_2_0]
+    responses:
+      200:
+        body:
+          application/json:
+            type: User[]
+            example:
+              - id: "user-1"
+                email: "user1@example.com"
+                name: "User One"
+                role: "user"
+                createdAt: "2024-01-15T10:30:00Z"
+      401:
+        body:
+          application/json:
+            type: Error
+
+  post:
+    displayName: Create User
+    description: Create a new user account
+    securedBy: [oauth_2_0]
+    body:
+      application/json:
+        type: UserCreate
+        example:
+          email: "newuser@example.com"
+          name: "New User"
+          password: "securepassword123"
+          role: "user"
+    responses:
+      201:
+        body:
+          application/json:
+            type: User
+      400:
+        body:
+          application/json:
+            type: Error
+
+  /{userId}:
+    uriParameters:
+      userId:
+        type: string
+        description: User's unique identifier
+
+    get:
+      displayName: Get User
+      description: Retrieve a specific user by ID
+      securedBy: [oauth_2_0]
+      responses:
+        200:
+          body:
+            application/json:
+              type: User
+        404:
+          body:
+            application/json:
+              type: Error
+
+    put:
+      displayName: Update User
+      description: Update an existing user
+      securedBy: [oauth_2_0]
+      body:
+        application/json:
+          type: UserCreate
+      responses:
+        200:
+          body:
+            application/json:
+              type: User
+        404:
+          body:
+            application/json:
+              type: Error
+
+    delete:
+      displayName: Delete User
+      description: Delete a user account
+      securedBy: [oauth_2_0]
+      responses:
+        204:
+          description: User deleted successfully
+        404:
+          body:
+            application/json:
+              type: Error

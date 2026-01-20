@@ -23,19 +23,28 @@ var convertCmd = &cobra.Command{
 	Long: `Convert various specification formats to SKILL.md format.
 
 Supported formats:
-  - openapi: OpenAPI 3.x specifications (YAML/JSON)
-  - graphql: GraphQL schema definitions
-  - postman: Postman collection files
-  - pdf: PDF documents
-  - url: Web pages and documentation URLs
-  - text: Plain text descriptions
+  - openapi:      OpenAPI 3.x specifications (YAML/JSON)
+  - graphql:      GraphQL schema definitions
+  - postman:      Postman collection files
+  - asyncapi:     AsyncAPI event-driven API specs (Kafka, MQTT, WebSocket)
+  - proto:        Protocol Buffer/gRPC service definitions
+  - raml:         RAML 1.0 specifications
+  - wsdl:         WSDL/SOAP web service definitions
+  - apiblueprint: API Blueprint Markdown specifications
+  - pdf:          PDF documents
+  - url:          Web pages and documentation URLs
+  - text:         Plain text descriptions
 
 Examples:
   skillforge convert api.yaml
   skillforge convert schema.graphql -f graphql
   skillforge convert api.yaml -o skill.md -n "My API"
-  skillforge convert --url https://docs.example.com/api
-  skillforge convert -u https://api.example.com/docs -o skill.md`,
+  skillforge convert events.yaml -f asyncapi
+  skillforge convert service.proto -f proto
+  skillforge convert api.raml -f raml
+  skillforge convert service.wsdl -f wsdl
+  skillforge convert api.apib -f apiblueprint
+  skillforge convert --url https://docs.example.com/api`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var content []byte
@@ -109,7 +118,7 @@ Examples:
 }
 
 func init() {
-	convertCmd.Flags().StringVarP(&convertFormat, "format", "f", "", "Input format (openapi, graphql, postman, url, text)")
+	convertCmd.Flags().StringVarP(&convertFormat, "format", "f", "", "Input format (openapi, graphql, postman, asyncapi, proto, raml, wsdl, apiblueprint, pdf, url, text)")
 	convertCmd.Flags().StringVarP(&convertOutput, "output", "o", "", "Output file path")
 	convertCmd.Flags().StringVarP(&convertName, "name", "n", "", "Name for the skill")
 	convertCmd.Flags().StringVarP(&convertURL, "url", "u", "", "URL to fetch and convert")

@@ -2,6 +2,7 @@ package converter
 
 import (
 	"fmt"
+	"net"
 	"net/url"
 	"strings"
 	"time"
@@ -44,6 +45,11 @@ func (c *URLConverter) Convert(content []byte, opts *Options) (*skill.Skill, err
 		urlStr = "https://" + urlStr
 	}
 
+	// SSRF protection: validate URL before fetching
+	if err := c.validateURL(urlStr); err != nil {
+		return nil, err
+	}
+
 	// Fetch the page
 	htmlContent, err := c.fetchURL(urlStr)
 	if err != nil {
@@ -64,6 +70,52 @@ func (c *URLConverter) Convert(content []byte, opts *Options) (*skill.Skill, err
 // ConvertFromURL fetches a URL and converts it to a skill.
 func (c *URLConverter) ConvertFromURL(urlStr string, opts *Options) (*skill.Skill, error) {
 	return c.Convert([]byte(urlStr), opts)
+}
+
+// validateURL checks if a URL is safe to fetch (SSRF protection).
+func (c *URLConverter) validateURL(urlStr string) error {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return fmt.Errorf("invalid URL format: %w", err)
+	}
+
+	// Only allow http and https schemes
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return fmt.Errorf("only http and https URLs are allowed")
+	}
+
+	// Block requests to private/internal networks
+	host := u.Hostname()
+
+	// Check common internal hostnames
+	lowerHost := strings.ToLower(host)
+	blockedHosts := []string{
+		"localhost",
+		"127.0.0.1",
+		"0.0.0.0",
+		"::1",
+		"metadata.google.internal",
+		"169.254.169.254", // AWS/GCP metadata endpoint
+	}
+	for _, blocked := range blockedHosts {
+		if lowerHost == blocked {
+			return fmt.Errorf("requests to internal hosts are not allowed")
+		}
+	}
+
+	// Check if it's an IP address and validate
+	ip := net.ParseIP(host)
+	if ip != nil {
+		if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsUnspecified() {
+			return fmt.Errorf("requests to private IP addresses are not allowed")
+		}
+		// Check IPv4 link-local (169.254.x.x)
+		if ip4 := ip.To4(); ip4 != nil && ip4[0] == 169 && ip4[1] == 254 {
+			return fmt.Errorf("requests to link-local addresses are not allowed")
+		}
+	}
+
+	return nil
 }
 
 func (c *URLConverter) fetchURL(urlStr string) ([]byte, error) {

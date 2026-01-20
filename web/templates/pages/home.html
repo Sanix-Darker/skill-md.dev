@@ -1,12 +1,12 @@
 {{define "home.html"}}
 <div class="max-w-6xl mx-auto px-4 py-16">
     <!-- Hero -->
-    <div class="text-center mb-16">
+    <div class="text-center mb-16 fade-in">
         <h1 class="text-4xl md:text-5xl font-bold mb-4">
             <span class="text-terminal-accent">&gt;_</span> Skill Forge
         </h1>
         <p class="text-xl text-terminal-muted max-w-2xl mx-auto">
-            Convert technical specifications into SKILL.md format that AI agents understand and use.
+            Convert <span class="text-terminal-accent font-semibold">{{.FormatCount}} API formats</span> into SKILL.md documentation optimized for AI agents.
         </p>
     </div>
 
@@ -93,14 +93,20 @@
     </div>
 
     <!-- Supported formats -->
-    <div class="mt-12 text-center">
-        <p class="text-terminal-muted mb-4">Supported formats</p>
-        <div class="flex flex-wrap justify-center gap-4">
-            <span class="px-3 py-1 border border-terminal-border text-sm">OpenAPI 3.x</span>
-            <span class="px-3 py-1 border border-terminal-border text-sm">GraphQL</span>
-            <span class="px-3 py-1 border border-terminal-border text-sm">Postman</span>
-            <span class="px-3 py-1 border border-terminal-border text-sm">Plain Text</span>
+    <div class="mt-12 text-center slide-in-right">
+        <p class="text-terminal-muted mb-4">Supported formats ({{.FormatCount}} converters)</p>
+        <div class="flex flex-wrap justify-center gap-3">
+            {{range .Formats}}
+            <span class="format-badge px-3 py-1 border border-terminal-border text-sm hover:border-terminal-accent hover:text-terminal-accent transition-colors">{{.}}</span>
+            {{end}}
         </div>
+    </div>
+
+    <!-- MCP Compatible -->
+    <div class="mt-8 text-center">
+        <p class="text-sm text-terminal-muted">
+            <span class="text-terminal-accent">MCP Compatible</span> - Generated skills include tool definitions for AI agents
+        </p>
     </div>
 </div>
 {{end}}

@@ -189,6 +189,21 @@ body {
 input, textarea, select {
   color: var(--terminal-text);
   background-color: var(--terminal-bg);
+  border: 1px solid var(--terminal-border);
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--terminal-accent);
+  box-shadow: 0 0 0 2px rgba(0, 255, 65, 0.1);
+}
+
+input:hover, textarea:hover, select:hover {
+  border-color: var(--terminal-muted);
 }
 
 input::placeholder, textarea::placeholder {
@@ -202,6 +217,7 @@ input[type="checkbox"] {
   border: 1px solid var(--terminal-border);
   background: var(--terminal-bg);
   cursor: pointer;
+  padding: 0;
 }
 
 input[type="checkbox"]:checked {
@@ -209,11 +225,86 @@ input[type="checkbox"]:checked {
   border-color: var(--terminal-accent);
 }
 
+input[type="file"] {
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+input[type="file"]::file-selector-button {
+  background: var(--terminal-accent);
+  color: var(--terminal-bg);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  margin-right: 0.75rem;
+  transition: background-color 0.2s ease;
+}
+
+input[type="file"]::file-selector-button:hover {
+  background: #00cc35;
+}
+
+/* Select styling */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23666666' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+select:focus {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2300ff41' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+}
+
+/* Format badges */
+.format-badge {
+  display: inline-block;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  cursor: default;
+}
+
 /* Red/Error colors */
 .border-red-500 { border-color: #ef4444; }
 .bg-red-500\/10 { background-color: rgba(239, 68, 68, 0.1); }
 .text-red-400 { color: #f87171; }
 .text-red-300 { color: #fca5a5; }
+
+/* Source badge colors */
+.border-purple-500 { border-color: #a855f7; }
+.bg-purple-500\/20 { background-color: rgba(168, 85, 247, 0.2); }
+.text-purple-400 { color: #c084fc; }
+.hover\:border-purple-500:hover { border-color: #a855f7; }
+.hover\:text-purple-400:hover { color: #c084fc; }
+
+.border-gray-400 { border-color: #9ca3af; }
+.bg-gray-400\/20 { background-color: rgba(156, 163, 175, 0.2); }
+.text-gray-300 { color: #d1d5db; }
+.hover\:border-gray-400:hover { border-color: #9ca3af; }
+.hover\:text-gray-300:hover { color: #d1d5db; }
+
+.border-orange-500 { border-color: #f97316; }
+.bg-orange-500\/20 { background-color: rgba(249, 115, 22, 0.2); }
+.text-orange-400 { color: #fb923c; }
+.hover\:border-orange-500:hover { border-color: #f97316; }
+.hover\:text-orange-400:hover { color: #fb923c; }
+
+.border-blue-500 { border-color: #3b82f6; }
+.bg-blue-500\/20 { background-color: rgba(59, 130, 246, 0.2); }
+.text-blue-400 { color: #60a5fa; }
+.hover\:border-blue-500:hover { border-color: #3b82f6; }
+.hover\:text-blue-400:hover { color: #60a5fa; }
+
+.border-green-500 { border-color: #22c55e; }
+.bg-green-500\/20 { background-color: rgba(34, 197, 94, 0.2); }
+.text-green-400 { color: #4ade80; }
+.hover\:border-green-500:hover { border-color: #22c55e; }
+.hover\:text-green-400:hover { color: #4ade80; }
 
 /* Opacity */
 .opacity-50 { opacity: 0.5; }
@@ -503,4 +594,326 @@ pre {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ===== SYNTAX HIGHLIGHTING (Dark Terminal Theme) ===== */
+/* Compatible with highlight.js and custom code blocks */
+
+code, pre code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+pre {
+  background-color: var(--terminal-surface);
+  border: 1px solid var(--terminal-border);
+  border-radius: 4px;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+/* Inline code */
+:not(pre) > code {
+  background-color: var(--terminal-surface);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+  color: var(--terminal-accent);
+}
+
+/* Syntax highlighting colors */
+.hljs {
+  background: var(--terminal-surface);
+  color: var(--terminal-text);
+}
+
+/* Comments */
+.hljs-comment,
+.hljs-quote {
+  color: #666666;
+  font-style: italic;
+}
+
+/* Keywords */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-addition {
+  color: #ff79c6;
+}
+
+/* Strings */
+.hljs-string,
+.hljs-attribute,
+.hljs-meta .hljs-string {
+  color: #f1fa8c;
+}
+
+/* Numbers */
+.hljs-number,
+.hljs-literal {
+  color: #bd93f9;
+}
+
+/* Built-ins and functions */
+.hljs-built_in,
+.hljs-title.function_,
+.hljs-title.class_,
+.hljs-section {
+  color: #8be9fd;
+}
+
+/* Variables and params */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-params {
+  color: #ffb86c;
+}
+
+/* Types */
+.hljs-type,
+.hljs-class .hljs-title {
+  color: #50fa7b;
+}
+
+/* Punctuation */
+.hljs-punctuation,
+.hljs-symbol {
+  color: var(--terminal-text);
+}
+
+/* HTML/XML */
+.hljs-tag {
+  color: #ff79c6;
+}
+
+.hljs-name {
+  color: var(--terminal-accent);
+}
+
+.hljs-attr {
+  color: #50fa7b;
+}
+
+/* Diff */
+.hljs-deletion {
+  color: #ff5555;
+  background: rgba(255, 85, 85, 0.1);
+}
+
+.hljs-addition {
+  color: #50fa7b;
+  background: rgba(80, 250, 123, 0.1);
+}
+
+/* Emphasis */
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+
+/* Line numbers (if used) */
+.hljs-ln-numbers {
+  color: var(--terminal-muted);
+  padding-right: 1em;
+  text-align: right;
+  user-select: none;
+}
+
+/* Code block language label */
+pre[class*="language-"]::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--terminal-muted);
+  background: var(--terminal-bg);
+  border-bottom-left-radius: 4px;
+  text-transform: uppercase;
+}
+
+/* Copy button for code blocks (if added via JS) */
+.code-copy-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--terminal-bg);
+  border: 1px solid var(--terminal-border);
+  color: var(--terminal-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+pre:hover .code-copy-btn {
+  opacity: 1;
+}
+
+.code-copy-btn:hover {
+  color: var(--terminal-accent);
+  border-color: var(--terminal-accent);
+}
+
+.code-copy-btn.copied {
+  color: var(--terminal-accent);
+  border-color: var(--terminal-accent);
+}
+
+/* Skill preview code styling */
+.skill-preview pre {
+  margin: 1rem 0;
+}
+
+.skill-preview code {
+  display: block;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* ===== LOADING BAR & NATIVE FEEL ===== */
+
+/* Position utilities */
+.fixed { position: fixed; }
+.top-0 { top: 0; }
+.left-0 { left: 0; }
+.right-0 { right: 0; }
+.z-50 { z-index: 50; }
+
+/* Height */
+.h-0\.5 { height: 0.125rem; }
+
+/* Transform utilities */
+.scale-x-0 { transform: scaleX(0); }
+.origin-left { transform-origin: left; }
+
+/* Transition utilities */
+.transition-transform { transition-property: transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.duration-300 { transition-duration: 300ms; }
+
+/* View Transitions */
+@view-transition {
+    navigation: auto;
+}
+
+/* Gap utilities */
+.gap-1 { gap: 0.25rem; }
+
+/* Smooth page transitions with HTMX boost */
+.htmx-swapping > main {
+    opacity: 0;
+    transition: opacity 0.15s ease-out;
+}
+
+.htmx-settling > main {
+    opacity: 1;
+    transition: opacity 0.15s ease-in;
+}
+
+/* ===== TOOLTIPS ===== */
+
+/* Tooltip container */
+.tooltip {
+    position: relative;
+}
+
+/* Tooltip text - uses data-tooltip attribute */
+.tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 10px;
+    background-color: var(--terminal-surface);
+    border: 1px solid var(--terminal-accent);
+    color: var(--terminal-text);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease;
+    z-index: 100;
+    pointer-events: none;
+    border-radius: 4px;
+}
+
+/* Arrow */
+.tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--terminal-accent);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease;
+    z-index: 100;
+}
+
+/* Show on hover/focus */
+.tooltip:hover::after,
+.tooltip:hover::before,
+.tooltip:focus::after,
+.tooltip:focus::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Position variant: bottom */
+.tooltip-bottom::after {
+    bottom: auto;
+    top: calc(100% + 8px);
+}
+
+.tooltip-bottom::before {
+    bottom: auto;
+    top: calc(100% + 2px);
+    border-top-color: transparent;
+    border-bottom-color: var(--terminal-accent);
+}
+
+/* Position variant: left */
+.tooltip-left::after {
+    bottom: auto;
+    left: auto;
+    right: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.tooltip-left::before {
+    bottom: auto;
+    left: auto;
+    right: calc(100% + 2px);
+    top: 50%;
+    transform: translateY(-50%);
+    border-top-color: transparent;
+    border-left-color: var(--terminal-accent);
+}
+
+/* Position variant: right */
+.tooltip-right::after {
+    bottom: auto;
+    left: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.tooltip-right::before {
+    bottom: auto;
+    left: calc(100% + 2px);
+    top: 50%;
+    transform: translateY(-50%);
+    border-top-color: transparent;
+    border-right-color: var(--terminal-accent);
 }
