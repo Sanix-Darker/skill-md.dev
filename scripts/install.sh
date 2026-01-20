@@ -6,7 +6,7 @@ set -e
 
 # Configuration
 REPO="sanixdarker/skillforge"
-BINARY_NAME="skillforge"
+BINARY_NAME="skillmd"
 INSTALL_DIR="/usr/local/bin"
 
 # Colors
@@ -93,8 +93,8 @@ install() {
 
     echo -e "${GREEN}Skill Forge installed successfully!${NC}"
     echo ""
-    echo "Run 'skillforge --help' to get started."
-    echo "Start the server with 'skillforge serve'"
+    echo "Run 'skillmd --help' to get started."
+    echo "Start the server with 'skillmd serve'"
 }
 
 # Install from source
@@ -106,7 +106,7 @@ install_from_source() {
         exit 1
     fi
 
-    go install github.com/${REPO}/cmd/skillforge@latest
+    go install github.com/${REPO}/cmd/skillmd@latest
 
     echo -e "${GREEN}Skill Forge installed from source!${NC}"
 }

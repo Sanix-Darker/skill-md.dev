@@ -1,24 +1,24 @@
 .PHONY: build run test clean docker docker-run install dev fmt lint
 
 # Variables
-BINARY_NAME=skillforge
+BINARY_NAME=skillmd
 VERSION?=dev
 COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 LDFLAGS=-ldflags "-X github.com/sanixdarker/skillforge/internal/cli.Version=$(VERSION) -X github.com/sanixdarker/skillforge/internal/cli.Commit=$(COMMIT)"
 
 # Build
 build:
-	go build $(LDFLAGS) -o $(BINARY_NAME) ./cmd/skillforge
+	go build $(LDFLAGS) -o $(BINARY_NAME) ./cmd/skillmd
 
 build-linux:
-	GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY_NAME)-linux-amd64 ./cmd/skillforge
+	GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY_NAME)-linux-amd64 ./cmd/skillmd
 
 build-darwin:
-	GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY_NAME)-darwin-amd64 ./cmd/skillforge
-	GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o $(BINARY_NAME)-darwin-arm64 ./cmd/skillforge
+	GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY_NAME)-darwin-amd64 ./cmd/skillmd
+	GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o $(BINARY_NAME)-darwin-arm64 ./cmd/skillmd
 
 build-windows:
-	GOOS=windows GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY_NAME)-windows-amd64.exe ./cmd/skillforge
+	GOOS=windows GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY_NAME)-windows-amd64.exe ./cmd/skillmd
 
 build-all: build-linux build-darwin build-windows
 
@@ -27,7 +27,7 @@ run: build
 	./$(BINARY_NAME) serve
 
 dev:
-	go run ./cmd/skillforge serve --debug
+	go run ./cmd/skillmd serve --debug
 
 # Test
 test:

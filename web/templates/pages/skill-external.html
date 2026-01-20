@@ -76,11 +76,11 @@
                 <input type="hidden" name="source" value="{{.Skill.Source}}">
                 <input type="hidden" name="id" value="{{.Skill.ID}}">
                 <button type="submit"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-terminal-accent text-terminal-bg hover:opacity-90 transition-opacity text-sm">
+                        class="inline-flex items-center gap-2 px-4 py-2 border border-terminal-accent text-terminal-accent hover:bg-terminal-accent hover:text-terminal-bg transition-colors text-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                     </svg>
-                    Import to Local
+                    Import
                 </button>
             </form>
             {{end}}
@@ -99,7 +99,7 @@
                     hx-target="#skill-content"
                     hx-swap="innerHTML"
                     class="px-4 py-2 border border-terminal-accent text-terminal-accent hover:bg-terminal-accent hover:text-terminal-bg transition-colors text-sm">
-                Load Content
+                Load
             </button>
             <div id="skill-content" class="mt-4"></div>
         </div>
