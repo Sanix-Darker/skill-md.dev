@@ -1,0 +1,205 @@
+FORMAT: 1A
+HOST: https://api.example.com
+
+# User Management API
+
+The User Management API provides endpoints for managing users, authentication,
+and user profiles. This API follows REST principles and returns JSON responses.
+
+## Authentication
+
+All API requests require authentication using an API key or OAuth 2.0 token.
+Include the `Authorization` header in all requests.
+
+# Group Users
+
+Resources related to user management.
+
+## Users Collection [/users]
+
+### List All Users [GET]
+
+Retrieve a paginated list of all users.
+
++ Parameters
+    + page: `1` (number, optional) - Page number
+    + limit: `20` (number, optional) - Items per page
+
++ Response 200 (application/json)
+
+        [
+            {
+                "id": "user-1",
+                "email": "user1@example.com",
+                "name": "John Doe",
+                "role": "user",
+                "createdAt": "2024-01-15T10:30:00Z"
+            },
+            {
+                "id": "user-2",
+                "email": "user2@example.com",
+                "name": "Jane Smith",
+                "role": "admin",
+                "createdAt": "2024-01-10T08:00:00Z"
+            }
+        ]
+
+### Create a User [POST]
+
+Create a new user account.
+
++ Request (application/json)
+
+        {
+            "email": "newuser@example.com",
+            "name": "New User",
+            "password": "securepassword123",
+            "role": "user"
+        }
+
++ Response 201 (application/json)
+
+        {
+            "id": "user-3",
+            "email": "newuser@example.com",
+            "name": "New User",
+            "role": "user",
+            "createdAt": "2024-01-20T14:00:00Z"
+        }
+
++ Response 400 (application/json)
+
+        {
+            "error": "validation_error",
+            "message": "Email already exists"
+        }
+
+## User [/users/{userId}]
+
++ Parameters
+    + userId: `user-1` (string, required) - The user's unique identifier
+
+### Get User [GET]
+
+Retrieve a specific user by their ID.
+
++ Response 200 (application/json)
+
+        {
+            "id": "user-1",
+            "email": "user1@example.com",
+            "name": "John Doe",
+            "role": "user",
+            "createdAt": "2024-01-15T10:30:00Z",
+            "profile": {
+                "avatar": "https://example.com/avatars/user1.png",
+                "bio": "Software developer",
+                "location": "San Francisco, CA"
+            }
+        }
+
++ Response 404 (application/json)
+
+        {
+            "error": "not_found",
+            "message": "User not found"
+        }
+
+### Update User [PUT]
+
+Update an existing user's information.
+
++ Request (application/json)
+
+        {
+            "name": "John Updated",
+            "role": "admin"
+        }
+
++ Response 200 (application/json)
+
+        {
+            "id": "user-1",
+            "email": "user1@example.com",
+            "name": "John Updated",
+            "role": "admin",
+            "createdAt": "2024-01-15T10:30:00Z"
+        }
+
+### Delete User [DELETE]
+
+Delete a user account.
+
++ Response 204
+
++ Response 404 (application/json)
+
+        {
+            "error": "not_found",
+            "message": "User not found"
+        }
+
+# Group Authentication
+
+Resources for user authentication.
+
+## Login [/auth/login]
+
+### Authenticate User [POST]
+
+Authenticate a user and receive an access token.
+
++ Request (application/json)
+
+        {
+            "email": "user@example.com",
+            "password": "password123"
+        }
+
++ Response 200 (application/json)
+
+        {
+            "access_token": "eyJhbGciOiJIUzI1NiIs...",
+            "token_type": "Bearer",
+            "expires_in": 3600,
+            "refresh_token": "dGhpcyBpcyBhIHJlZnJlc2g..."
+        }
+
++ Response 401 (application/json)
+
+        {
+            "error": "authentication_failed",
+            "message": "Invalid email or password"
+        }
+
+## Logout [/auth/logout]
+
+### Logout User [POST]
+
+Invalidate the current access token.
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+
++ Response 204
+
+# Data Structures
+
+## User (object)
++ id: `user-1` (string, required) - Unique identifier
++ email: `user@example.com` (string, required) - Email address
++ name: `John Doe` (string, required) - Full name
++ role: `user` (string) - User role (admin, user, guest)
++ createdAt: `2024-01-15T10:30:00Z` (string) - Creation timestamp
+
+## UserProfile (object)
++ avatar: `https://example.com/avatar.png` (string) - Avatar URL
++ bio: `Software developer` (string) - Biography
++ location: `San Francisco, CA` (string) - Location
+
+## Error (object)
++ error: `validation_error` (string, required) - Error code
++ message: `Validation failed` (string, required) - Error message

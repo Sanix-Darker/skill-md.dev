@@ -157,7 +157,7 @@ func (m ConvertModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.input.Focus()
 			}
 			return m, nil
-		case "ctrl+enter":
+		case "ctrl+s":
 			// Trigger conversion
 			return m, m.convert()
 		}
@@ -250,7 +250,7 @@ func (m ConvertModel) View() string {
 
 	// Help
 	b.WriteString("\n\n")
-	b.WriteString(m.styles.Help.Render("Tab: switch focus | Ctrl+Enter: convert | Esc: back"))
+	b.WriteString(m.styles.Help.Render("Tab: switch focus | Ctrl+S: convert | Esc: back"))
 
 	return lipgloss.NewStyle().Padding(2).Render(b.String())
 }

@@ -2,7 +2,7 @@
 <div class="enhance-controls flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-terminal-bg border border-terminal-border mt-3">
     <div class="flex items-center gap-2">
         <label for="enhance-mode" class="text-xs text-terminal-muted">Mode:</label>
-        <select id="enhance-mode" class="bg-terminal-surface border border-terminal-border px-2 py-1 text-xs focus:border-terminal-accent focus:outline-none">
+        <select id="enhance-mode" class="tooltip tooltip-bottom bg-terminal-surface border border-terminal-border px-2 py-1 text-xs focus:border-terminal-accent focus:outline-none" data-tooltip="Choose how to enhance the content" aria-label="Enhancement mode selection">
             <option value="elaborate">Elaborate</option>
             <option value="examples">Add Examples</option>
             <option value="bestPractices">Best Practices</option>
@@ -12,7 +12,9 @@
 
     <button id="enhance-btn"
             type="button"
-            class="flex items-center gap-2 px-4 py-2 bg-terminal-surface border border-terminal-accent text-terminal-accent hover:bg-terminal-accent hover:text-terminal-bg transition-colors text-sm font-medium btn-hover">
+            class="tooltip flex items-center gap-2 px-4 py-2 bg-terminal-surface border border-terminal-accent text-terminal-accent hover:bg-terminal-accent hover:text-terminal-bg transition-colors text-sm font-medium btn-hover"
+            data-tooltip="Runs locally in browser (~400MB model download first time)"
+            aria-label="Enhance content with AI">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
@@ -24,7 +26,7 @@
         <span class="status-text">Loading...</span>
     </div>
 
-    <button type="button" id="enhance-info-toggle" class="text-terminal-muted hover:text-terminal-accent text-xs ml-auto" onclick="toggleEnhanceInfo()">
+    <button type="button" id="enhance-info-toggle" class="tooltip tooltip-left text-terminal-muted hover:text-terminal-accent text-xs ml-auto" onclick="toggleEnhanceInfo()" data-tooltip="Show privacy and usage information" aria-label="Show AI enhancement information">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>

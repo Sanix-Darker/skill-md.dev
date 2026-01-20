@@ -1,0 +1,125 @@
+asyncapi: 2.6.0
+info:
+  title: User Events API
+  version: 1.0.0
+  description: Event-driven API for user lifecycle events
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  production:
+    url: kafka://events.example.com:9092
+    protocol: kafka
+    description: Production Kafka cluster
+  staging:
+    url: kafka://staging-events.example.com:9092
+    protocol: kafka
+    description: Staging Kafka cluster
+
+channels:
+  user/created:
+    description: Channel for user creation events
+    publish:
+      operationId: publishUserCreated
+      summary: Publish when a new user is created
+      message:
+        $ref: '#/components/messages/UserCreated'
+    subscribe:
+      operationId: onUserCreated
+      summary: Receive user creation events
+      message:
+        $ref: '#/components/messages/UserCreated'
+
+  user/updated:
+    description: Channel for user update events
+    publish:
+      operationId: publishUserUpdated
+      summary: Publish when a user is updated
+      message:
+        $ref: '#/components/messages/UserUpdated'
+
+  user/{userId}/notifications:
+    description: User-specific notification channel
+    parameters:
+      userId:
+        description: The user ID
+        schema:
+          type: string
+    subscribe:
+      operationId: onUserNotification
+      summary: Receive notifications for a specific user
+      message:
+        $ref: '#/components/messages/Notification'
+
+components:
+  messages:
+    UserCreated:
+      name: UserCreated
+      title: User Created Event
+      summary: Event published when a new user registers
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          userId:
+            type: string
+            format: uuid
+            description: Unique user identifier
+          email:
+            type: string
+            format: email
+            description: User's email address
+          name:
+            type: string
+            description: User's full name
+          createdAt:
+            type: string
+            format: date-time
+            description: Timestamp of user creation
+        required:
+          - userId
+          - email
+          - createdAt
+
+    UserUpdated:
+      name: UserUpdated
+      title: User Updated Event
+      summary: Event published when user profile is updated
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          userId:
+            type: string
+            format: uuid
+          changes:
+            type: object
+            additionalProperties: true
+          updatedAt:
+            type: string
+            format: date-time
+
+    Notification:
+      name: Notification
+      title: User Notification
+      summary: Notification message for a user
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          id:
+            type: string
+          type:
+            type: string
+            enum: [info, warning, alert]
+          message:
+            type: string
+          timestamp:
+            type: string
+            format: date-time
+
+  securitySchemes:
+    saslPlain:
+      type: userPassword
+      description: SASL/PLAIN authentication for Kafka

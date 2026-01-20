@@ -3,8 +3,8 @@
  * Uses Transformers.js to run SmolLM2-360M-Instruct locally
  */
 
-// Import Transformers.js from CDN
-importScripts('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.1');
+// ES Module import for Transformers.js
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.1';
 
 let generator = null;
 let isLoading = false;
@@ -57,9 +57,6 @@ async function initModel(modelType) {
 
   try {
     self.postMessage({ type: 'loading', message: 'Initializing model...' });
-
-    // Configure Transformers.js
-    const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.1');
 
     // Allow local models and set cache
     env.allowLocalModels = true;

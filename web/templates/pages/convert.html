@@ -9,7 +9,7 @@
         <div class="border border-terminal-border bg-terminal-surface">
             <div class="border-b border-terminal-border px-4 py-3 flex items-center justify-between">
                 <span class="text-sm font-medium">Input</span>
-                <select id="format-select" name="format" class="bg-terminal-bg border border-terminal-border px-2 py-1 text-sm focus:border-terminal-accent focus:outline-none">
+                <select id="format-select" name="format" class="tooltip tooltip-left bg-terminal-bg border border-terminal-border px-2 py-1 text-sm focus:border-terminal-accent focus:outline-none" data-tooltip="Auto-detect analyzes content structure" aria-label="Format selection">
                     <option value="auto">Auto-detect</option>
                     {{range .Formats}}
                     <option value="{{.}}">{{.}}</option>
@@ -46,12 +46,31 @@
                           placeholder="Paste your OpenAPI, GraphQL, or other specification here..."
                           class="w-full h-64 bg-terminal-bg border border-terminal-border p-3 text-sm font-mono resize-none focus:border-terminal-accent focus:outline-none"></textarea>
 
+                <!-- Input AI Assistant -->
+                <div class="mt-2 flex items-center gap-2">
+                    <button type="button" id="input-assist-btn"
+                            class="tooltip text-xs px-3 py-1 border border-terminal-border text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent transition-colors"
+                            data-tooltip="AI suggests improvements to your input"
+                            aria-label="AI Assist for input">
+                        <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        AI Assist
+                    </button>
+                    <select id="input-assist-mode" class="tooltip tooltip-bottom bg-terminal-bg border border-terminal-border px-2 py-1 text-xs focus:border-terminal-accent focus:outline-none" data-tooltip="Choose assistance type">
+                        <option value="format">Format & Clean</option>
+                        <option value="expand">Expand Spec</option>
+                        <option value="validate">Suggest Fixes</option>
+                    </select>
+                    <span id="input-assist-status" class="text-xs text-terminal-muted hidden"></span>
+                </div>
+
                 <!-- Options -->
                 <div class="mt-4 flex flex-col sm:flex-row gap-4">
                     <input type="text" name="name" placeholder="Skill name (optional)"
                            class="flex-1 bg-terminal-bg border border-terminal-border px-3 py-2 text-sm focus:border-terminal-accent focus:outline-none">
                     <input type="hidden" name="format" id="format-hidden" value="auto">
-                    <button type="submit" class="px-6 py-2 bg-terminal-accent text-terminal-bg font-medium hover:opacity-90 transition-opacity">
+                    <button type="submit" class="tooltip px-6 py-2 bg-terminal-accent text-terminal-bg font-medium hover:opacity-90 transition-opacity" data-tooltip="Transform spec into SKILL.md format" aria-label="Convert to SKILL.md">
                         Convert
                     </button>
                 </div>
@@ -62,7 +81,7 @@
         <div class="border border-terminal-border bg-terminal-surface">
             <div class="border-b border-terminal-border px-4 py-3 flex items-center justify-between">
                 <span class="text-sm font-medium">Output</span>
-                <button id="copy-btn" onclick="copyOutput()" class="text-sm text-terminal-muted hover:text-terminal-accent transition-colors hidden">
+                <button id="copy-btn" onclick="copyOutput()" class="tooltip tooltip-left text-sm text-terminal-muted hover:text-terminal-accent transition-colors hidden" data-tooltip="Copy output to clipboard" aria-label="Copy output to clipboard">
                     Copy
                 </button>
             </div>
@@ -107,6 +126,18 @@ document.body.addEventListener('htmx:afterSwap', function(e) {
         document.getElementById('copy-btn').classList.remove('hidden');
     }
 });
+
+function downloadOutput() {
+    const content = document.getElementById('output-content').querySelector('pre')?.textContent;
+    if (content) {
+        const blob = new Blob([content], { type: 'text/markdown' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'SKILL.md';
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+}
 
 // Drag and drop
 const dropZone = document.getElementById('file-upload');

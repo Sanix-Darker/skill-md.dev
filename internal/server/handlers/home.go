@@ -20,9 +20,15 @@ func NewHomeHandler(application *app.App) *HomeHandler {
 
 // Index renders the home page.
 func (h *HomeHandler) Index(w http.ResponseWriter, r *http.Request) {
+	// Get supported formats from converter manager
+	formats := h.app.ConverterManager.SupportedFormats()
+	formatCount := len(formats)
+
 	data := map[string]interface{}{
 		"Title":       "Skill Forge",
 		"Description": "Convert technical specs to SKILL.md format for AI agents",
+		"Formats":     formats,
+		"FormatCount": formatCount,
 	}
 
 	if err := web.RenderPage(w, "home.html", data); err != nil {

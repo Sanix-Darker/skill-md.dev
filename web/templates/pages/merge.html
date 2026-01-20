@@ -37,12 +37,12 @@
                     <input type="text" name="name" placeholder="Merged skill name (optional)"
                            class="w-full bg-terminal-bg border border-terminal-border px-3 py-2 text-sm focus:border-terminal-accent focus:outline-none">
 
-                    <label class="flex items-center space-x-2 cursor-pointer">
+                    <label class="tooltip tooltip-right flex items-center space-x-2 cursor-pointer" data-tooltip="Remove duplicate endpoints and descriptions">
                         <input type="checkbox" name="dedupe" class="w-4 h-4 bg-terminal-bg border border-terminal-border checked:bg-terminal-accent">
                         <span class="text-sm">Deduplicate similar content</span>
                     </label>
 
-                    <button type="submit" class="w-full px-6 py-2 bg-terminal-accent text-terminal-bg font-medium hover:opacity-90 transition-opacity">
+                    <button type="submit" class="tooltip w-full px-6 py-2 bg-terminal-accent text-terminal-bg font-medium hover:opacity-90 transition-opacity" data-tooltip="Combine selected files into one skill" aria-label="Merge skills into one file">
                         Merge Skills
                     </button>
                 </div>
@@ -53,7 +53,7 @@
         <div class="border border-terminal-border bg-terminal-surface">
             <div class="border-b border-terminal-border px-4 py-3 flex items-center justify-between">
                 <span class="text-sm font-medium">Merged Output</span>
-                <button id="merge-copy-btn" onclick="copyMergeOutput()" class="text-sm text-terminal-muted hover:text-terminal-accent transition-colors hidden">
+                <button id="merge-copy-btn" onclick="copyMergeOutput()" class="tooltip tooltip-left text-sm text-terminal-muted hover:text-terminal-accent transition-colors hidden" data-tooltip="Copy merged output to clipboard" aria-label="Copy merged output to clipboard">
                     Copy
                 </button>
             </div>

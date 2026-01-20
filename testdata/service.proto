@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package userservice;
+
+option go_package = "github.com/example/userservice";
+
+// UserService provides user management operations
+service UserService {
+  // GetUser retrieves a user by ID
+  rpc GetUser(GetUserRequest) returns (User);
+
+  // ListUsers returns a stream of users
+  rpc ListUsers(ListUsersRequest) returns (stream User);
+
+  // CreateUser creates a new user
+  rpc CreateUser(CreateUserRequest) returns (User);
+
+  // UpdateUser updates an existing user
+  rpc UpdateUser(UpdateUserRequest) returns (User);
+
+  // DeleteUser deletes a user
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+
+  // WatchUsers streams user changes in real-time
+  rpc WatchUsers(WatchUsersRequest) returns (stream UserEvent);
+}
+
+// User represents a user in the system
+message User {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  UserRole role = 4;
+  bool active = 5;
+  string created_at = 6;
+  string updated_at = 7;
+  Profile profile = 8;
+}
+
+// Profile contains additional user profile information
+message Profile {
+  string avatar_url = 1;
+  string bio = 2;
+  string location = 3;
+  repeated string interests = 4;
+}
+
+// UserRole defines the user's role in the system
+enum UserRole {
+  USER_ROLE_UNSPECIFIED = 0;
+  USER_ROLE_ADMIN = 1;
+  USER_ROLE_USER = 2;
+  USER_ROLE_GUEST = 3;
+}
+
+// GetUserRequest is the request for GetUser
+message GetUserRequest {
+  string id = 1;
+}
+
+// ListUsersRequest is the request for ListUsers
+message ListUsersRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  string filter = 3;
+}
+
+// CreateUserRequest is the request for CreateUser
+message CreateUserRequest {
+  string email = 1;
+  string name = 2;
+  string password = 3;
+  UserRole role = 4;
+}
+
+// UpdateUserRequest is the request for UpdateUser
+message UpdateUserRequest {
+  string id = 1;
+  optional string email = 2;
+  optional string name = 3;
+  optional UserRole role = 4;
+  optional Profile profile = 5;
+}
+
+// DeleteUserRequest is the request for DeleteUser
+message DeleteUserRequest {
+  string id = 1;
+}
+
+// DeleteUserResponse is the response for DeleteUser
+message DeleteUserResponse {
+  bool success = 1;
+}
+
+// WatchUsersRequest is the request for WatchUsers
+message WatchUsersRequest {
+  repeated string user_ids = 1;
+}
+
+// UserEvent represents a user change event
+message UserEvent {
+  EventType type = 1;
+  User user = 2;
+  string timestamp = 3;
+}
+
+// EventType defines the type of user event
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_CREATED = 1;
+  EVENT_TYPE_UPDATED = 2;
+  EVENT_TYPE_DELETED = 3;
+}

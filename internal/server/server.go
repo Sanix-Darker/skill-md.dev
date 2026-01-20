@@ -46,6 +46,7 @@ func New(application *app.App) *Server {
 func (s *Server) setupMiddleware() {
 	s.router.Use(middleware.RequestID)
 	s.router.Use(middleware.RealIP)
+	s.router.Use(servermw.SecurityHeaders)
 	s.router.Use(servermw.Logger(s.app.Logger))
 	s.router.Use(middleware.Recoverer)
 	s.router.Use(middleware.Compress(5))
@@ -69,6 +70,9 @@ func (s *Server) setupRoutes() {
 	s.router.Get("/browse", skillsHandler.Browse)
 	s.router.Get("/skill/{slug}", skillsHandler.View)
 
+	// External skill routes
+	s.router.Get("/external/{source}/*", skillsHandler.ViewExternal)
+
 	// API endpoints (HTMX)
 	s.router.Post("/api/convert", convertHandler.Convert)
 	s.router.Post("/api/convert/url", convertHandler.ConvertURL)
@@ -80,6 +84,8 @@ func (s *Server) setupRoutes() {
 	s.router.Get("/api/skill/{slug}", skillsHandler.Get)
 	s.router.Delete("/api/skill/{id}", skillsHandler.Delete)
 	s.router.Get("/api/skill/{slug}/download", skillsHandler.Download)
+	s.router.Post("/api/skills/import-external", skillsHandler.ImportExternal)
+	s.router.Get("/api/external/{source}/*/content", skillsHandler.GetExternalContent)
 }
 
 // Start starts the HTTP server.

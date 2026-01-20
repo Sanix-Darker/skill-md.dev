@@ -4,32 +4,90 @@
         <span class="text-terminal-accent">&gt;</span> Browse Skills
     </h1>
 
-    <!-- Search and Filters -->
-    <div class="mb-8 flex flex-col md:flex-row gap-4">
+    <!-- Source Tabs -->
+    <div class="mb-6 flex flex-wrap gap-2 border-b border-terminal-border pb-4">
+        <a href="/browse{{if .Query}}?q={{.Query}}{{end}}"
+           hx-get="/api/skills/search{{if .Query}}?q={{.Query}}{{end}}"
+           hx-target="#skills-list"
+           class="px-4 py-2 text-sm {{if not .Source}}bg-terminal-accent text-terminal-bg{{else}}border border-terminal-border text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent{{end}} transition-colors">
+            All
+        </a>
+        <a href="/browse?source=local{{if .Query}}&q={{.Query}}{{end}}"
+           hx-get="/api/skills/search?source=local{{if .Query}}&q={{.Query}}{{end}}"
+           hx-target="#skills-list"
+           class="px-4 py-2 text-sm {{if eq .Source "local"}}bg-terminal-accent text-terminal-bg{{else}}border border-terminal-border text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent{{end}} transition-colors">
+            Local
+        </a>
+        <a href="/browse?source=skills.sh{{if .Query}}&q={{.Query}}{{end}}"
+           hx-get="/api/skills/search?source=skills.sh{{if .Query}}&q={{.Query}}{{end}}"
+           hx-target="#skills-list"
+           class="px-4 py-2 text-sm {{if eq .Source "skills.sh"}}border-purple-500 bg-purple-500/20 text-purple-400{{else}}border border-terminal-border text-terminal-muted hover:border-purple-500 hover:text-purple-400{{end}} transition-colors">
+            SKILLS.sh
+        </a>
+        <a href="/browse?source=github{{if .Query}}&q={{.Query}}{{end}}"
+           hx-get="/api/skills/search?source=github{{if .Query}}&q={{.Query}}{{end}}"
+           hx-target="#skills-list"
+           class="px-4 py-2 text-sm {{if eq .Source "github"}}border-gray-400 bg-gray-400/20 text-gray-300{{else}}border border-terminal-border text-terminal-muted hover:border-gray-400 hover:text-gray-300{{end}} transition-colors">
+            GitHub
+        </a>
+        <a href="/browse?source=gitlab{{if .Query}}&q={{.Query}}{{end}}"
+           hx-get="/api/skills/search?source=gitlab{{if .Query}}&q={{.Query}}{{end}}"
+           hx-target="#skills-list"
+           class="px-4 py-2 text-sm {{if eq .Source "gitlab"}}border-orange-500 bg-orange-500/20 text-orange-400{{else}}border border-terminal-border text-terminal-muted hover:border-orange-500 hover:text-orange-400{{end}} transition-colors">
+            GitLab
+        </a>
+        <a href="/browse?source=bitbucket{{if .Query}}&q={{.Query}}{{end}}"
+           hx-get="/api/skills/search?source=bitbucket{{if .Query}}&q={{.Query}}{{end}}"
+           hx-target="#skills-list"
+           class="px-4 py-2 text-sm {{if eq .Source "bitbucket"}}border-blue-500 bg-blue-500/20 text-blue-400{{else}}border border-terminal-border text-terminal-muted hover:border-blue-500 hover:text-blue-400{{end}} transition-colors">
+            Bitbucket
+        </a>
+        <a href="/browse?source=codeberg{{if .Query}}&q={{.Query}}{{end}}"
+           hx-get="/api/skills/search?source=codeberg{{if .Query}}&q={{.Query}}{{end}}"
+           hx-target="#skills-list"
+           class="px-4 py-2 text-sm {{if eq .Source "codeberg"}}border-green-500 bg-green-500/20 text-green-400{{else}}border border-terminal-border text-terminal-muted hover:border-green-500 hover:text-green-400{{end}} transition-colors">
+            Codeberg
+        </a>
+    </div>
+
+    <!-- Search -->
+    <div class="mb-6 flex flex-col md:flex-row gap-4">
         <div class="flex-1">
             <input type="text"
                    id="search-input"
                    name="q"
                    value="{{.Query}}"
-                   placeholder="Search skills..."
+                   placeholder="Search skills across all sources..."
                    hx-get="/api/skills/search"
                    hx-trigger="keyup changed delay:300ms"
                    hx-target="#skills-list"
-                   hx-include="this"
+                   hx-include="[name='source']"
                    class="w-full bg-terminal-bg border border-terminal-border px-4 py-2 focus:border-terminal-accent focus:outline-none">
+            <input type="hidden" name="source" value="{{.Source}}">
         </div>
+    </div>
 
-        {{if .Tags}}
-        <div class="flex flex-wrap gap-2">
-            {{range $tag, $count := .Tags}}
-            <a href="/browse?tag={{$tag}}"
-               class="px-3 py-1 border {{if eq $.Tag $tag}}border-terminal-accent text-terminal-accent{{else}}border-terminal-border text-terminal-muted hover:border-terminal-text hover:text-terminal-text{{end}} text-sm transition-colors">
-                {{$tag}} <span class="opacity-50">({{$count}})</span>
-            </a>
-            {{end}}
-        </div>
+    <!-- Search Stats -->
+    {{if .SearchTime}}
+    <div class="mb-4 text-xs text-terminal-muted flex flex-wrap gap-4">
+        <span>Found {{.Total}} skills in {{.SearchTime}}</span>
+        {{range $source, $count := .BySource}}
+        <span class="px-2 py-0.5 border border-terminal-border">{{$source}}: {{$count}}</span>
         {{end}}
     </div>
+    {{end}}
+
+    <!-- Tag Filters -->
+    {{if .Tags}}
+    <div class="mb-6 flex flex-wrap gap-2">
+        {{range $tag, $count := .Tags}}
+        <a href="/browse?tag={{$tag}}{{if $.Source}}&source={{$.Source}}{{end}}"
+           class="px-3 py-1 border {{if eq $.Tag $tag}}border-terminal-accent text-terminal-accent{{else}}border-terminal-border text-terminal-muted hover:border-terminal-text hover:text-terminal-text{{end}} text-sm transition-colors">
+            {{$tag}} <span class="opacity-50">({{$count}})</span>
+        </a>
+        {{end}}
+    </div>
+    {{end}}
 
     <!-- Skills List -->
     <div id="skills-list">

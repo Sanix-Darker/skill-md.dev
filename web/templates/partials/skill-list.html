@@ -2,14 +2,21 @@
 {{if .Skills}}
 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
     {{range .Skills}}
-    <a href="/skill/{{.Slug}}" class="block border border-terminal-border bg-terminal-surface p-4 hover:border-terminal-accent transition-colors">
-        <h3 class="font-medium mb-2 truncate">{{.Name}}</h3>
+    <a href="{{if eq .Source "local"}}/skill/{{.Slug}}{{else}}/external/{{.Source}}/{{.ID}}{{end}}"
+       class="block border border-terminal-border bg-terminal-surface p-4 hover:border-terminal-accent transition-colors hover-lift">
+        <div class="flex items-start justify-between gap-2 mb-2">
+            <h3 class="font-medium truncate flex-1">{{.Name}}</h3>
+            <!-- Source Badge -->
+            <span class="flex-shrink-0 px-1.5 py-0.5 text-xs border {{if eq .Source "local"}}border-terminal-accent text-terminal-accent{{else if eq .Source "skills.sh"}}border-purple-500 text-purple-400{{else if eq .Source "github"}}border-gray-400 text-gray-300{{else if eq .Source "gitlab"}}border-orange-500 text-orange-400{{else if eq .Source "bitbucket"}}border-blue-500 text-blue-400{{else if eq .Source "codeberg"}}border-green-500 text-green-400{{else}}border-terminal-border text-terminal-muted{{end}}">
+                {{if eq .Source "local"}}Local{{else if eq .Source "skills.sh"}}SKILLS.sh{{else if eq .Source "github"}}GitHub{{else if eq .Source "gitlab"}}GitLab{{else if eq .Source "bitbucket"}}Bitbucket{{else if eq .Source "codeberg"}}Codeberg{{else}}{{.Source}}{{end}}
+            </span>
+        </div>
         {{if .Description}}
         <p class="text-sm text-terminal-muted mb-3 line-clamp-2">{{truncate .Description 100}}</p>
         {{end}}
         <div class="flex items-center justify-between text-xs text-terminal-muted">
-            <span>v{{.Version}}</span>
-            <span>{{.ViewCount}} views</span>
+            <span>{{if .Version}}v{{.Version}}{{else if .RepoOwner}}{{.RepoOwner}}{{end}}</span>
+            <span>{{if .Stars}}{{.Stars}} stars{{else if .ViewCount}}{{.ViewCount}} views{{end}}</span>
         </div>
         {{if .Tags}}
         <div class="flex flex-wrap gap-1 mt-2">
@@ -22,26 +29,18 @@
     {{end}}
 </div>
 
-<!-- Pagination -->
-{{if or .HasPrev .HasNext}}
-<div class="flex justify-center gap-4 mt-8">
-    {{if .HasPrev}}
-    <a href="?page={{.PrevPage}}{{if .Query}}&q={{.Query}}{{end}}{{if .Tag}}&tag={{.Tag}}{{end}}"
-       hx-get="/api/skills?page={{.PrevPage}}{{if .Query}}&q={{.Query}}{{end}}{{if .Tag}}&tag={{.Tag}}{{end}}"
-       hx-target="#skills-list"
-       class="px-4 py-2 border border-terminal-border hover:border-terminal-accent text-sm transition-colors">
-        Previous
-    </a>
-    {{end}}
-    <span class="px-4 py-2 text-terminal-muted text-sm">Page {{.Page}}</span>
-    {{if .HasNext}}
-    <a href="?page={{.NextPage}}{{if .Query}}&q={{.Query}}{{end}}{{if .Tag}}&tag={{.Tag}}{{end}}"
-       hx-get="/api/skills?page={{.NextPage}}{{if .Query}}&q={{.Query}}{{end}}{{if .Tag}}&tag={{.Tag}}{{end}}"
-       hx-target="#skills-list"
-       class="px-4 py-2 border border-terminal-border hover:border-terminal-accent text-sm transition-colors">
-        Next
-    </a>
-    {{end}}
+<!-- Infinite Scroll / Lazy Loading -->
+{{if .HasNext}}
+<div hx-get="/api/skills?page={{.NextPage}}{{if .Query}}&q={{.Query}}{{end}}{{if .Tag}}&tag={{.Tag}}{{end}}{{if .Source}}&source={{.Source}}{{end}}"
+     hx-trigger="revealed"
+     hx-swap="afterend"
+     class="flex justify-center py-8">
+    <div class="htmx-indicator flex items-center gap-2 text-terminal-muted">
+        <svg class="w-5 h-5 loading-spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        <span class="text-sm">Loading more...</span>
+    </div>
 </div>
 {{end}}
 

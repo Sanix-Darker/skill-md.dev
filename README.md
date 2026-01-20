@@ -7,11 +7,13 @@ Convert technical specifications into SKILL.md format for AI agents.
 
 ## Features
 
-- **Convert** - Transform OpenAPI, GraphQL, Postman, and plain text specs into SKILL.md format
+- **11 Input Formats** - OpenAPI, GraphQL, Postman, AsyncAPI, Protobuf/gRPC, RAML, WSDL, API Blueprint, URL, PDF, Plain Text
+- **MCP Compatible** - Generated skills include tool definitions for AI agents
 - **Merge** - Combine multiple SKILL.md files with intelligent deduplication
 - **Browse** - Search and explore the skill registry
 - **Web UI** - Dark terminal-themed interface with HTMX
 - **CLI** - Full-featured command line interface
+- **SSH TUI** - Terminal UI accessible via SSH
 
 ## Installation
 
@@ -71,6 +73,13 @@ Supported formats:
 - `openapi` - OpenAPI 3.x (YAML/JSON)
 - `graphql` - GraphQL schema
 - `postman` - Postman collection
+- `asyncapi` - AsyncAPI specs (Kafka, MQTT, WebSocket, AMQP)
+- `proto` - Protocol Buffers / gRPC
+- `raml` - RAML 1.0
+- `wsdl` - WSDL/SOAP
+- `apiblueprint` - API Blueprint (.apib)
+- `url` - Web page extraction
+- `pdf` - PDF document extraction
 - `text` - Plain text
 
 ### Merge
