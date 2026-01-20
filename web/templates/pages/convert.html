@@ -49,10 +49,10 @@
                 <!-- Input AI Assistant -->
                 <div class="mt-2 flex items-center gap-2">
                     <button type="button" id="input-assist-btn"
-                            class="tooltip text-xs px-3 py-1 border border-terminal-border text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent transition-colors"
+                            class="tooltip text-sm px-4 py-2 border border-terminal-border text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent transition-colors"
                             data-tooltip="AI suggests improvements to your input"
                             aria-label="AI Assist for input">
-                        <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
                         AI Assist
@@ -124,6 +124,11 @@ function copyOutput() {
 document.body.addEventListener('htmx:afterSwap', function(e) {
     if (e.detail.target.id === 'output-content') {
         document.getElementById('copy-btn').classList.remove('hidden');
+        // Apply syntax highlighting
+        const codeBlock = e.detail.target.querySelector('code');
+        if (codeBlock && window.hljs) {
+            hljs.highlightElement(codeBlock);
+        }
     }
 });
 

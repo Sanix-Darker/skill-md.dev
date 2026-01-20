@@ -20,6 +20,14 @@
 
     <!-- HTMX -->
     <script src="/static/js/htmx.min.js"></script>
+
+    <!-- Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/markdown.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/yaml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/json.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
 </head>
 <body hx-boost="true" class="bg-terminal-bg text-terminal-text font-mono min-h-screen flex flex-col">
     <!-- Loading bar -->
@@ -55,16 +63,19 @@
     <!-- Loading bar control -->
     <script>
     document.body.addEventListener('htmx:beforeRequest', function() {
-        document.getElementById('loading-bar').style.transform = 'scaleX(0.7)';
+        const bar = document.getElementById('loading-bar');
+        if (bar) bar.style.transform = 'scaleX(0.7)';
     });
     document.body.addEventListener('htmx:afterRequest', function() {
         const bar = document.getElementById('loading-bar');
-        bar.style.transform = 'scaleX(1)';
-        setTimeout(() => {
-            bar.style.transition = 'none';
-            bar.style.transform = 'scaleX(0)';
-            setTimeout(() => bar.style.transition = '', 50);
-        }, 200);
+        if (bar) {
+            bar.style.transform = 'scaleX(1)';
+            setTimeout(() => {
+                bar.style.transition = 'none';
+                bar.style.transform = 'scaleX(0)';
+                setTimeout(() => bar.style.transition = '', 50);
+            }, 200);
+        }
     });
     </script>
 </body>

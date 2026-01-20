@@ -8,7 +8,7 @@
             <h3 class="font-medium truncate flex-1">{{.Name}}</h3>
             <!-- Source Badge -->
             <span class="flex-shrink-0 px-1.5 py-0.5 text-xs border {{if eq .Source "local"}}border-terminal-accent text-terminal-accent{{else if eq .Source "skills.sh"}}border-purple-500 text-purple-400{{else if eq .Source "github"}}border-gray-400 text-gray-300{{else if eq .Source "gitlab"}}border-orange-500 text-orange-400{{else if eq .Source "bitbucket"}}border-blue-500 text-blue-400{{else if eq .Source "codeberg"}}border-green-500 text-green-400{{else}}border-terminal-border text-terminal-muted{{end}}">
-                {{if eq .Source "local"}}Local{{else if eq .Source "skills.sh"}}SKILLS.sh{{else if eq .Source "github"}}GitHub{{else if eq .Source "gitlab"}}GitLab{{else if eq .Source "bitbucket"}}Bitbucket{{else if eq .Source "codeberg"}}Codeberg{{else}}{{.Source}}{{end}}
+                {{if eq .Source "local"}}Local{{else if eq .Source "skills.sh"}}SKILLS.sh (Vercel){{else if eq .Source "github"}}GitHub{{else if eq .Source "gitlab"}}GitLab{{else if eq .Source "bitbucket"}}Bitbucket{{else if eq .Source "codeberg"}}Codeberg{{else}}{{.Source}}{{end}}
             </span>
         </div>
         {{if .Description}}

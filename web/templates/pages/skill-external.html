@@ -21,7 +21,7 @@
 
                 <!-- Source Badge -->
                 <span class="flex-shrink-0 px-3 py-1 text-sm border {{if eq .Skill.Source "skills.sh"}}border-purple-500 text-purple-400{{else if eq .Skill.Source "github"}}border-gray-400 text-gray-300{{else if eq .Skill.Source "gitlab"}}border-orange-500 text-orange-400{{else if eq .Skill.Source "bitbucket"}}border-blue-500 text-blue-400{{else if eq .Skill.Source "codeberg"}}border-green-500 text-green-400{{else}}border-terminal-border text-terminal-muted{{end}}">
-                    {{if eq .Skill.Source "skills.sh"}}SKILLS.sh{{else if eq .Skill.Source "github"}}GitHub{{else if eq .Skill.Source "gitlab"}}GitLab{{else if eq .Skill.Source "bitbucket"}}Bitbucket{{else if eq .Skill.Source "codeberg"}}Codeberg{{else}}{{.Skill.Source}}{{end}}
+                    {{if eq .Skill.Source "skills.sh"}}SKILLS.sh (Vercel){{else if eq .Skill.Source "github"}}GitHub{{else if eq .Skill.Source "gitlab"}}GitLab{{else if eq .Skill.Source "bitbucket"}}Bitbucket{{else if eq .Skill.Source "codeberg"}}Codeberg{{else}}{{.Skill.Source}}{{end}}
                 </span>
             </div>
 
@@ -65,7 +65,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                 </svg>
-                View on {{if eq .Skill.Source "skills.sh"}}SKILLS.sh{{else if eq .Skill.Source "github"}}GitHub{{else if eq .Skill.Source "gitlab"}}GitLab{{else if eq .Skill.Source "bitbucket"}}Bitbucket{{else if eq .Skill.Source "codeberg"}}Codeberg{{else}}{{.Skill.Source}}{{end}}
+                View on {{if eq .Skill.Source "skills.sh"}}SKILLS.sh (Vercel){{else if eq .Skill.Source "github"}}GitHub{{else if eq .Skill.Source "gitlab"}}GitLab{{else if eq .Skill.Source "bitbucket"}}Bitbucket{{else if eq .Skill.Source "codeberg"}}Codeberg{{else}}{{.Skill.Source}}{{end}}
             </a>
 
             {{if .Skill.Content}}
@@ -95,7 +95,7 @@
         {{else}}
         <div class="p-6 text-center text-terminal-muted">
             <p class="mb-4">Content not loaded. Click the button below to fetch the full SKILL.md content.</p>
-            <button hx-get="/api/external/{{.Skill.Source}}/{{.Skill.ID}}/content"
+            <button hx-get="/api/external/{{.Skill.Source}}/content/{{.Skill.ID}}"
                     hx-target="#skill-content"
                     hx-swap="innerHTML"
                     class="px-4 py-2 border border-terminal-accent text-terminal-accent hover:bg-terminal-accent hover:text-terminal-bg transition-colors text-sm">

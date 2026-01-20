@@ -108,7 +108,7 @@ func IsSourceEnabled(sources []SourceType, source SourceType) bool {
 func SourceLabel(s SourceType) string {
 	labels := map[SourceType]string{
 		SourceTypeLocal:     "Local",
-		SourceTypeSkillsSH:  "SKILLS.sh",
+		SourceTypeSkillsSH:  "SKILLS.sh (Vercel)",
 		SourceTypeGitHub:    "GitHub",
 		SourceTypeGitLab:    "GitLab",
 		SourceTypeBitbucket: "Bitbucket",

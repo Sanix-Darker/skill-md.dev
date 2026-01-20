@@ -1,6 +1,6 @@
 /**
  * LLM WebWorker for browser-based content enhancement
- * Uses Transformers.js to run SmolLM2-360M-Instruct locally
+ * Uses Transformers.js to run distilgpt2 locally
  */
 
 // ES Module import for Transformers.js
@@ -11,8 +11,8 @@ let isLoading = false;
 
 // Model configuration
 const MODEL_CONFIG = {
-  default: 'Xenova/SmolLM2-360M-Instruct',
-  quality: 'Xenova/Phi-3-mini-4k-instruct'
+  default: 'Xenova/distilgpt2',
+  quality: 'Xenova/gpt2'
 };
 
 // Handle messages from main thread
