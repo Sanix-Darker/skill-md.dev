@@ -18,10 +18,35 @@
             <span class="text-xs">Download</span>
         </button>
     </div>
-    <pre class="text-sm whitespace-pre-wrap overflow-auto max-h-[600px] bg-terminal-bg p-3 border border-terminal-border">{{.Content}}</pre>
+    <pre class="text-sm whitespace-pre-wrap overflow-auto max-h-[600px] bg-terminal-bg p-3 border border-terminal-border"><code class="language-markdown hljs">{{.Content}}</code></pre>
 
     <!-- AI Enhancement Controls -->
     {{template "enhance-button.html" .}}
+
+    <!-- CLI Usage Hints -->
+    <details class="mt-4 border border-terminal-border">
+        <summary class="px-3 py-2 bg-terminal-surface text-sm text-terminal-muted cursor-pointer hover:text-terminal-accent transition-colors">
+            <span class="text-terminal-accent">$</span> CLI Usage Tips
+        </summary>
+        <div class="p-3 bg-terminal-bg text-xs font-mono space-y-3">
+            <div>
+                <p class="text-terminal-muted mb-1"># Convert from URL and save:</p>
+                <pre class="text-terminal-accent"><code class="language-bash">skillforge convert https://api.example.com/openapi.json -o skill.md</code></pre>
+            </div>
+            <div>
+                <p class="text-terminal-muted mb-1"># Pipe directly to Claude:</p>
+                <pre class="text-terminal-accent"><code class="language-bash">skillforge convert api.yaml | claude</code></pre>
+            </div>
+            <div>
+                <p class="text-terminal-muted mb-1"># Fetch from URL and pipe to agent:</p>
+                <pre class="text-terminal-accent"><code class="language-bash">skillforge convert --url https://docs.example.com/api | claude "Use this skill"</code></pre>
+            </div>
+            <div>
+                <p class="text-terminal-muted mb-1"># Merge multiple skills:</p>
+                <pre class="text-terminal-accent"><code class="language-bash">skillforge merge skill1.md skill2.md --dedupe | claude</code></pre>
+            </div>
+        </div>
+    </details>
     {{end}}
 </div>
 {{end}}

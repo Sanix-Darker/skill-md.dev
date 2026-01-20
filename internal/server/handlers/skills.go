@@ -57,6 +57,14 @@ func (h *SkillsHandler) Browse(w http.ResponseWriter, r *http.Request) {
 		sourcesToSearch = []sources.SourceType{sources.SourceType(source)}
 	}
 
+	// If no specific query, source, or tag, fetch from all configured sources
+	if query == "" && len(sourcesToSearch) == 0 && tag == "" {
+		sourcesToSearch = []sources.SourceType{
+			sources.SourceTypeGitHub,
+			sources.SourceTypeSkillsSH,
+		}
+	}
+
 	// Perform federated search
 	result, err := h.app.FederatedSource.SearchSources(ctx, opts, sourcesToSearch)
 	if err != nil {

@@ -7,44 +7,30 @@
     <!-- Source Tabs -->
     <div class="mb-6 flex flex-wrap gap-2 border-b border-terminal-border pb-4">
         <a href="/browse{{if .Query}}?q={{.Query}}{{end}}"
-           hx-get="/api/skills/search{{if .Query}}?q={{.Query}}{{end}}"
-           hx-target="#skills-list"
            class="px-4 py-2 text-sm {{if not .Source}}bg-terminal-accent text-terminal-bg{{else}}border border-terminal-border text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent{{end}} transition-colors">
             All
         </a>
         <a href="/browse?source=local{{if .Query}}&q={{.Query}}{{end}}"
-           hx-get="/api/skills/search?source=local{{if .Query}}&q={{.Query}}{{end}}"
-           hx-target="#skills-list"
            class="px-4 py-2 text-sm {{if eq .Source "local"}}bg-terminal-accent text-terminal-bg{{else}}border border-terminal-border text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent{{end}} transition-colors">
             Local
         </a>
         <a href="/browse?source=skills.sh{{if .Query}}&q={{.Query}}{{end}}"
-           hx-get="/api/skills/search?source=skills.sh{{if .Query}}&q={{.Query}}{{end}}"
-           hx-target="#skills-list"
            class="px-4 py-2 text-sm {{if eq .Source "skills.sh"}}border-purple-500 bg-purple-500/20 text-purple-400{{else}}border border-terminal-border text-terminal-muted hover:border-purple-500 hover:text-purple-400{{end}} transition-colors">
-            SKILLS.sh
+            SKILLS.sh (Vercel)
         </a>
         <a href="/browse?source=github{{if .Query}}&q={{.Query}}{{end}}"
-           hx-get="/api/skills/search?source=github{{if .Query}}&q={{.Query}}{{end}}"
-           hx-target="#skills-list"
            class="px-4 py-2 text-sm {{if eq .Source "github"}}border-gray-400 bg-gray-400/20 text-gray-300{{else}}border border-terminal-border text-terminal-muted hover:border-gray-400 hover:text-gray-300{{end}} transition-colors">
             GitHub
         </a>
         <a href="/browse?source=gitlab{{if .Query}}&q={{.Query}}{{end}}"
-           hx-get="/api/skills/search?source=gitlab{{if .Query}}&q={{.Query}}{{end}}"
-           hx-target="#skills-list"
            class="px-4 py-2 text-sm {{if eq .Source "gitlab"}}border-orange-500 bg-orange-500/20 text-orange-400{{else}}border border-terminal-border text-terminal-muted hover:border-orange-500 hover:text-orange-400{{end}} transition-colors">
             GitLab
         </a>
         <a href="/browse?source=bitbucket{{if .Query}}&q={{.Query}}{{end}}"
-           hx-get="/api/skills/search?source=bitbucket{{if .Query}}&q={{.Query}}{{end}}"
-           hx-target="#skills-list"
            class="px-4 py-2 text-sm {{if eq .Source "bitbucket"}}border-blue-500 bg-blue-500/20 text-blue-400{{else}}border border-terminal-border text-terminal-muted hover:border-blue-500 hover:text-blue-400{{end}} transition-colors">
             Bitbucket
         </a>
         <a href="/browse?source=codeberg{{if .Query}}&q={{.Query}}{{end}}"
-           hx-get="/api/skills/search?source=codeberg{{if .Query}}&q={{.Query}}{{end}}"
-           hx-target="#skills-list"
            class="px-4 py-2 text-sm {{if eq .Source "codeberg"}}border-green-500 bg-green-500/20 text-green-400{{else}}border border-terminal-border text-terminal-muted hover:border-green-500 hover:text-green-400{{end}} transition-colors">
             Codeberg
         </a>

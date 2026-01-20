@@ -85,7 +85,7 @@ func (s *Server) setupRoutes() {
 	s.router.Delete("/api/skill/{id}", skillsHandler.Delete)
 	s.router.Get("/api/skill/{slug}/download", skillsHandler.Download)
 	s.router.Post("/api/skills/import-external", skillsHandler.ImportExternal)
-	s.router.Get("/api/external/{source}/*/content", skillsHandler.GetExternalContent)
+	s.router.Get("/api/external/{source}/content/*", skillsHandler.GetExternalContent)
 }
 
 // Start starts the HTTP server.

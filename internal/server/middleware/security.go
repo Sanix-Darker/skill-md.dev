@@ -31,7 +31,14 @@ func SecurityHeaders(next http.Handler) http.Handler {
 		w.Header().Set("Pragma", "no-cache")
 
 		// Content Security Policy (allow HTMX and inline scripts for now)
-		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'")
+		w.Header().Set("Content-Security-Policy",
+			"default-src 'self'; "+
+				"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; "+
+				"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "+
+				"font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "+
+				"img-src 'self' data: https:; "+
+				"connect-src 'self' https://cdn.jsdelivr.net https://huggingface.co; "+
+				"worker-src 'self' blob: https://cdn.jsdelivr.net")
 
 		// Permissions Policy
 		w.Header().Set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
