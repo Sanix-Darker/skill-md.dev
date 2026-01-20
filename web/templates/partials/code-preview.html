@@ -31,19 +31,19 @@
         <div class="p-3 bg-terminal-bg text-xs font-mono space-y-3">
             <div>
                 <p class="text-terminal-muted mb-1"># Convert from URL and save:</p>
-                <pre class="text-terminal-accent"><code class="language-bash">skillforge convert https://api.example.com/openapi.json -o skill.md</code></pre>
+                <pre class="text-terminal-accent"><code class="language-bash">skillmd convert https://api.example.com/openapi.json -o skill.md</code></pre>
             </div>
             <div>
                 <p class="text-terminal-muted mb-1"># Pipe directly to Claude:</p>
-                <pre class="text-terminal-accent"><code class="language-bash">skillforge convert api.yaml | claude</code></pre>
+                <pre class="text-terminal-accent"><code class="language-bash">skillmd convert api.yaml | claude</code></pre>
             </div>
             <div>
                 <p class="text-terminal-muted mb-1"># Fetch from URL and pipe to agent:</p>
-                <pre class="text-terminal-accent"><code class="language-bash">skillforge convert --url https://docs.example.com/api | claude "Use this skill"</code></pre>
+                <pre class="text-terminal-accent"><code class="language-bash">skillmd convert --url https://docs.example.com/api | claude "Use this skill"</code></pre>
             </div>
             <div>
                 <p class="text-terminal-muted mb-1"># Merge multiple skills:</p>
-                <pre class="text-terminal-accent"><code class="language-bash">skillforge merge skill1.md skill2.md --dedupe | claude</code></pre>
+                <pre class="text-terminal-accent"><code class="language-bash">skillmd merge skill1.md skill2.md --dedupe | claude</code></pre>
             </div>
         </div>
     </details>

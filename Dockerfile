@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # Build binary
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o skillforge ./cmd/skillforge
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o skillmd ./cmd/skillmd
 
 # Runtime stage
 FROM alpine:3.19
@@ -25,7 +25,7 @@ WORKDIR /app
 RUN apk add --no-cache ca-certificates
 
 # Copy binary from builder
-COPY --from=builder /app/skillforge /usr/local/bin/skillforge
+COPY --from=builder /app/skillmd /usr/local/bin/skillmd
 
 # Create data directory
 RUN mkdir -p /data
@@ -42,5 +42,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1
 
 # Run server
-ENTRYPOINT ["skillforge"]
+ENTRYPOINT ["skillmd"]
 CMD ["serve", "--port", "8080", "--db", "/data/skillforge.db"]

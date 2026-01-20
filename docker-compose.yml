@@ -1,13 +1,13 @@
 version: '3.8'
 
 services:
-  skillforge:
+  skillmd:
     build: .
-    container_name: skillforge
+    container_name: skillmd
     ports:
       - "8080:8080"
     volumes:
-      - skillforge_data:/data
+      - skillmd_data:/data
     environment:
       - SKILLFORGE_PORT=8080
       - SKILLFORGE_DB=/data/skillforge.db
@@ -20,5 +20,5 @@ services:
       start_period: 5s
 
 volumes:
-  skillforge_data:
+  skillmd_data:
     driver: local

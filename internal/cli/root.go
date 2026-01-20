@@ -16,9 +16,9 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "skillforge",
+	Use:   "skillmd",
 	Short: "Convert technical specs to SKILL.md format for AI agents",
-	Long: `Skill Forge is a tool for converting technical specifications
+	Long: `skillmd.dev is a tool for converting technical specifications
 (OpenAPI, GraphQL, Postman, etc.) into SKILL.md format that AI agents
 can understand and use.
 
@@ -33,7 +33,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Show version information",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("skillforge version %s (commit: %s)\n", Version, Commit)
+		fmt.Printf("skillmd version %s (commit: %s)\n", Version, Commit)
 	},
 }
 
