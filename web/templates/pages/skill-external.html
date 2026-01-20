@@ -61,7 +61,7 @@
         <!-- Actions -->
         <div class="border-b border-terminal-border p-4 flex flex-wrap gap-4">
             <a href="{{.Skill.SourceURL}}" target="_blank" rel="noopener"
-               class="inline-flex items-center gap-2 px-4 py-2 border border-terminal-border hover:border-terminal-accent hover:text-terminal-accent transition-colors text-sm">
+               class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-transparent border border-terminal-border hover:border-terminal-accent hover:text-terminal-accent transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                 </svg>
@@ -76,7 +76,7 @@
                 <input type="hidden" name="source" value="{{.Skill.Source}}">
                 <input type="hidden" name="id" value="{{.Skill.ID}}">
                 <button type="submit"
-                        class="inline-flex items-center gap-2 px-4 py-2 border border-terminal-accent text-terminal-accent hover:bg-terminal-accent hover:text-terminal-bg transition-colors text-sm">
+                        class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-transparent border border-terminal-accent text-terminal-accent hover:bg-terminal-accent hover:text-terminal-bg transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                     </svg>
@@ -98,7 +98,7 @@
             <button hx-get="/api/external/{{.Skill.Source}}/content/{{.Skill.ID}}"
                     hx-target="#skill-content"
                     hx-swap="innerHTML"
-                    class="px-4 py-2 border border-terminal-accent text-terminal-accent hover:bg-terminal-accent hover:text-terminal-bg transition-colors text-sm">
+                    class="px-4 py-2 text-sm bg-transparent border border-terminal-accent text-terminal-accent hover:bg-terminal-accent hover:text-terminal-bg transition-colors">
                 Load
             </button>
             <div id="skill-content" class="mt-4"></div>
