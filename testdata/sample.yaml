@@ -1,7 +1,7 @@
 openapi: "3.0.0"
 info:
   title: Sample API
-  description: A sample API for testing Skill Forge
+  description: A sample API for testing Skill MD
   version: "1.0.0"
   contact:
     name: API Support

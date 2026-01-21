@@ -9,9 +9,9 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/sanixdarker/skillforge/internal/converter"
-	"github.com/sanixdarker/skillforge/internal/registry"
-	"github.com/sanixdarker/skillforge/pkg/skill"
+	"github.com/sanixdarker/skill-md/internal/converter"
+	"github.com/sanixdarker/skill-md/internal/registry"
+	"github.com/sanixdarker/skill-md/pkg/skill"
 )
 
 // HomeModel is the home view model.
@@ -66,7 +66,7 @@ func (m HomeModel) View() string {
 	var b strings.Builder
 
 	// Header
-	title := m.styles.Title.Render("SKILL FORGE")
+	title := m.styles.Title.Render("SKILL MD")
 	subtitle := m.styles.Subtitle.Render("Convert specs to SKILL.md for AI agents")
 
 	b.WriteString("\n")

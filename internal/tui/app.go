@@ -1,11 +1,11 @@
-// Package tui provides a terminal user interface for Skill Forge.
+// Package tui provides a terminal user interface for Skill MD.
 package tui
 
 import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/sanixdarker/skillforge/internal/registry"
+	"github.com/sanixdarker/skill-md/internal/registry"
 )
 
 // View represents different views in the TUI.

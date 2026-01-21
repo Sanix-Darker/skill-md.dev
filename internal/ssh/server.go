@@ -18,8 +18,8 @@ import (
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/bubbletea"
 	"github.com/charmbracelet/wish/logging"
-	"github.com/sanixdarker/skillforge/internal/registry"
-	"github.com/sanixdarker/skillforge/internal/tui"
+	"github.com/sanixdarker/skill-md/internal/registry"
+	"github.com/sanixdarker/skill-md/internal/tui"
 )
 
 // Server represents the SSH server.
@@ -48,7 +48,7 @@ func New(cfg Config) (*Server, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to get home dir: %w", err)
 		}
-		cfg.KeyPath = filepath.Join(home, ".ssh", "skillforge_ed25519")
+		cfg.KeyPath = filepath.Join(home, ".ssh", "skill-md_ed25519")
 	}
 
 	// Ensure key directory exists

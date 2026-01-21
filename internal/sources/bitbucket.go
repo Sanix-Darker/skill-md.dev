@@ -252,7 +252,7 @@ func (s *BitbucketSource) GetContent(ctx context.Context, skill *ExternalSkill) 
 // setHeaders sets common headers for Bitbucket API requests.
 func (s *BitbucketSource) setHeaders(req *http.Request) {
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("User-Agent", "SkillForge/1.0")
+	req.Header.Set("User-Agent", "SkillMD/1.0")
 	if s.username != "" && s.password != "" {
 		req.SetBasicAuth(s.username, s.password)
 	}

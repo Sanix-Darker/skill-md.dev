@@ -8,24 +8,25 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/sanixdarker/skillforge/internal/app"
-	"github.com/sanixdarker/skillforge/internal/server"
-	sshserver "github.com/sanixdarker/skillforge/internal/ssh"
+	"github.com/sanixdarker/skill-md/internal/app"
+	"github.com/sanixdarker/skill-md/internal/server"
+	sshserver "github.com/sanixdarker/skill-md/internal/ssh"
 	"github.com/spf13/cobra"
 )
 
 var (
-	servePort    int
-	serveSSHPort int
-	serveDBPath  string
-	serveDebug   bool
-	serveNoSSH   bool
+	servePort        int
+	serveSSHPort     int
+	serveDBPath      string
+	serveDebug       bool
+	serveNoSSH       bool
+	serveGitHubToken string
 )
 
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start the web server",
-	Long: `Start the Skill Forge web server with the UI and API endpoints.
+	Long: `Start the Skill MD web server with the UI and API endpoints.
 
 Optionally starts an SSH server for terminal UI access.
 
@@ -37,10 +38,17 @@ Examples:
 Connect via SSH:
   ssh localhost -p 2222`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Use environment variable if flag not set
+		githubToken := serveGitHubToken
+		if githubToken == "" {
+			githubToken = os.Getenv("GITHUB_TOKEN")
+		}
+
 		cfg := &app.Config{
-			Port:   servePort,
-			DBPath: serveDBPath,
-			Debug:  serveDebug,
+			Port:        servePort,
+			DBPath:      serveDBPath,
+			Debug:       serveDebug,
+			GitHubToken: githubToken,
 		}
 
 		application, err := app.New(cfg)
@@ -89,7 +97,7 @@ Connect via SSH:
 		}()
 
 		application.Logger.Info("starting server", "port", cfg.Port)
-		fmt.Printf("Skill Forge web server running at http://localhost:%d\n", cfg.Port)
+		fmt.Printf("Skill MD web server running at http://localhost:%d\n", cfg.Port)
 
 		return srv.Start()
 	},
@@ -98,9 +106,10 @@ Connect via SSH:
 func init() {
 	serveCmd.Flags().IntVarP(&servePort, "port", "p", 8080, "HTTP port to listen on")
 	serveCmd.Flags().IntVar(&serveSSHPort, "ssh-port", 2222, "SSH port for TUI access")
-	serveCmd.Flags().StringVar(&serveDBPath, "db", "./skillforge.db", "Path to SQLite database")
+	serveCmd.Flags().StringVar(&serveDBPath, "db", "./skill-md.db", "Path to SQLite database")
 	serveCmd.Flags().BoolVar(&serveDebug, "debug", false, "Enable debug mode")
 	serveCmd.Flags().BoolVar(&serveNoSSH, "no-ssh", false, "Disable SSH server")
+	serveCmd.Flags().StringVar(&serveGitHubToken, "github-token", "", "GitHub API token (or set GITHUB_TOKEN env var)")
 
 	rootCmd.AddCommand(serveCmd)
 }

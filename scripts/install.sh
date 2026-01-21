@@ -1,11 +1,11 @@
 #!/bin/bash
-# Skill Forge Installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/sanixdarker/skillforge/main/scripts/install.sh | bash
+# Skill MD Installer
+# Usage: curl -fsSL https://raw.githubusercontent.com/sanixdarker/skill-md/main/scripts/install.sh | bash
 
 set -e
 
 # Configuration
-REPO="sanixdarker/skillforge"
+REPO="sanixdarker/skill-md"
 BINARY_NAME="skillmd"
 INSTALL_DIR="/usr/local/bin"
 
@@ -57,7 +57,7 @@ install() {
         VERSION="latest"
     fi
 
-    echo -e "${GREEN}Installing Skill Forge ${VERSION} for ${PLATFORM}...${NC}"
+    echo -e "${GREEN}Installing Skill MD ${VERSION} for ${PLATFORM}...${NC}"
 
     # Construct download URL
     if [ "$OS" = "windows" ]; then
@@ -91,7 +91,7 @@ install() {
         sudo mv "$TMP_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
     fi
 
-    echo -e "${GREEN}Skill Forge installed successfully!${NC}"
+    echo -e "${GREEN}Skill MD installed successfully!${NC}"
     echo ""
     echo "Run 'skillmd --help' to get started."
     echo "Start the server with 'skillmd serve'"
@@ -108,7 +108,7 @@ install_from_source() {
 
     go install github.com/${REPO}/cmd/skillmd@latest
 
-    echo -e "${GREEN}Skill Forge installed from source!${NC}"
+    echo -e "${GREEN}Skill MD installed from source!${NC}"
 }
 
 # Main

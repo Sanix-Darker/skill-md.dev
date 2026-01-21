@@ -16,7 +16,7 @@
         {{end}}
         <div class="flex items-center justify-between text-xs text-terminal-muted">
             <span>{{if .Version}}v{{.Version}}{{else if .RepoOwner}}{{.RepoOwner}}{{end}}</span>
-            <span>{{if .Stars}}{{.Stars}} stars{{else if .ViewCount}}{{.ViewCount}} views{{end}}</span>
+            <span>{{if .Stars}}{{.Stars}} stars{{end}}</span>
         </div>
         {{if .Tags}}
         <div class="flex flex-wrap gap-1 mt-2">

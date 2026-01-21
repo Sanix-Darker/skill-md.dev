@@ -34,8 +34,8 @@ RUN mkdir -p /data
 EXPOSE 8080
 
 # Set environment variables
-ENV SKILLFORGE_DB=/data/skillforge.db
-ENV SKILLFORGE_PORT=8080
+ENV SKILLMD_DB=/data/skill-md.db
+ENV SKILLMD_PORT=8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
@@ -43,4 +43,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Run server
 ENTRYPOINT ["skillmd"]
-CMD ["serve", "--port", "8080", "--db", "/data/skillforge.db"]
+CMD ["serve", "--port", "8080", "--db", "/data/skill-md.db"]

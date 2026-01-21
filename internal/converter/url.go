@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/gocolly/colly/v2"
-	"github.com/sanixdarker/skillforge/internal/extractor"
-	"github.com/sanixdarker/skillforge/pkg/skill"
+	"github.com/sanixdarker/skill-md/internal/extractor"
+	"github.com/sanixdarker/skill-md/pkg/skill"
 )
 
 // URLConverter converts web pages to SKILL.md.
@@ -131,7 +131,7 @@ func (c *URLConverter) fetchURL(urlStr string) ([]byte, error) {
 	collector.SetRequestTimeout(30 * time.Second)
 
 	// Set User-Agent to avoid being blocked
-	collector.UserAgent = "Mozilla/5.0 (compatible; SkillForge/1.0; +https://github.com/sanixdarker/skillforge)"
+	collector.UserAgent = "Mozilla/5.0 (compatible; SkillMD/1.0; +https://github.com/sanixdarker/skill-md)"
 
 	collector.OnResponse(func(r *colly.Response) {
 		htmlContent = r.Body

@@ -30,3 +30,10 @@ coverage.html
 
 # SSH keys
 .ssh/
+
+# Caddy files
+Caddyfile
+deploy/Caddyfile
+*.caddy
+caddy_data/
+caddy_config/

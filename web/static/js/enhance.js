@@ -503,7 +503,7 @@ Issues and suggestions:`
   }
 
   // Expose for debugging
-  window.SkillForgeEnhance = {
+  window.SkillMDEnhance = {
     init: init,
     getStatus: () => ({ isReady, isLoading, isProcessing })
   };

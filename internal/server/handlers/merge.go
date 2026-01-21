@@ -8,12 +8,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/sanixdarker/skillforge/internal/app"
-	"github.com/sanixdarker/skillforge/internal/merger"
-	"github.com/sanixdarker/skillforge/internal/server/middleware"
-	"github.com/sanixdarker/skillforge/internal/sources"
-	"github.com/sanixdarker/skillforge/pkg/skill"
-	"github.com/sanixdarker/skillforge/web"
+	"github.com/sanixdarker/skill-md/internal/app"
+	"github.com/sanixdarker/skill-md/internal/merger"
+	"github.com/sanixdarker/skill-md/internal/server/middleware"
+	"github.com/sanixdarker/skill-md/internal/sources"
+	"github.com/sanixdarker/skill-md/pkg/skill"
+	"github.com/sanixdarker/skill-md/web"
 )
 
 // SkillRef represents a reference to a skill for merging.
@@ -36,7 +36,7 @@ func NewMergeHandler(application *app.App) *MergeHandler {
 // Index renders the merge page.
 func (h *MergeHandler) Index(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{
-		"Title": "Merge - Skill Forge",
+		"Title": "Merge - Skill MD",
 	}
 
 	if err := web.RenderPage(w, "merge.html", data); err != nil {
