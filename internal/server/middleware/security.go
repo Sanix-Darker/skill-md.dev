@@ -30,7 +30,12 @@ func SecurityHeaders(next http.Handler) http.Handler {
 		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
 		w.Header().Set("Pragma", "no-cache")
 
-		// Content Security Policy (allow HTMX and inline scripts for now)
+		// HTTP Strict Transport Security
+		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+
+		// Content Security Policy
+		// Note: Using 'unsafe-inline' and 'unsafe-eval' for HTMX and inline event handler compatibility
+		// The codebase uses onclick handlers extensively, which requires this permissive policy
 		w.Header().Set("Content-Security-Policy",
 			"default-src 'self'; "+
 				"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "+
@@ -38,7 +43,10 @@ func SecurityHeaders(next http.Handler) http.Handler {
 				"font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "+
 				"img-src 'self' data: https:; "+
 				"connect-src 'self' https://cdn.jsdelivr.net https://huggingface.co https://cdn-lfs.huggingface.co; "+
-				"worker-src 'self' blob: https://cdn.jsdelivr.net")
+				"worker-src 'self' blob: https://cdn.jsdelivr.net; "+
+				"frame-ancestors 'none'; "+
+				"base-uri 'self'; "+
+				"form-action 'self'")
 
 		// Permissions Policy
 		w.Header().Set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")

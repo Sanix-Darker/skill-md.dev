@@ -14,6 +14,12 @@ import (
 	"github.com/sanixdarker/skill-md/web"
 )
 
+// Upload limits for convert handler
+const (
+	maxConvertUploadSize = 10 << 20 // 10MB total
+	maxConvertFileSize   = 5 << 20  // 5MB per file
+)
+
 // ConvertHandler handles conversion requests.
 type ConvertHandler struct {
 	app *app.App
@@ -40,8 +46,9 @@ func (h *ConvertHandler) Index(w http.ResponseWriter, r *http.Request) {
 // Convert handles file conversion.
 func (h *ConvertHandler) Convert(w http.ResponseWriter, r *http.Request) {
 	// Parse multipart form
-	if err := r.ParseMultipartForm(10 << 20); err != nil { // 10MB max
-		h.renderError(w, r, "Failed to parse form: "+err.Error())
+	if err := r.ParseMultipartForm(maxConvertUploadSize); err != nil {
+		h.app.Logger.Error("failed to parse convert form", "error", err)
+		h.renderError(w, r, "Failed to parse form. Please try again.")
 		return
 	}
 
@@ -64,10 +71,16 @@ func (h *ConvertHandler) Convert(w http.ResponseWriter, r *http.Request) {
 		// Try file upload
 		file, header, err := r.FormFile("file")
 		if err == nil {
+			// Validate per-file size
+			if header.Size > maxConvertFileSize {
+				h.renderError(w, r, "File too large (max 5MB)")
+				return
+			}
 			defer file.Close()
 			content, err = io.ReadAll(file)
 			if err != nil {
-				h.renderError(w, r, "Failed to read file: "+err.Error())
+				h.app.Logger.Error("failed to read file", "error", err)
+				h.renderError(w, r, "Failed to read file. Please try again.")
 				return
 			}
 			filename = header.Filename
@@ -109,7 +122,8 @@ func (h *ConvertHandler) Convert(w http.ResponseWriter, r *http.Request) {
 		SourcePath: filename,
 	})
 	if err != nil {
-		h.renderError(w, r, "Conversion failed: "+err.Error())
+		h.app.Logger.Error("conversion failed", "format", format, "error", err)
+		h.renderError(w, r, "Conversion failed. Please check the input format and try again.")
 		return
 	}
 
@@ -142,7 +156,8 @@ func (h *ConvertHandler) ConvertURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
+		h.app.Logger.Error("invalid JSON in convert URL request", "error", err)
+		http.Error(w, "Invalid request format", http.StatusBadRequest)
 		return
 	}
 
@@ -162,7 +177,8 @@ func (h *ConvertHandler) ConvertURL(w http.ResponseWriter, r *http.Request) {
 		SourcePath: req.URL,
 	})
 	if err != nil {
-		http.Error(w, "Conversion failed: "+err.Error(), http.StatusInternalServerError)
+		h.app.Logger.Error("URL conversion failed", "url", req.URL, "error", err)
+		http.Error(w, "Conversion failed. Please check the URL and try again.", http.StatusInternalServerError)
 		return
 	}
 

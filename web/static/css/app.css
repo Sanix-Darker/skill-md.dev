@@ -33,6 +33,7 @@ body {
 }
 
 /* Base Styles */
+.bg-transparent { background-color: transparent; }
 .bg-terminal-bg { background-color: var(--terminal-bg); }
 .bg-terminal-surface { background-color: var(--terminal-surface); }
 .border-terminal-border { border-color: var(--terminal-border); }
@@ -194,6 +195,15 @@ input, textarea, select {
   border-radius: 4px;
   font-family: 'Hack', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Button base styles - prevent white backgrounds */
+button {
+  background-color: transparent;
+  color: var(--terminal-text);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 input:focus, textarea:focus, select:focus {

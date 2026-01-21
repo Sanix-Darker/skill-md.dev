@@ -80,6 +80,34 @@ install() {
         return
     fi
 
+    # Verify checksum if available
+    CHECKSUM_URL="${DOWNLOAD_URL}.sha256"
+    echo "Verifying checksum..."
+    if curl -fsSL "$CHECKSUM_URL" -o "$TMP_DIR/${BINARY_NAME}.sha256" 2>/dev/null; then
+        cd "$TMP_DIR"
+        if command -v sha256sum &> /dev/null; then
+            if ! sha256sum -c "${BINARY_NAME}.sha256" 2>/dev/null; then
+                echo -e "${RED}Checksum verification failed!${NC}"
+                echo -e "${RED}The downloaded file may be corrupted or tampered with.${NC}"
+                exit 1
+            fi
+            echo -e "${GREEN}Checksum verified successfully.${NC}"
+        elif command -v shasum &> /dev/null; then
+            # macOS fallback
+            if ! shasum -a 256 -c "${BINARY_NAME}.sha256" 2>/dev/null; then
+                echo -e "${RED}Checksum verification failed!${NC}"
+                echo -e "${RED}The downloaded file may be corrupted or tampered with.${NC}"
+                exit 1
+            fi
+            echo -e "${GREEN}Checksum verified successfully.${NC}"
+        else
+            echo -e "${YELLOW}Warning: sha256sum not available, skipping verification${NC}"
+        fi
+        cd - > /dev/null
+    else
+        echo -e "${YELLOW}Warning: Checksum file not available, skipping verification${NC}"
+    fi
+
     # Make executable
     chmod +x "$TMP_DIR/$BINARY_NAME"
 

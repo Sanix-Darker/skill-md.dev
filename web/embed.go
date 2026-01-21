@@ -8,7 +8,12 @@ import (
 	"io/fs"
 	"net/http"
 	"strings"
+
+	"github.com/microcosm-cc/bluemonday"
 )
+
+// htmlPolicy is the HTML sanitization policy for user content
+var htmlPolicy = bluemonday.UGCPolicy()
 
 //go:embed templates/* static/*
 var content embed.FS
@@ -32,7 +37,8 @@ func init() {
 	// Add template functions
 	templates.Funcs(template.FuncMap{
 		"safe": func(s string) template.HTML {
-			return template.HTML(s)
+			// Sanitize HTML to prevent XSS while allowing safe formatting
+			return template.HTML(htmlPolicy.Sanitize(s))
 		},
 		"truncate": func(s string, n int) string {
 			if len(s) <= n {

@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"context"
+	"html"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -14,6 +16,44 @@ import (
 	"github.com/sanixdarker/skill-md/internal/sources"
 	"github.com/sanixdarker/skill-md/web"
 )
+
+// Input validation constants
+const (
+	MaxQueryLength     = 500
+	MaxSlugLength      = 100
+	MaxSkillContentLen = 5 * 1024 * 1024 // 5MB max skill content
+)
+
+// validSources is a whitelist of allowed source types
+var validSources = map[string]bool{
+	"local":     true,
+	"skills.sh": true,
+	"github":    true,
+	"gitlab":    true,
+	"bitbucket": true,
+	"codeberg":  true,
+}
+
+// containsPathTraversal checks if a string contains path traversal sequences
+func containsPathTraversal(s string) bool {
+	// Check for common path traversal patterns
+	dangerous := []string{
+		"..",
+		"./",
+		".\\",
+		"%2e%2e",
+		"%252e%252e",
+		"..%2f",
+		"..%5c",
+	}
+	lower := strings.ToLower(s)
+	for _, pattern := range dangerous {
+		if strings.Contains(lower, pattern) {
+			return true
+		}
+	}
+	return false
+}
 
 // SkillsHandler handles skill registry requests.
 type SkillsHandler struct {
@@ -154,12 +194,21 @@ func (h *SkillsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var content string
-	file, _, err := r.FormFile("file")
+	file, header, err := r.FormFile("file")
 	if err == nil {
+		// Validate file size
+		if header.Size > MaxSkillContentLen {
+			http.Error(w, "File too large (max 5MB)", http.StatusRequestEntityTooLarge)
+			return
+		}
 		defer file.Close()
-		data, err := io.ReadAll(file)
+		data, err := io.ReadAll(io.LimitReader(file, MaxSkillContentLen+1))
 		if err != nil {
 			http.Error(w, "Failed to read file", http.StatusBadRequest)
+			return
+		}
+		if len(data) > MaxSkillContentLen {
+			http.Error(w, "File too large (max 5MB)", http.StatusRequestEntityTooLarge)
 			return
 		}
 		content = string(data)
@@ -172,9 +221,16 @@ func (h *SkillsHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate content length
+	if len(content) > MaxSkillContentLen {
+		http.Error(w, "Content too large (max 5MB)", http.StatusRequestEntityTooLarge)
+		return
+	}
+
 	stored, err := h.app.RegistryService.ImportSkill(content)
 	if err != nil {
-		http.Error(w, "Failed to create skill: "+err.Error(), http.StatusBadRequest)
+		h.app.Logger.Error("failed to create skill", "error", err)
+		http.Error(w, "Failed to create skill. Please check the skill format.", http.StatusBadRequest)
 		return
 	}
 
@@ -219,6 +275,19 @@ func (h *SkillsHandler) Search(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	source := r.URL.Query().Get("source")
 	mergeMode := r.URL.Query().Get("merge_mode") == "true"
+
+	// Validate input length
+	if len(query) > MaxQueryLength {
+		http.Error(w, "Query too long", http.StatusBadRequest)
+		return
+	}
+
+	// Validate source type if provided
+	if source != "" && !validSources[source] {
+		http.Error(w, "Invalid source type", http.StatusBadRequest)
+		return
+	}
+
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 	if page < 1 {
 		page = 1
@@ -331,6 +400,18 @@ func (h *SkillsHandler) Delete(w http.ResponseWriter, r *http.Request) {
 func (h *SkillsHandler) Download(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 
+	// Validate slug length and format
+	if len(slug) > MaxSlugLength || len(slug) == 0 {
+		http.Error(w, "Invalid slug", http.StatusBadRequest)
+		return
+	}
+
+	// Check for path traversal in slug
+	if containsPathTraversal(slug) {
+		http.Error(w, "Invalid slug", http.StatusBadRequest)
+		return
+	}
+
 	skill, err := h.app.RegistryService.GetSkill(slug)
 	if err != nil {
 		h.app.Logger.Error("failed to get skill", "error", err)
@@ -356,10 +437,22 @@ func (h *SkillsHandler) ViewExternal(w http.ResponseWriter, r *http.Request) {
 	sourceType := chi.URLParam(r, "source")
 	id := chi.URLParam(r, "*")
 
+	// Validate source type against whitelist
+	if !validSources[sourceType] {
+		http.Error(w, "Invalid source type", http.StatusBadRequest)
+		return
+	}
+
 	// URL decode the ID
 	decodedID, err := url.PathUnescape(id)
 	if err != nil {
 		decodedID = id
+	}
+
+	// Validate ID to prevent path traversal
+	if containsPathTraversal(decodedID) {
+		http.Error(w, "Invalid skill ID", http.StatusBadRequest)
+		return
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
@@ -406,6 +499,24 @@ func (h *SkillsHandler) ImportExternal(w http.ResponseWriter, r *http.Request) {
 	sourceType := r.FormValue("source")
 	id := r.FormValue("id")
 
+	// Validate source type against whitelist
+	if !validSources[sourceType] {
+		http.Error(w, "Invalid source type", http.StatusBadRequest)
+		return
+	}
+
+	// Validate id parameter
+	if id == "" || len(id) > 500 {
+		http.Error(w, "Invalid skill ID", http.StatusBadRequest)
+		return
+	}
+
+	// Check for path traversal in id
+	if containsPathTraversal(id) {
+		http.Error(w, "Invalid skill ID", http.StatusBadRequest)
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 	defer cancel()
 
@@ -441,7 +552,7 @@ func (h *SkillsHandler) ImportExternal(w http.ResponseWriter, r *http.Request) {
 	stored, err := h.app.RegistryService.ImportSkill(skill.Content)
 	if err != nil {
 		h.app.Logger.Error("failed to import skill", "error", err)
-		http.Error(w, "Failed to import skill: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, "Failed to import skill. Please try again.", http.StatusBadRequest)
 		return
 	}
 
@@ -458,9 +569,21 @@ func (h *SkillsHandler) GetExternalContent(w http.ResponseWriter, r *http.Reques
 	sourceType := chi.URLParam(r, "source")
 	id := chi.URLParam(r, "*")
 
+	// Validate source type against whitelist
+	if !validSources[sourceType] {
+		http.Error(w, "Invalid source type", http.StatusBadRequest)
+		return
+	}
+
 	decodedID, err := url.PathUnescape(id)
 	if err != nil {
 		decodedID = id
+	}
+
+	// Validate ID to prevent path traversal
+	if containsPathTraversal(decodedID) {
+		http.Error(w, "Invalid skill ID", http.StatusBadRequest)
+		return
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
@@ -486,5 +609,5 @@ func (h *SkillsHandler) GetExternalContent(w http.ResponseWriter, r *http.Reques
 	}
 
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(`<pre class="text-sm whitespace-pre-wrap overflow-auto max-h-[600px] bg-terminal-bg p-4 border border-terminal-border">` + content + `</pre>`))
+	w.Write([]byte(`<pre class="text-sm whitespace-pre-wrap overflow-auto max-h-[600px] bg-terminal-bg p-4 border border-terminal-border">` + html.EscapeString(content) + `</pre>`))
 }

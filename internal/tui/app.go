@@ -15,6 +15,8 @@ const (
 	ViewHome View = iota
 	ViewConvert
 	ViewBrowse
+	ViewSearch
+	ViewMerge
 	ViewHelp
 )
 
@@ -23,12 +25,16 @@ type KeyMap struct {
 	Home    key.Binding
 	Convert key.Binding
 	Browse  key.Binding
+	Search  key.Binding
+	Merge   key.Binding
 	Help    key.Binding
 	Quit    key.Binding
 	Back    key.Binding
 	Enter   key.Binding
 	Up      key.Binding
 	Down    key.Binding
+	Tab     key.Binding
+	Space   key.Binding
 }
 
 // DefaultKeyMap returns the default key bindings.
@@ -45,6 +51,14 @@ func DefaultKeyMap() KeyMap {
 		Browse: key.NewBinding(
 			key.WithKeys("b"),
 			key.WithHelp("b", "browse"),
+		),
+		Search: key.NewBinding(
+			key.WithKeys("s"),
+			key.WithHelp("s", "search"),
+		),
+		Merge: key.NewBinding(
+			key.WithKeys("m"),
+			key.WithHelp("m", "merge"),
 		),
 		Help: key.NewBinding(
 			key.WithKeys("?"),
@@ -69,6 +83,14 @@ func DefaultKeyMap() KeyMap {
 		Down: key.NewBinding(
 			key.WithKeys("down", "j"),
 			key.WithHelp("down/j", "down"),
+		),
+		Tab: key.NewBinding(
+			key.WithKeys("tab"),
+			key.WithHelp("tab", "next"),
+		),
+		Space: key.NewBinding(
+			key.WithKeys(" "),
+			key.WithHelp("space", "toggle"),
 		),
 	}
 }
@@ -166,15 +188,17 @@ func DefaultStyles() Styles {
 
 // Model is the main TUI model.
 type Model struct {
-	registry   *registry.Service
-	keys       KeyMap
-	styles     Styles
-	width      int
-	height     int
-	view       View
-	homeModel  HomeModel
+	registry     *registry.Service
+	keys         KeyMap
+	styles       Styles
+	width        int
+	height       int
+	view         View
+	homeModel    HomeModel
 	convertModel ConvertModel
 	browseModel  BrowseModel
+	searchModel  SearchModel
+	mergeModel   MergeModel
 }
 
 // NewModel creates a new TUI model.
@@ -190,6 +214,8 @@ func NewModel(registryService *registry.Service) Model {
 		homeModel:    NewHomeModel(keys, styles),
 		convertModel: NewConvertModel(keys, styles),
 		browseModel:  NewBrowseModel(keys, styles, registryService),
+		searchModel:  NewSearchModel(keys, styles, registryService),
+		mergeModel:   NewMergeModel(keys, styles, registryService),
 	}
 }
 
@@ -210,6 +236,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.convertModel.height = msg.Height
 		m.browseModel.width = msg.Width
 		m.browseModel.height = msg.Height
+		m.searchModel.width = msg.Width
+		m.searchModel.height = msg.Height
+		m.mergeModel.width = msg.Width
+		m.mergeModel.height = msg.Height
 		return m, nil
 
 	case tea.KeyMsg:
@@ -226,9 +256,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				case 0:
 					m.view = ViewConvert
 				case 1:
+					m.view = ViewSearch
+				case 2:
+					m.view = ViewMerge
+					m.mergeModel = m.mergeModel.LoadSkills()
+				case 3:
 					m.view = ViewBrowse
 					m.browseModel = m.browseModel.LoadSkills()
-				case 2:
+				case 4:
 					return m, tea.Quit
 				}
 				return m, nil
@@ -253,6 +288,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.view = ViewBrowse
 			m.browseModel = m.browseModel.LoadSkills()
 			return m, nil
+		case key.Matches(msg, m.keys.Search):
+			m.view = ViewSearch
+			return m, nil
+		case key.Matches(msg, m.keys.Merge):
+			m.view = ViewMerge
+			m.mergeModel = m.mergeModel.LoadSkills()
+			return m, nil
 		}
 	}
 
@@ -271,6 +313,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		var newBrowse tea.Model
 		newBrowse, cmd = m.browseModel.Update(msg)
 		m.browseModel = newBrowse.(BrowseModel)
+	case ViewSearch:
+		var newSearch tea.Model
+		newSearch, cmd = m.searchModel.Update(msg)
+		m.searchModel = newSearch.(SearchModel)
+	case ViewMerge:
+		var newMerge tea.Model
+		newMerge, cmd = m.mergeModel.Update(msg)
+		m.mergeModel = newMerge.(MergeModel)
 	}
 
 	return m, cmd
@@ -287,6 +337,10 @@ func (m Model) View() string {
 		content = m.convertModel.View()
 	case ViewBrowse:
 		content = m.browseModel.View()
+	case ViewSearch:
+		content = m.searchModel.View()
+	case ViewMerge:
+		content = m.mergeModel.View()
 	default:
 		content = m.homeModel.View()
 	}

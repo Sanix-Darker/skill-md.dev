@@ -4,11 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 )
+
+// Maximum content size for GitLab skill content (1MB)
+const maxGitLabContentSize = 1 * 1024 * 1024
 
 const gitlabAPIURL = "https://gitlab.com/api/v4"
 
@@ -43,7 +47,7 @@ type gitlabProject struct {
 func NewGitLabSource(token string) *GitLabSource {
 	return &GitLabSource{
 		client: &http.Client{
-			Timeout: 15 * time.Second,
+			Timeout: 30 * time.Second,
 		},
 		token:   token,
 		enabled: true,
@@ -124,8 +128,12 @@ func (s *GitLabSource) Search(ctx context.Context, opts SearchOptions) (*SearchR
 	}
 
 	// Filter to only SKILL.md files and convert
+	// Limit sequential API calls to prevent timeout exhaustion
+	const maxDetailedFetches = 5
 	var skills []*ExternalSkill
 	seen := make(map[int]bool)
+	detailedCount := 0
+
 	for _, item := range searchResp {
 		if !strings.HasSuffix(item.Filename, "SKILL.md") {
 			continue
@@ -135,11 +143,24 @@ func (s *GitLabSource) Search(ctx context.Context, opts SearchOptions) (*SearchR
 		}
 		seen[item.ProjectID] = true
 
-		skill, err := s.itemToSkill(ctx, &item)
-		if err != nil {
-			continue
+		// For first N results, fetch full details
+		if detailedCount < maxDetailedFetches {
+			skill, err := s.itemToSkill(ctx, &item)
+			if err != nil {
+				continue
+			}
+			skills = append(skills, skill)
+			detailedCount++
+		} else {
+			// Return basic info without extra API calls
+			skills = append(skills, &ExternalSkill{
+				ID:        fmt.Sprintf("%d/%s", item.ProjectID, item.Path),
+				Slug:      fmt.Sprintf("gitlab-%d", item.ProjectID),
+				Name:      item.Filename,
+				Source:    SourceTypeGitLab,
+				SourceURL: fmt.Sprintf("https://gitlab.com/projects/%d", item.ProjectID),
+			})
 		}
-		skills = append(skills, skill)
 	}
 
 	return &SearchResult{
@@ -265,20 +286,10 @@ func (s *GitLabSource) getFileContent(ctx context.Context, projectID, path, ref 
 		return "", fmt.Errorf("status: %d", resp.StatusCode)
 	}
 
-	var content []byte
-	content = make([]byte, 0, 64*1024)
-	buf := make([]byte, 4096)
-	for {
-		n, err := resp.Body.Read(buf)
-		if n > 0 {
-			content = append(content, buf[:n]...)
-		}
-		if err != nil {
-			break
-		}
-		if len(content) > 1024*1024 {
-			break
-		}
+	// Use LimitReader to prevent memory exhaustion
+	content, err := io.ReadAll(io.LimitReader(resp.Body, maxGitLabContentSize))
+	if err != nil {
+		return "", fmt.Errorf("failed to read content: %w", err)
 	}
 
 	return string(content), nil

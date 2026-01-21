@@ -84,6 +84,9 @@ func (s *Service) ListSkills(page, pageSize int) ([]*skill.StoredSkill, int, err
 	if page < 1 {
 		page = 1
 	}
+	if page > 10000 {
+		page = 10000 // Prevent integer overflow
+	}
 	if pageSize < 1 {
 		pageSize = 20
 	}
@@ -92,6 +95,9 @@ func (s *Service) ListSkills(page, pageSize int) ([]*skill.StoredSkill, int, err
 	}
 
 	offset := (page - 1) * pageSize
+	if offset < 0 {
+		offset = 0 // Overflow protection
+	}
 	return s.repo.List(offset, pageSize)
 }
 
@@ -100,6 +106,9 @@ func (s *Service) SearchSkills(query string, page, pageSize int) ([]*skill.Store
 	if page < 1 {
 		page = 1
 	}
+	if page > 10000 {
+		page = 10000 // Prevent integer overflow
+	}
 	if pageSize < 1 {
 		pageSize = 20
 	}
@@ -108,6 +117,9 @@ func (s *Service) SearchSkills(query string, page, pageSize int) ([]*skill.Store
 	}
 
 	offset := (page - 1) * pageSize
+	if offset < 0 {
+		offset = 0 // Overflow protection
+	}
 	return s.repo.Search(query, offset, pageSize)
 }
 
@@ -116,11 +128,20 @@ func (s *Service) ListSkillsByTag(tag string, page, pageSize int) ([]*skill.Stor
 	if page < 1 {
 		page = 1
 	}
+	if page > 10000 {
+		page = 10000 // Prevent integer overflow
+	}
 	if pageSize < 1 {
 		pageSize = 20
 	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
 
 	offset := (page - 1) * pageSize
+	if offset < 0 {
+		offset = 0 // Overflow protection
+	}
 	return s.repo.ListByTag(tag, offset, pageSize)
 }
 

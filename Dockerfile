@@ -27,8 +27,11 @@ RUN apk add --no-cache ca-certificates
 # Copy binary from builder
 COPY --from=builder /app/skillmd /usr/local/bin/skillmd
 
-# Create data directory
-RUN mkdir -p /data
+# Create non-root user and data directory
+RUN addgroup -g 1000 skillmd && \
+    adduser -u 1000 -G skillmd -s /sbin/nologin -D skillmd && \
+    mkdir -p /data && \
+    chown -R skillmd:skillmd /data
 
 # Expose port
 EXPOSE 8080
@@ -36,6 +39,9 @@ EXPOSE 8080
 # Set environment variables
 ENV SKILLMD_DB=/data/skill-md.db
 ENV SKILLMD_PORT=8080
+
+# Switch to non-root user
+USER skillmd:skillmd
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

@@ -295,7 +295,11 @@ function mergeSelectedSkills() {
         mergeBtn.textContent = 'Merge Selected Skills';
     })
     .catch(err => {
-        document.getElementById('merge-output').innerHTML = `<div class="text-red-400">Error: ${err.message}</div>`;
+        // Use textContent to prevent XSS from error messages
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'text-red-400';
+        errorDiv.textContent = 'Error: ' + err.message;
+        document.getElementById('merge-output').replaceChildren(errorDiv);
         mergeBtn.disabled = false;
         mergeBtn.textContent = 'Merge Selected Skills';
     });

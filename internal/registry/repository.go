@@ -151,13 +151,38 @@ func (r *Repository) List(offset, limit int) ([]*skill.StoredSkill, int, error) 
 	return skills, total, nil
 }
 
+// sanitizeFTSQuery sanitizes a query string for SQLite FTS to prevent injection
+func sanitizeFTSQuery(query string) string {
+	// Remove FTS5 special characters that could be used for injection
+	// See: https://www.sqlite.org/fts5.html#full_text_query_syntax
+	dangerous := []string{
+		"*", ":", "^", "(", ")", "{", "}", "[", "]", "\"", "'",
+		"AND", "OR", "NOT", "NEAR",
+	}
+	result := query
+	for _, char := range dangerous {
+		result = strings.ReplaceAll(result, char, " ")
+	}
+	// Remove multiple spaces and trim
+	for strings.Contains(result, "  ") {
+		result = strings.ReplaceAll(result, "  ", " ")
+	}
+	return strings.TrimSpace(result)
+}
+
 // Search performs full-text search.
 func (r *Repository) Search(query string, offset, limit int) ([]*skill.StoredSkill, int, error) {
+	// Sanitize query to prevent FTS injection
+	safeQuery := sanitizeFTSQuery(query)
+	if safeQuery == "" {
+		return []*skill.StoredSkill{}, 0, nil
+	}
+
 	// Get total count
 	var total int
 	err := r.db.QueryRow(`
 		SELECT COUNT(*) FROM skills_fts WHERE skills_fts MATCH ?
-	`, query).Scan(&total)
+	`, safeQuery).Scan(&total)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count search results: %w", err)
 	}
@@ -170,7 +195,7 @@ func (r *Repository) Search(query string, offset, limit int) ([]*skill.StoredSki
 		WHERE skills_fts MATCH ?
 		ORDER BY rank
 		LIMIT ? OFFSET ?
-	`, query, limit, offset)
+	`, safeQuery, limit, offset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to search skills: %w", err)
 	}

@@ -34,6 +34,10 @@ func renderParameters(b *strings.Builder, params map[string]interface{}, indent 
 
 // Render generates the SKILL.md content from a Skill struct.
 func Render(s *Skill) string {
+	if s == nil {
+		return ""
+	}
+
 	var b strings.Builder
 
 	// Write frontmatter
