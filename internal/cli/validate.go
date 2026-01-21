@@ -20,7 +20,7 @@ Checks performed:
   - Section hierarchy
 
 Examples:
-  skillforge validate skill.md`,
+  skillmd validate skill.md`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		inputPath := args[0]

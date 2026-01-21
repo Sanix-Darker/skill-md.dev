@@ -36,15 +36,15 @@ Supported formats:
   - text:         Plain text descriptions
 
 Examples:
-  skillforge convert api.yaml
-  skillforge convert schema.graphql -f graphql
-  skillforge convert api.yaml -o skill.md -n "My API"
-  skillforge convert events.yaml -f asyncapi
-  skillforge convert service.proto -f proto
-  skillforge convert api.raml -f raml
-  skillforge convert service.wsdl -f wsdl
-  skillforge convert api.apib -f apiblueprint
-  skillforge convert --url https://docs.example.com/api`,
+  skillmd convert api.yaml
+  skillmd convert schema.graphql -f graphql
+  skillmd convert api.yaml -o skill.md -n "My API"
+  skillmd convert events.yaml -f asyncapi
+  skillmd convert service.proto -f proto
+  skillmd convert api.raml -f raml
+  skillmd convert service.wsdl -f wsdl
+  skillmd convert api.apib -f apiblueprint
+  skillmd convert --url https://docs.example.com/api`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var content []byte

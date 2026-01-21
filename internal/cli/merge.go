@@ -27,8 +27,8 @@ The merge process:
   4. Resolves any conflicts
 
 Examples:
-  skillforge merge api1.md api2.md -o combined.md
-  skillforge merge *.md -n "Combined API Skills" --dedupe`,
+  skillmd merge api1.md api2.md -o combined.md
+  skillmd merge *.md -n "Combined API Skills" --dedupe`,
 	Args: cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var skills []*skill.Skill
