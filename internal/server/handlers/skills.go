@@ -105,7 +105,8 @@ func (h *SkillsHandler) Browse(w http.ResponseWriter, r *http.Request) {
 		"PrevPage":   page - 1,
 	}
 
-	if middleware.IsHTMXRequest(r) {
+	htmxReq := middleware.GetHTMX(r)
+	if htmxReq.IsHTMX && !htmxReq.IsBoosted {
 		if err := web.RenderPartial(w, "skill-list.html", data); err != nil {
 			h.app.Logger.Error("failed to render skill list", "error", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -217,6 +218,7 @@ func (h *SkillsHandler) List(w http.ResponseWriter, r *http.Request) {
 func (h *SkillsHandler) Search(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	source := r.URL.Query().Get("source")
+	mergeMode := r.URL.Query().Get("merge_mode") == "true"
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 	if page < 1 {
 		page = 1
@@ -269,7 +271,13 @@ func (h *SkillsHandler) Search(w http.ResponseWriter, r *http.Request) {
 		"PrevPage":   page - 1,
 	}
 
-	if err := web.RenderPartial(w, "skill-list.html", data); err != nil {
+	// Use merge-specific template when in merge mode
+	templateName := "skill-list.html"
+	if mergeMode {
+		templateName = "merge-skill-list.html"
+	}
+
+	if err := web.RenderPartial(w, templateName, data); err != nil {
 		h.app.Logger.Error("failed to render skill list", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
@@ -312,10 +320,10 @@ func (h *SkillsHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if middleware.IsHTMXRequest(r) {
-		w.Header().Set("HX-Redirect", "/browse")
+		w.Header().Set("HX-Redirect", "/merge")
 		w.WriteHeader(http.StatusOK)
 	} else {
-		http.Redirect(w, r, "/browse", http.StatusSeeOther)
+		http.Redirect(w, r, "/merge", http.StatusSeeOther)
 	}
 }
 

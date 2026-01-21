@@ -9,6 +9,7 @@ import (
 
 	"github.com/pb33f/libopenapi"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
+	v2 "github.com/pb33f/libopenapi/datamodel/high/v2"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/sanixdarker/skillforge/pkg/skill"
 )
@@ -33,18 +34,54 @@ func (c *OpenAPIConverter) CanHandle(filename string, content []byte) bool {
 }
 
 func (c *OpenAPIConverter) Convert(content []byte, opts *Options) (*skill.Skill, error) {
+	// Strip BOM (Byte Order Mark) if present
+	content = stripBOM(content)
+
+	// Try to detect if it's OpenAPI 2.x (Swagger) or 3.x
+	isSwagger := bytes.Contains(content, []byte("swagger:")) || bytes.Contains(content, []byte(`"swagger":`))
+
 	doc, err := libopenapi.NewDocument(content)
 	if err != nil {
+		// Provide more helpful error message
+		if bytes.Contains(content, []byte("openapi:")) || bytes.Contains(content, []byte(`"openapi":`)) {
+			return nil, fmt.Errorf("failed to parse OpenAPI 3.x document: %w. Ensure the file is a valid OpenAPI 3.x specification", err)
+		}
+		if isSwagger {
+			return nil, fmt.Errorf("failed to parse Swagger 2.x document: %w. Ensure the file is a valid Swagger 2.x specification", err)
+		}
 		return nil, fmt.Errorf("failed to parse OpenAPI document: %w", err)
 	}
 
-	model, err := doc.BuildV3Model()
-	if err != nil {
-		return nil, fmt.Errorf("failed to build OpenAPI model: %w", err)
+	// Check document version and build appropriate model
+	version := doc.GetVersion()
+
+	// Handle OpenAPI 3.x
+	if strings.HasPrefix(version, "3.") {
+		model, err := doc.BuildV3Model()
+		if err != nil {
+			return nil, fmt.Errorf("failed to build OpenAPI 3.x model: %w", err)
+		}
+		return c.buildSkill(model, opts), nil
 	}
 
-	s := c.buildSkill(model, opts)
-	return s, nil
+	// Handle Swagger 2.x (OpenAPI 2.0)
+	if strings.HasPrefix(version, "2.") {
+		model, err := doc.BuildV2Model()
+		if err != nil {
+			return nil, fmt.Errorf("failed to build Swagger 2.x model: %w", err)
+		}
+		return c.buildSkillFromV2(model, opts), nil
+	}
+
+	return nil, fmt.Errorf("unsupported OpenAPI version: %s. Supported versions are 2.x (Swagger) and 3.x", version)
+}
+
+// stripBOM removes UTF-8 BOM if present at the beginning of content.
+func stripBOM(content []byte) []byte {
+	if len(content) >= 3 && content[0] == 0xEF && content[1] == 0xBB && content[2] == 0xBF {
+		return content[3:]
+	}
+	return content
 }
 
 func (c *OpenAPIConverter) buildSkill(model *libopenapi.DocumentModel[v3.Document], opts *Options) *skill.Skill {
@@ -1014,6 +1051,617 @@ func (c *OpenAPIConverter) buildBestPracticesSection(doc *v3.Document) string {
 			break
 		}
 	}
+
+	return strings.TrimSpace(b.String())
+}
+
+// buildSkillFromV2 builds a skill from a Swagger 2.x (OpenAPI 2.0) model.
+func (c *OpenAPIConverter) buildSkillFromV2(model *libopenapi.DocumentModel[v2.Swagger], opts *Options) *skill.Skill {
+	doc := model.Model
+
+	name := "API Skill"
+	if opts != nil && opts.Name != "" {
+		name = opts.Name
+	} else if doc.Info != nil && doc.Info.Title != "" {
+		name = doc.Info.Title
+	}
+
+	description := ""
+	if doc.Info != nil && doc.Info.Description != "" {
+		description = doc.Info.Description
+	}
+
+	s := skill.NewSkill(name, description)
+	s.Frontmatter.SourceType = "swagger"
+	if opts != nil && opts.SourcePath != "" {
+		s.Frontmatter.Source = opts.SourcePath
+	}
+
+	// Add version info
+	if doc.Info != nil && doc.Info.Version != "" {
+		s.Frontmatter.Version = doc.Info.Version
+	}
+
+	// Extract tags as skill tags
+	if doc.Tags != nil {
+		for _, tag := range doc.Tags {
+			s.Frontmatter.Tags = append(s.Frontmatter.Tags, tag.Name)
+		}
+	}
+
+	// Count endpoints for metadata
+	endpointCount := c.countEndpointsV2(&doc)
+	s.Frontmatter.EndpointCount = endpointCount
+
+	// Extract auth methods for metadata
+	authMethods := c.extractAuthMethodsV2(&doc)
+	s.Frontmatter.AuthMethods = authMethods
+
+	// Set base URL if available
+	if doc.Host != "" {
+		scheme := "https"
+		if len(doc.Schemes) > 0 {
+			scheme = doc.Schemes[0]
+		}
+		basePath := doc.BasePath
+		if basePath == "" {
+			basePath = "/"
+		}
+		s.Frontmatter.BaseURL = fmt.Sprintf("%s://%s%s", scheme, doc.Host, basePath)
+	}
+
+	// Determine difficulty based on complexity
+	s.Frontmatter.Difficulty = c.determineDifficultyV2(&doc, endpointCount)
+
+	// Add Quick Start section
+	s.AddSection("Quick Start", 2, c.buildQuickStartV2(&doc))
+
+	// Add overview section
+	s.AddSection("Overview", 2, c.buildOverviewV2(&doc))
+
+	// Add authentication section if security definitions exist
+	if doc.SecurityDefinitions != nil && doc.SecurityDefinitions.Definitions.Len() > 0 {
+		s.AddSection("Authentication", 2, c.buildAuthSectionV2(&doc))
+	}
+
+	// Add endpoints section
+	s.AddSection("Endpoints", 2, c.buildEndpointsSectionV2(&doc))
+
+	// Add schemas section if definitions exist
+	if doc.Definitions != nil && doc.Definitions.Definitions.Len() > 0 {
+		s.AddSection("Data Models", 2, c.buildSchemasSectionV2(&doc))
+	}
+
+	// Add Error Handling section
+	s.AddSection("Error Handling", 2, c.buildErrorHandlingSectionV2(&doc))
+
+	// Add Best Practices section
+	s.AddSection("Best Practices", 2, c.buildBestPracticesSectionV2(&doc))
+
+	return s
+}
+
+func (c *OpenAPIConverter) countEndpointsV2(doc *v2.Swagger) int {
+	count := 0
+	if doc.Paths == nil {
+		return 0
+	}
+	for pair := doc.Paths.PathItems.First(); pair != nil; pair = pair.Next() {
+		item := pair.Value()
+		if item.Get != nil {
+			count++
+		}
+		if item.Post != nil {
+			count++
+		}
+		if item.Put != nil {
+			count++
+		}
+		if item.Delete != nil {
+			count++
+		}
+		if item.Patch != nil {
+			count++
+		}
+		if item.Head != nil {
+			count++
+		}
+		if item.Options != nil {
+			count++
+		}
+	}
+	return count
+}
+
+func (c *OpenAPIConverter) extractAuthMethodsV2(doc *v2.Swagger) []string {
+	var methods []string
+	if doc.SecurityDefinitions == nil {
+		return methods
+	}
+	for pair := doc.SecurityDefinitions.Definitions.First(); pair != nil; pair = pair.Next() {
+		scheme := pair.Value()
+		methods = append(methods, scheme.Type)
+	}
+	return methods
+}
+
+func (c *OpenAPIConverter) determineDifficultyV2(doc *v2.Swagger, endpointCount int) string {
+	hasAuth := doc.SecurityDefinitions != nil && doc.SecurityDefinitions.Definitions.Len() > 0
+	schemaCount := 0
+	if doc.Definitions != nil {
+		schemaCount = doc.Definitions.Definitions.Len()
+	}
+
+	if endpointCount <= 5 && schemaCount <= 5 && !hasAuth {
+		return "novice"
+	} else if endpointCount <= 20 && schemaCount <= 20 {
+		return "intermediate"
+	}
+	return "advanced"
+}
+
+func (c *OpenAPIConverter) buildQuickStartV2(doc *v2.Swagger) string {
+	var b strings.Builder
+
+	b.WriteString("Get started with this API in minutes.\n\n")
+
+	// Step 1: Base URL
+	b.WriteString("### 1. Set Your Base URL\n\n")
+	if doc.Host != "" {
+		scheme := "https"
+		if len(doc.Schemes) > 0 {
+			scheme = doc.Schemes[0]
+		}
+		basePath := doc.BasePath
+		if basePath == "" {
+			basePath = "/"
+		}
+		b.WriteString(fmt.Sprintf("```\n%s://%s%s\n```\n\n", scheme, doc.Host, basePath))
+	} else {
+		b.WriteString("```\nhttps://api.example.com\n```\n\n")
+	}
+
+	// Step 2: Authentication
+	if doc.SecurityDefinitions != nil && doc.SecurityDefinitions.Definitions.Len() > 0 {
+		b.WriteString("### 2. Authenticate\n\n")
+		for pair := doc.SecurityDefinitions.Definitions.First(); pair != nil; pair = pair.Next() {
+			scheme := pair.Value()
+			switch scheme.Type {
+			case "basic":
+				b.WriteString("Use HTTP Basic authentication:\n\n")
+				b.WriteString("```\nAuthorization: Basic BASE64_ENCODED_CREDENTIALS\n```\n\n")
+			case "apiKey":
+				b.WriteString(fmt.Sprintf("Add your API key to the `%s` %s:\n\n", scheme.Name, scheme.In))
+				if scheme.In == "header" {
+					b.WriteString(fmt.Sprintf("```\n%s: YOUR_API_KEY\n```\n\n", scheme.Name))
+				} else if scheme.In == "query" {
+					b.WriteString(fmt.Sprintf("```\n?%s=YOUR_API_KEY\n```\n\n", scheme.Name))
+				}
+			case "oauth2":
+				b.WriteString("Configure OAuth 2.0 authentication. See the Authentication section for flow details.\n\n")
+			}
+			break // Just show the first auth method for quick start
+		}
+	}
+
+	// Step 3: Make your first request
+	b.WriteString("### 3. Make Your First Request\n\n")
+	if doc.Paths != nil {
+		// Find a simple GET endpoint to demonstrate
+		for pair := doc.Paths.PathItems.First(); pair != nil; pair = pair.Next() {
+			path := pair.Key()
+			item := pair.Value()
+			if item.Get != nil {
+				baseURL := "https://api.example.com"
+				if doc.Host != "" {
+					scheme := "https"
+					if len(doc.Schemes) > 0 {
+						scheme = doc.Schemes[0]
+					}
+					basePath := doc.BasePath
+					if basePath == "" {
+						basePath = ""
+					}
+					baseURL = fmt.Sprintf("%s://%s%s", scheme, doc.Host, strings.TrimSuffix(basePath, "/"))
+				}
+				b.WriteString("**cURL:**\n")
+				b.WriteString("```bash\n")
+				b.WriteString(fmt.Sprintf("curl -X GET \"%s%s\" \\\n", baseURL, path))
+				b.WriteString("  -H \"Accept: application/json\"\n")
+				b.WriteString("```\n\n")
+				break
+			}
+		}
+	}
+
+	return strings.TrimSpace(b.String())
+}
+
+func (c *OpenAPIConverter) buildOverviewV2(doc *v2.Swagger) string {
+	var b strings.Builder
+
+	if doc.Info != nil {
+		if doc.Info.Description != "" {
+			b.WriteString(doc.Info.Description)
+			b.WriteString("\n\n")
+		}
+
+		if doc.Info.Contact != nil {
+			b.WriteString("**Contact**: ")
+			if doc.Info.Contact.Name != "" {
+				b.WriteString(doc.Info.Contact.Name)
+			}
+			if doc.Info.Contact.Email != "" {
+				b.WriteString(fmt.Sprintf(" <%s>", doc.Info.Contact.Email))
+			}
+			if doc.Info.Contact.URL != "" {
+				b.WriteString(fmt.Sprintf(" ([website](%s))", doc.Info.Contact.URL))
+			}
+			b.WriteString("\n")
+		}
+
+		if doc.Info.License != nil {
+			b.WriteString(fmt.Sprintf("**License**: %s", doc.Info.License.Name))
+			if doc.Info.License.URL != "" {
+				b.WriteString(fmt.Sprintf(" ([details](%s))", doc.Info.License.URL))
+			}
+			b.WriteString("\n")
+		}
+
+		if doc.Info.TermsOfService != "" {
+			b.WriteString(fmt.Sprintf("**Terms of Service**: %s\n", doc.Info.TermsOfService))
+		}
+	}
+
+	// Add base URL
+	if doc.Host != "" {
+		scheme := "https"
+		if len(doc.Schemes) > 0 {
+			scheme = doc.Schemes[0]
+		}
+		basePath := doc.BasePath
+		if basePath == "" {
+			basePath = "/"
+		}
+		b.WriteString(fmt.Sprintf("\n**Base URL**: `%s://%s%s`\n", scheme, doc.Host, basePath))
+	}
+
+	// Add external docs if available
+	if doc.ExternalDocs != nil && doc.ExternalDocs.URL != "" {
+		b.WriteString(fmt.Sprintf("\n**External Documentation**: [%s](%s)\n",
+			doc.ExternalDocs.Description, doc.ExternalDocs.URL))
+	}
+
+	return strings.TrimSpace(b.String())
+}
+
+func (c *OpenAPIConverter) buildAuthSectionV2(doc *v2.Swagger) string {
+	var b strings.Builder
+
+	for pair := doc.SecurityDefinitions.Definitions.First(); pair != nil; pair = pair.Next() {
+		name := pair.Key()
+		scheme := pair.Value()
+		b.WriteString(fmt.Sprintf("### %s\n\n", name))
+		b.WriteString(fmt.Sprintf("**Type**: `%s`\n", scheme.Type))
+
+		if scheme.In != "" {
+			b.WriteString(fmt.Sprintf("**In**: `%s`\n", scheme.In))
+		}
+		if scheme.Name != "" {
+			b.WriteString(fmt.Sprintf("**Parameter Name**: `%s`\n", scheme.Name))
+		}
+		if scheme.Description != "" {
+			b.WriteString(fmt.Sprintf("\n%s\n", scheme.Description))
+		}
+
+		b.WriteString("\n**Example Usage**:\n\n")
+		switch scheme.Type {
+		case "basic":
+			b.WriteString("```bash\n")
+			b.WriteString("curl -u username:password https://api.example.com/resource\n")
+			b.WriteString("```\n")
+		case "apiKey":
+			if scheme.In == "header" {
+				b.WriteString("```bash\n")
+				b.WriteString(fmt.Sprintf("curl -H \"%s: your-api-key\" https://api.example.com/resource\n", scheme.Name))
+				b.WriteString("```\n")
+			} else if scheme.In == "query" {
+				b.WriteString("```bash\n")
+				b.WriteString(fmt.Sprintf("curl \"https://api.example.com/resource?%s=your-api-key\"\n", scheme.Name))
+				b.WriteString("```\n")
+			}
+		case "oauth2":
+			b.WriteString("```javascript\n")
+			b.WriteString("// OAuth 2.0 flow\n")
+			b.WriteString("const token = await getOAuthToken(clientId, clientSecret);\n")
+			b.WriteString("fetch('/resource', {\n")
+			b.WriteString("  headers: { 'Authorization': `Bearer ${token}` }\n")
+			b.WriteString("});\n")
+			b.WriteString("```\n")
+		}
+		b.WriteString("\n")
+	}
+
+	return strings.TrimSpace(b.String())
+}
+
+func (c *OpenAPIConverter) buildEndpointsSectionV2(doc *v2.Swagger) string {
+	var b strings.Builder
+
+	if doc.Paths == nil {
+		return "No endpoints defined."
+	}
+
+	// Collect and sort paths
+	var paths []string
+	for pair := doc.Paths.PathItems.First(); pair != nil; pair = pair.Next() {
+		paths = append(paths, pair.Key())
+	}
+	sort.Strings(paths)
+
+	for _, path := range paths {
+		pathItem, _ := doc.Paths.PathItems.Get(path)
+		b.WriteString(c.buildPathSectionV2(path, pathItem, doc))
+	}
+
+	return strings.TrimSpace(b.String())
+}
+
+func (c *OpenAPIConverter) buildPathSectionV2(path string, item *v2.PathItem, doc *v2.Swagger) string {
+	var b strings.Builder
+
+	operations := []struct {
+		method string
+		op     *v2.Operation
+	}{
+		{"GET", item.Get},
+		{"POST", item.Post},
+		{"PUT", item.Put},
+		{"DELETE", item.Delete},
+		{"PATCH", item.Patch},
+		{"HEAD", item.Head},
+		{"OPTIONS", item.Options},
+	}
+
+	for _, entry := range operations {
+		if entry.op == nil {
+			continue
+		}
+
+		method := entry.method
+		op := entry.op
+
+		b.WriteString(fmt.Sprintf("### %s %s\n\n", method, path))
+
+		// Tags
+		if len(op.Tags) > 0 {
+			b.WriteString(fmt.Sprintf("**Tags**: %s\n\n", strings.Join(op.Tags, ", ")))
+		}
+
+		if op.Summary != "" {
+			b.WriteString(fmt.Sprintf("**%s**\n\n", op.Summary))
+		}
+
+		if op.Description != "" {
+			b.WriteString(op.Description)
+			b.WriteString("\n\n")
+		}
+
+		// Deprecated warning
+		if op.Deprecated {
+			b.WriteString("> ⚠️ **Deprecated**: This endpoint is deprecated and may be removed in future versions.\n\n")
+		}
+
+		// Parameters
+		if len(op.Parameters) > 0 {
+			b.WriteString("**Parameters**:\n\n")
+			b.WriteString("| Name | In | Type | Required | Description |\n")
+			b.WriteString("|------|-----|------|----------|-------------|\n")
+			for _, param := range op.Parameters {
+				required := "No"
+				if param.Required != nil && *param.Required {
+					required = "Yes"
+				}
+				paramType := "string"
+				if param.Type != "" {
+					paramType = param.Type
+				}
+				desc := strings.ReplaceAll(param.Description, "\n", " ")
+				b.WriteString(fmt.Sprintf("| `%s` | %s | `%s` | %s | %s |\n",
+					param.Name, param.In, paramType, required, desc))
+			}
+			b.WriteString("\n")
+		}
+
+		// Responses
+		if op.Responses != nil && op.Responses.Codes != nil {
+			b.WriteString("**Responses**:\n\n")
+			for pair := op.Responses.Codes.First(); pair != nil; pair = pair.Next() {
+				code := pair.Key()
+				resp := pair.Value()
+				desc := ""
+				if resp.Description != "" {
+					desc = strings.ReplaceAll(resp.Description, "\n", " ")
+				}
+				b.WriteString(fmt.Sprintf("- **%s**: %s\n", code, desc))
+			}
+			b.WriteString("\n")
+		}
+
+		// Code examples
+		b.WriteString(c.buildCodeExamplesV2(method, path, doc))
+	}
+
+	return b.String()
+}
+
+func (c *OpenAPIConverter) buildCodeExamplesV2(method, path string, doc *v2.Swagger) string {
+	var b strings.Builder
+
+	baseURL := "https://api.example.com"
+	if doc.Host != "" {
+		scheme := "https"
+		if len(doc.Schemes) > 0 {
+			scheme = doc.Schemes[0]
+		}
+		basePath := strings.TrimSuffix(doc.BasePath, "/")
+		baseURL = fmt.Sprintf("%s://%s%s", scheme, doc.Host, basePath)
+	}
+
+	b.WriteString("**Code Examples**:\n\n")
+
+	// cURL example
+	b.WriteString("<details>\n<summary>cURL</summary>\n\n")
+	b.WriteString("```bash\n")
+	b.WriteString(fmt.Sprintf("curl -X %s \"%s%s\" \\\n", method, baseURL, path))
+	b.WriteString("  -H \"Accept: application/json\"")
+	if method == "POST" || method == "PUT" || method == "PATCH" {
+		b.WriteString(" \\\n  -H \"Content-Type: application/json\"")
+		b.WriteString(" \\\n  -d '{\"key\": \"value\"}'")
+	}
+	b.WriteString("\n```\n\n")
+	b.WriteString("</details>\n\n")
+
+	return b.String()
+}
+
+func (c *OpenAPIConverter) buildSchemasSectionV2(doc *v2.Swagger) string {
+	var b strings.Builder
+
+	// Collect and sort schema names
+	var schemaNames []string
+	for pair := doc.Definitions.Definitions.First(); pair != nil; pair = pair.Next() {
+		schemaNames = append(schemaNames, pair.Key())
+	}
+	sort.Strings(schemaNames)
+
+	for _, name := range schemaNames {
+		schemaProxy, _ := doc.Definitions.Definitions.Get(name)
+		schema := schemaProxy.Schema()
+
+		b.WriteString(fmt.Sprintf("### %s\n\n", name))
+
+		if schema.Description != "" {
+			b.WriteString(schema.Description)
+			b.WriteString("\n\n")
+		}
+
+		// Show type
+		if len(schema.Type) > 0 {
+			b.WriteString(fmt.Sprintf("**Type**: `%s`\n\n", schema.Type[0]))
+		}
+
+		// List properties
+		if schema.Properties != nil && schema.Properties.Len() > 0 {
+			b.WriteString("| Property | Type | Required | Description |\n")
+			b.WriteString("|----------|------|----------|-------------|\n")
+
+			requiredSet := make(map[string]bool)
+			for _, r := range schema.Required {
+				requiredSet[r] = true
+			}
+
+			for pair := schema.Properties.First(); pair != nil; pair = pair.Next() {
+				propName := pair.Key()
+				prop := pair.Value().Schema()
+
+				propType := "any"
+				if len(prop.Type) > 0 {
+					propType = prop.Type[0]
+					if prop.Format != "" {
+						propType = fmt.Sprintf("%s (%s)", propType, prop.Format)
+					}
+				}
+
+				required := "No"
+				if requiredSet[propName] {
+					required = "Yes"
+				}
+
+				desc := strings.ReplaceAll(prop.Description, "\n", " ")
+				b.WriteString(fmt.Sprintf("| `%s` | `%s` | %s | %s |\n", propName, propType, required, desc))
+			}
+			b.WriteString("\n")
+		}
+	}
+
+	return strings.TrimSpace(b.String())
+}
+
+func (c *OpenAPIConverter) buildErrorHandlingSectionV2(doc *v2.Swagger) string {
+	var b strings.Builder
+
+	b.WriteString("This section documents common error responses and how to handle them.\n\n")
+
+	// Collect error codes from all operations
+	errorCodes := make(map[string]string)
+	if doc.Paths != nil {
+		for pair := doc.Paths.PathItems.First(); pair != nil; pair = pair.Next() {
+			item := pair.Value()
+			ops := []*v2.Operation{item.Get, item.Post, item.Put, item.Delete, item.Patch}
+			for _, op := range ops {
+				if op != nil && op.Responses != nil && op.Responses.Codes != nil {
+					for respPair := op.Responses.Codes.First(); respPair != nil; respPair = respPair.Next() {
+						code := respPair.Key()
+						// Only collect 4xx and 5xx codes
+						if strings.HasPrefix(code, "4") || strings.HasPrefix(code, "5") {
+							resp := respPair.Value()
+							if resp.Description != "" {
+								errorCodes[code] = resp.Description
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if len(errorCodes) > 0 {
+		b.WriteString("### Error Codes\n\n")
+		b.WriteString("| Code | Description | Recommended Action |\n")
+		b.WriteString("|------|-------------|-------------------|\n")
+
+		// Sort codes
+		codes := make([]string, 0, len(errorCodes))
+		for code := range errorCodes {
+			codes = append(codes, code)
+		}
+		sort.Strings(codes)
+
+		for _, code := range codes {
+			action := c.getErrorAction(code)
+			desc := strings.ReplaceAll(errorCodes[code], "\n", " ")
+			b.WriteString(fmt.Sprintf("| %s | %s | %s |\n", code, desc, action))
+		}
+		b.WriteString("\n")
+	}
+
+	b.WriteString("### Handling Errors\n\n")
+	b.WriteString("Always check the HTTP status code and handle errors appropriately.\n")
+
+	return strings.TrimSpace(b.String())
+}
+
+func (c *OpenAPIConverter) buildBestPracticesSectionV2(doc *v2.Swagger) string {
+	var b strings.Builder
+
+	b.WriteString("Follow these recommendations for optimal API usage.\n\n")
+
+	b.WriteString("### Authentication\n\n")
+	b.WriteString("- Store credentials securely (environment variables, secret managers)\n")
+	b.WriteString("- Never commit API keys to version control\n")
+	b.WriteString("- Rotate credentials periodically\n\n")
+
+	b.WriteString("### Request Handling\n\n")
+	b.WriteString("- Always set appropriate `Content-Type` and `Accept` headers\n")
+	b.WriteString("- Validate input before sending requests\n")
+	b.WriteString("- Use HTTPS for all requests\n")
+	b.WriteString("- Implement request timeouts\n\n")
+
+	b.WriteString("### Error Handling\n\n")
+	b.WriteString("- Implement exponential backoff for retries\n")
+	b.WriteString("- Log errors with request context for debugging\n")
+	b.WriteString("- Handle network errors gracefully\n")
 
 	return strings.TrimSpace(b.String())
 }

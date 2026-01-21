@@ -67,7 +67,6 @@ func (s *Server) setupRoutes() {
 	s.router.Get("/", homeHandler.Index)
 	s.router.Get("/convert", convertHandler.Index)
 	s.router.Get("/merge", mergeHandler.Index)
-	s.router.Get("/browse", skillsHandler.Browse)
 	s.router.Get("/skill/{slug}", skillsHandler.View)
 
 	// External skill routes
