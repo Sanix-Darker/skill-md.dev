@@ -31,9 +31,9 @@ var serveCmd = &cobra.Command{
 Optionally starts an SSH server for terminal UI access.
 
 Examples:
-  skillforge serve
-  skillforge serve --port 8080 --ssh-port 2222
-  skillforge serve --no-ssh
+  skillmd serve
+  skillmd serve --port 8080 --ssh-port 2222
+  skillmd serve --no-ssh
 
 Connect via SSH:
   ssh localhost -p 2222`,

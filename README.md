@@ -30,7 +30,7 @@ curl -fsSL https://raw.githubusercontent.com/sanixdarker/skill-md/main/scripts/i
 ### From Source
 
 ```bash
-go install github.com/sanixdarker/skill-md/cmd/skillforge@latest
+go install github.com/sanixdarker/skill-md/cmd/skillmd@latest
 ```
 
 ### Docker
@@ -46,7 +46,7 @@ docker run -p 8080:8080 sanixdarker/skill-md
 Start the web server:
 
 ```bash
-skillforge serve
+skillmd serve
 # Server running at http://localhost:8080
 ```
 
@@ -61,16 +61,16 @@ Convert a specification file to SKILL.md:
 
 ```bash
 # Auto-detect format
-skillforge convert api.yaml
+skillmd convert api.yaml
 
 # Specify format
-skillforge convert schema.graphql -f graphql
+skillmd convert schema.graphql -f graphql
 
 # Save to file
-skillforge convert api.yaml -o skill.md
+skillmd convert api.yaml -o skill.md
 
 # Custom name
-skillforge convert api.yaml -n "My API Skill"
+skillmd convert api.yaml -n "My API Skill"
 ```
 
 Supported formats:
@@ -92,16 +92,16 @@ Merge multiple SKILL.md files:
 
 ```bash
 # Basic merge
-skillforge merge skill1.md skill2.md
+skillmd merge skill1.md skill2.md
 
 # Save to file
-skillforge merge skill1.md skill2.md -o combined.md
+skillmd merge skill1.md skill2.md -o combined.md
 
 # With deduplication
-skillforge merge skill1.md skill2.md --dedupe
+skillmd merge skill1.md skill2.md --dedupe
 
 # Custom name
-skillforge merge skill1.md skill2.md -n "Combined Skills"
+skillmd merge skill1.md skill2.md -n "Combined Skills"
 ```
 
 ### Validate
@@ -109,7 +109,7 @@ skillforge merge skill1.md skill2.md -n "Combined Skills"
 Validate a SKILL.md file:
 
 ```bash
-skillforge validate skill.md
+skillmd validate skill.md
 ```
 
 ## SKILL.md Format
@@ -188,8 +188,8 @@ make docker-compose
 ## Project Structure
 
 ```
-skillforge/
-├── cmd/skillforge/        # CLI entry point
+skillmd/
+├── cmd/skillmd/        # CLI entry point
 ├── internal/
 │   ├── app/               # Application container
 │   ├── cli/               # CLI commands

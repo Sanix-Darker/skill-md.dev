@@ -17,7 +17,19 @@ const maxExternalContentSize = 1 * 1024 * 1024
 // Known skill repositories indexed by skills.sh
 var knownSkillRepos = []string{
 	"vercel-labs/agent-skills",
-	"anthropics/anthropic-cookbook",
+	"anthropics/skills",
+	"expo/skills",
+	"better-auth/skills",
+	"remotion-dev/skills",
+	"onmax/nuxt-skills",
+	"ComposioHQ/skills",
+	"trailofbits/skills",
+	"cloudflare/skills",
+	"dify/skills",
+	"jimliu/baoyu-skills",
+	"obra/superpowers",
+	"waynesutton/convexskills",
+	"coreyhaines31/marketingskills",
 }
 
 // SkillsSHSource provides access to the SKILLS.sh registry via GitHub.
@@ -93,7 +105,9 @@ func (s *SkillsSHSource) Search(ctx context.Context, opts SearchOptions) (*Searc
 			if query == "" ||
 				strings.Contains(strings.ToLower(skill.Name), query) ||
 				strings.Contains(strings.ToLower(skill.Description), query) ||
-				strings.Contains(strings.ToLower(skill.Slug), query) {
+				strings.Contains(strings.ToLower(skill.Slug), query) ||
+				s.matchesTags(skill.Tags, query) ||
+				(len(query) >= 3 && strings.Contains(strings.ToLower(skill.Content), query)) {
 				allSkills = append(allSkills, skill)
 			}
 		}
@@ -236,8 +250,8 @@ func (s *SkillsSHSource) getSkillInfo(ctx context.Context, repoPath, filePath, s
 		return nil, err
 	}
 
-	// Parse frontmatter for name and description
-	name, description := s.parseFrontmatter(string(content), skillName)
+	// Parse frontmatter for name, description, and tags
+	name, description, tags := s.parseFrontmatter(string(content), skillName)
 
 	// Build skills.sh URL
 	skillSlug := skillName
@@ -249,6 +263,7 @@ func (s *SkillsSHSource) getSkillInfo(ctx context.Context, repoPath, filePath, s
 		Name:        name,
 		Description: description,
 		Content:     string(content),
+		Tags:        tags,
 		Source:      SourceTypeSkillsSH,
 		SourceURL:   skillsshURL,
 		ContentURL:  fmt.Sprintf("https://raw.githubusercontent.com/%s/main/%s", repoPath, filePath),
@@ -257,35 +272,60 @@ func (s *SkillsSHSource) getSkillInfo(ctx context.Context, repoPath, filePath, s
 	}, nil
 }
 
-// parseFrontmatter extracts name and description from SKILL.md frontmatter
-func (s *SkillsSHSource) parseFrontmatter(content, defaultName string) (string, string) {
+// matchesTags checks if any tag contains the query
+func (s *SkillsSHSource) matchesTags(tags []string, query string) bool {
+	for _, tag := range tags {
+		if strings.Contains(strings.ToLower(tag), query) {
+			return true
+		}
+	}
+	return false
+}
+
+// parseFrontmatter extracts name, description, and tags from SKILL.md frontmatter
+func (s *SkillsSHSource) parseFrontmatter(content, defaultName string) (string, string, []string) {
 	name := defaultName
 	description := ""
+	var tags []string
 
 	if !strings.HasPrefix(content, "---") {
-		return name, description
+		return name, description, tags
 	}
 
 	end := strings.Index(content[3:], "---")
 	if end == -1 {
-		return name, description
+		return name, description, tags
 	}
 
 	frontmatter := content[3 : end+3]
 	lines := strings.Split(frontmatter, "\n")
 
+	inTags := false
 	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, "name:") {
-			name = strings.TrimSpace(strings.TrimPrefix(line, "name:"))
+		trimmedLine := strings.TrimSpace(line)
+
+		if strings.HasPrefix(trimmedLine, "name:") {
+			name = strings.TrimSpace(strings.TrimPrefix(trimmedLine, "name:"))
 			name = strings.Trim(name, "\"'")
-		} else if strings.HasPrefix(line, "description:") {
-			description = strings.TrimSpace(strings.TrimPrefix(line, "description:"))
+			inTags = false
+		} else if strings.HasPrefix(trimmedLine, "description:") {
+			description = strings.TrimSpace(strings.TrimPrefix(trimmedLine, "description:"))
 			description = strings.Trim(description, "\"'")
+			inTags = false
+		} else if strings.HasPrefix(trimmedLine, "tags:") {
+			inTags = true
+		} else if inTags && strings.HasPrefix(trimmedLine, "-") {
+			tag := strings.TrimSpace(strings.TrimPrefix(trimmedLine, "-"))
+			tag = strings.Trim(tag, "\"'")
+			if tag != "" {
+				tags = append(tags, tag)
+			}
+		} else if inTags && !strings.HasPrefix(line, " ") && !strings.HasPrefix(line, "\t") {
+			inTags = false
 		}
 	}
 
-	return name, description
+	return name, description, tags
 }
 
 // GetSkill retrieves a specific skill from SKILLS.sh via GitHub.

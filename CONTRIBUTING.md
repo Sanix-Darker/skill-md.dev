@@ -9,7 +9,7 @@ Thank you for your interest in contributing to Skill MD!
 3. Create a feature branch: `git checkout -b feat/your-feature`
 4. Make your changes
 5. Run tests: `go test ./...`
-6. Build: `go build ./cmd/skillforge`
+6. Build: `go build ./cmd/skillmd`
 7. Commit with conventional format
 8. Push and open a Pull Request
 
@@ -23,13 +23,13 @@ Thank you for your interest in contributing to Skill MD!
 ### Build
 
 ```bash
-go build ./cmd/skillforge
+go build ./cmd/skillmd
 ```
 
 ### Run
 
 ```bash
-./skillforge serve
+./skillmd serve
 ```
 
 ### Test
@@ -114,8 +114,8 @@ Add sample files to `testdata/`:
 ### 4. Test
 
 ```bash
-go build ./cmd/skillforge
-./skillforge convert testdata/sample.yourext -f yourformat
+go build ./cmd/skillmd
+./skillmd convert testdata/sample.yourext -f yourformat
 ```
 
 ## Code Style
@@ -154,8 +154,8 @@ docs: add converter development guide
 ## Project Structure
 
 ```
-skillforge/
-├── cmd/skillforge/        # CLI entry point
+skillmd/
+├── cmd/skillmd/        # CLI entry point
 ├── internal/
 │   ├── app/               # Application container
 │   ├── cli/               # CLI commands
