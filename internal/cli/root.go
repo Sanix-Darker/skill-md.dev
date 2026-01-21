@@ -18,7 +18,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "skillmd",
 	Short: "Convert technical specs to SKILL.md format for AI agents",
-	Long: `skillmd.dev is a tool for converting technical specifications
+	Long: `skill-md.dev is a tool for converting technical specifications
 (OpenAPI, GraphQL, Postman, etc.) into SKILL.md format that AI agents
 can understand and use.
 

@@ -33,11 +33,11 @@ func SecurityHeaders(next http.Handler) http.Handler {
 		// Content Security Policy (allow HTMX and inline scripts for now)
 		w.Header().Set("Content-Security-Policy",
 			"default-src 'self'; "+
-				"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; "+
-				"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "+
+				"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "+
+				"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com; "+
 				"font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "+
 				"img-src 'self' data: https:; "+
-				"connect-src 'self' https://cdn.jsdelivr.net https://huggingface.co; "+
+				"connect-src 'self' https://cdn.jsdelivr.net https://huggingface.co https://cdn-lfs.huggingface.co; "+
 				"worker-src 'self' blob: https://cdn.jsdelivr.net")
 
 		// Permissions Policy

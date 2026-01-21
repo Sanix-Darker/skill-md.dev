@@ -21,13 +21,12 @@
     <!-- HTMX -->
     <script src="/static/js/htmx.min.js"></script>
 
-    <!-- Syntax Highlighting -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/atom-one-dark.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/markdown.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/yaml.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/json.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/bash.min.js"></script>
+    <!-- Syntax Highlighting - Prism.js with Tomorrow Night theme -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 </head>
 <body hx-boost="true" class="bg-terminal-bg text-terminal-text font-mono min-h-screen flex flex-col">
     <!-- Loading bar -->
@@ -42,8 +41,6 @@
             {{template "convert.html" .}}
         {{else if eq .Page "merge.html"}}
             {{template "merge.html" .}}
-        {{else if eq .Page "browse.html"}}
-            {{template "browse.html" .}}
         {{else if eq .Page "skill.html"}}
             {{template "skill.html" .}}
         {{else if eq .Page "skill-external.html"}}
@@ -75,6 +72,14 @@
                 bar.style.transform = 'scaleX(0)';
                 setTimeout(() => bar.style.transition = '', 50);
             }, 200);
+        }
+    });
+    // Syntax highlighting for dynamically loaded content
+    document.body.addEventListener('htmx:afterSwap', function(e) {
+        if (typeof Prism !== 'undefined') {
+            e.target.querySelectorAll('pre code').forEach(function(el) {
+                Prism.highlightElement(el);
+            });
         }
     });
     </script>

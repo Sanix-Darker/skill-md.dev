@@ -597,7 +597,7 @@ pre {
 }
 
 /* ===== SYNTAX HIGHLIGHTING (Dark Terminal Theme) ===== */
-/* Compatible with highlight.js and custom code blocks */
+/* Compatible with Prism.js and custom code blocks */
 
 code, pre code {
   font-family: 'Hack', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -622,119 +622,126 @@ pre {
   color: var(--terminal-accent);
 }
 
-/* Syntax highlighting colors */
-.hljs {
+/* Prism.js Terminal Theme Overrides */
+code[class*="language-"],
+pre[class*="language-"] {
   background: var(--terminal-surface);
   color: var(--terminal-text);
+  text-shadow: none;
 }
 
-/* Comments */
-.hljs-comment,
-.hljs-quote {
-  color: #666666;
+/* Token colors - Dracula-inspired for terminal aesthetic */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #6272a4;
   font-style: italic;
 }
 
-/* Keywords */
-.hljs-keyword,
-.hljs-selector-tag,
-.hljs-addition {
+.token.punctuation {
+  color: var(--terminal-text);
+}
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted {
   color: #ff79c6;
 }
 
-/* Strings */
-.hljs-string,
-.hljs-attribute,
-.hljs-meta .hljs-string {
-  color: #f1fa8c;
-}
-
-/* Numbers */
-.hljs-number,
-.hljs-literal {
+.token.boolean,
+.token.number {
   color: #bd93f9;
 }
 
-/* Built-ins and functions */
-.hljs-built_in,
-.hljs-title.function_,
-.hljs-title.class_,
-.hljs-section {
-  color: #8be9fd;
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #50fa7b;
 }
 
-/* Variables and params */
-.hljs-variable,
-.hljs-template-variable,
-.hljs-params {
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string,
+.token.variable {
   color: #ffb86c;
 }
 
-/* Types */
-.hljs-type,
-.hljs-class .hljs-title {
-  color: #50fa7b;
+.token.atrule,
+.token.attr-value,
+.token.function,
+.token.class-name {
+  color: #f1fa8c;
 }
 
-/* Punctuation */
-.hljs-punctuation,
-.hljs-symbol {
-  color: var(--terminal-text);
-}
-
-/* HTML/XML */
-.hljs-tag {
+.token.keyword {
   color: #ff79c6;
 }
 
-.hljs-name {
-  color: var(--terminal-accent);
+.token.regex,
+.token.important {
+  color: #ffb86c;
 }
 
-.hljs-attr {
-  color: #50fa7b;
-}
-
-/* Diff */
-.hljs-deletion {
-  color: #ff5555;
-  background: rgba(255, 85, 85, 0.1);
-}
-
-.hljs-addition {
-  color: #50fa7b;
-  background: rgba(80, 250, 123, 0.1);
-}
-
-/* Emphasis */
-.hljs-emphasis {
-  font-style: italic;
-}
-
-.hljs-strong {
+.token.important,
+.token.bold {
   font-weight: bold;
 }
 
-/* Line numbers (if used) */
-.hljs-ln-numbers {
-  color: var(--terminal-muted);
-  padding-right: 1em;
-  text-align: right;
-  user-select: none;
+.token.italic {
+  font-style: italic;
 }
 
-/* Code block language label */
-pre[class*="language-"]::before {
-  content: attr(data-lang);
-  position: absolute;
-  top: 0;
-  right: 0;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-  color: var(--terminal-muted);
-  background: var(--terminal-bg);
-  border-bottom-left-radius: 4px;
-  text-transform: uppercase;
+.token.entity {
+  cursor: help;
+}
+
+/* YAML specific tokens */
+.token.key,
+.token.atrule {
+  color: #8be9fd;
+}
+
+.token.scalar,
+.token.string {
+  color: #f1fa8c;
+}
+
+/* Markdown specific tokens */
+.token.title,
+.token.title .token.punctuation {
+  color: var(--terminal-accent);
+  font-weight: bold;
+}
+
+.token.list {
+  color: #ff79c6;
+}
+
+.token.hr {
+  color: #6272a4;
+}
+
+.token.code {
+  color: #50fa7b;
+}
+
+.token.url,
+.token.url-reference {
+  color: #8be9fd;
+  text-decoration: underline;
+}
+
+/* Code block styling */
+pre[class*="language-"] {
+  position: relative;
 }
 
 /* Copy button for code blocks (if added via JS) */

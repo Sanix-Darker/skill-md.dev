@@ -9,11 +9,11 @@
             </div>
             <div class="flex gap-2">
                 <a href="/api/skill/{{.Skill.Slug}}/download"
-                   class="px-4 py-2 border border-terminal-border hover:border-terminal-accent text-sm transition-colors">
+                   class="px-4 py-2 text-sm bg-terminal-bg text-terminal-text border border-terminal-border hover:border-terminal-accent hover:text-terminal-accent transition-colors">
                     Download
                 </a>
                 <button onclick="copySkillUrl()"
-                        class="px-4 py-2 border border-terminal-border hover:border-terminal-accent text-sm transition-colors">
+                        class="px-4 py-2 text-sm bg-terminal-bg text-terminal-text border border-terminal-border hover:border-terminal-accent hover:text-terminal-accent transition-colors">
                     Copy URL
                 </button>
             </div>
@@ -32,7 +32,7 @@
         {{if .Skill.Tags}}
         <div class="flex flex-wrap gap-2 mt-4">
             {{range .Skill.Tags}}
-            <a href="/browse?tag={{.}}" class="px-2 py-1 bg-terminal-bg border border-terminal-border text-xs hover:border-terminal-accent transition-colors">
+            <a href="/merge" class="px-2 py-1 bg-terminal-bg border border-terminal-border text-xs hover:border-terminal-accent transition-colors">
                 {{.}}
             </a>
             {{end}}
@@ -44,7 +44,7 @@
     <div class="border border-terminal-border bg-terminal-surface">
         <div class="border-b border-terminal-border px-4 py-3 flex items-center justify-between">
             <span class="text-sm font-medium">SKILL.md</span>
-            <button onclick="copyContent()" class="text-sm text-terminal-muted hover:text-terminal-accent transition-colors">
+            <button onclick="copyContent()" class="px-4 py-2 text-sm bg-terminal-bg text-terminal-text border border-terminal-border hover:border-terminal-accent hover:text-terminal-accent transition-colors">
                 Copy
             </button>
         </div>
@@ -55,7 +55,7 @@
 
     <!-- Back link -->
     <div class="mt-6">
-        <a href="/browse" class="text-terminal-accent hover:underline">&larr; Back to browse</a>
+        <a href="/merge" class="text-terminal-accent hover:underline">&larr; Back to merge</a>
     </div>
 </div>
 

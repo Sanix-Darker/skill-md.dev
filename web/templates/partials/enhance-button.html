@@ -2,7 +2,7 @@
 <div class="enhance-controls flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-terminal-bg border border-terminal-border mt-3">
     <div class="flex items-center gap-2">
         <label for="enhance-mode" class="text-xs text-terminal-muted">Mode:</label>
-        <select id="enhance-mode" class="tooltip tooltip-bottom bg-transparent border border-terminal-border px-4 py-2 text-sm focus:border-terminal-accent focus:outline-none" data-tooltip="Choose how to enhance the content" aria-label="Enhancement mode selection">
+        <select id="enhance-mode" class="tooltip tooltip-bottom bg-terminal-bg text-terminal-text border border-terminal-border px-4 py-2 text-sm focus:border-terminal-accent focus:outline-none" data-tooltip="Choose how to enhance the content" aria-label="Enhancement mode selection">
             <option value="elaborate">Elaborate</option>
             <option value="examples">Add Examples</option>
             <option value="bestPractices">Best Practices</option>
@@ -12,7 +12,7 @@
 
     <button id="enhance-btn"
             type="button"
-            class="tooltip flex items-center gap-2 px-4 py-2 text-sm bg-transparent border border-terminal-accent text-terminal-accent hover:bg-terminal-accent hover:text-terminal-bg transition-colors font-medium btn-hover"
+            class="tooltip flex items-center gap-2 px-4 py-2 text-sm bg-terminal-bg text-terminal-text border border-terminal-border hover:border-terminal-accent hover:text-terminal-accent transition-colors font-medium btn-hover"
             data-tooltip="Runs locally in browser (~400MB model download first time)"
             aria-label="Enhance content with AI">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

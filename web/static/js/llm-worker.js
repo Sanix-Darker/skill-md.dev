@@ -58,8 +58,8 @@ async function initModel(modelType) {
   try {
     self.postMessage({ type: 'loading', message: 'Initializing model...' });
 
-    // Allow local models and set cache
-    env.allowLocalModels = true;
+    // Disable local model loading to fetch from Hugging Face hub
+    env.allowLocalModels = false;
     env.useBrowserCache = true;
 
     self.postMessage({ type: 'loading', message: `Loading ${modelId}...` });

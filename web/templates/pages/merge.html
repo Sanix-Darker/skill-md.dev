@@ -7,64 +7,301 @@
     <div class="grid lg:grid-cols-2 gap-6">
         <!-- Input Panel -->
         <div class="border border-terminal-border bg-terminal-surface">
-            <div class="border-b border-terminal-border px-4 py-3">
-                <span class="text-sm font-medium">Input Files</span>
+            <!-- Tabs -->
+            <div class="border-b border-terminal-border flex bg-terminal-bg">
+                <button type="button" id="tab-upload" onclick="switchTab('upload')"
+                        class="flex-1 px-4 py-3 text-sm font-medium border-b-2 border-terminal-accent text-terminal-accent bg-terminal-bg">
+                    Upload Files
+                </button>
+                <button type="button" id="tab-search" onclick="switchTab('search')"
+                        class="flex-1 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-terminal-muted hover:text-terminal-text bg-terminal-bg">
+                    Search Skills
+                </button>
             </div>
 
-            <form id="merge-form"
-                  hx-post="/api/merge"
-                  hx-target="#merge-output"
-                  hx-swap="innerHTML"
-                  hx-encoding="multipart/form-data"
-                  class="p-4">
+            <!-- Upload Tab Content -->
+            <div id="content-upload" class="p-4">
+                <form id="merge-form"
+                      hx-post="/api/merge"
+                      hx-target="#merge-output"
+                      hx-swap="innerHTML"
+                      hx-encoding="multipart/form-data">
 
-                <!-- File Upload -->
-                <div id="merge-upload" class="border-2 border-dashed border-terminal-border hover:border-terminal-accent transition-colors p-8 text-center mb-4 cursor-pointer"
-                     onclick="document.getElementById('merge-files').click()">
-                    <svg class="w-10 h-10 mx-auto mb-3 text-terminal-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    <p class="text-terminal-muted text-sm">Click to select SKILL.md files</p>
-                    <p class="text-terminal-muted text-xs mt-1">Select 2 or more files to merge</p>
-                    <input type="file" id="merge-files" name="files" class="hidden" accept=".md,.txt" multiple>
+                    <!-- File Upload -->
+                    <div id="merge-upload" class="border-2 border-dashed border-terminal-border hover:border-terminal-accent transition-colors p-8 text-center mb-4 cursor-pointer"
+                         onclick="document.getElementById('merge-files').click()">
+                        <svg class="w-10 h-10 mx-auto mb-3 text-terminal-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <p class="text-terminal-muted text-sm">Click to select SKILL.md files</p>
+                        <p class="text-terminal-muted text-xs mt-1">Select 2 or more files to merge</p>
+                        <input type="file" id="merge-files" name="files" class="hidden" accept=".md,.txt" multiple>
+                    </div>
+
+                    <!-- File List -->
+                    <div id="file-list" class="space-y-2 mb-4"></div>
+
+                    <!-- Options -->
+                    <div class="space-y-4">
+                        <input type="text" name="name" placeholder="Merged skill name (optional)"
+                               class="w-full bg-terminal-bg border border-terminal-border px-3 py-2 text-sm focus:border-terminal-accent focus:outline-none">
+
+                        <label class="tooltip tooltip-right flex items-center space-x-2 cursor-pointer" data-tooltip="Remove duplicate endpoints and descriptions">
+                            <input type="checkbox" name="dedupe" class="w-4 h-4 bg-terminal-bg border border-terminal-border checked:bg-terminal-accent">
+                            <span class="text-sm">Deduplicate similar content</span>
+                        </label>
+
+                        <button type="submit" class="tooltip w-full px-4 py-2 text-sm bg-terminal-bg text-terminal-text border border-terminal-border font-medium hover:border-terminal-accent hover:text-terminal-accent transition-colors" data-tooltip="Combine selected files into one skill" aria-label="Merge skills into one file">
+                            Merge Files
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Search Tab Content -->
+            <div id="content-search" class="p-4 hidden">
+                <!-- Source Tabs -->
+                <div class="mb-4 flex flex-wrap gap-2">
+                    <button type="button" onclick="setSource('')" id="src-all"
+                            class="source-btn px-3 py-1 text-xs bg-terminal-bg border border-terminal-accent text-terminal-accent transition-colors">
+                        All
+                    </button>
+                    <button type="button" onclick="setSource('local')" id="src-local"
+                            class="source-btn px-3 py-1 text-xs bg-terminal-bg border border-terminal-border text-terminal-text hover:border-terminal-accent hover:text-terminal-accent transition-colors">
+                        Local
+                    </button>
+                    <button type="button" onclick="setSource('skills.sh')" id="src-skills.sh"
+                            class="source-btn px-3 py-1 text-xs bg-terminal-bg border border-terminal-border text-terminal-text hover:border-purple-500 hover:text-purple-400 transition-colors">
+                        SKILLS.sh
+                    </button>
+                    <button type="button" onclick="setSource('github')" id="src-github"
+                            class="source-btn px-3 py-1 text-xs bg-terminal-bg border border-terminal-border text-terminal-text hover:border-gray-400 hover:text-gray-300 transition-colors">
+                        GitHub
+                    </button>
+                    <button type="button" onclick="setSource('gitlab')" id="src-gitlab"
+                            class="source-btn px-3 py-1 text-xs bg-terminal-bg border border-terminal-border text-terminal-text hover:border-orange-500 hover:text-orange-400 transition-colors">
+                        GitLab
+                    </button>
                 </div>
 
-                <!-- File List -->
-                <div id="file-list" class="space-y-2 mb-4"></div>
+                <!-- Search Input -->
+                <div class="mb-4">
+                    <input type="text"
+                           id="skill-search-input"
+                           placeholder="Search skills..."
+                           hx-get="/api/skills/search"
+                           hx-trigger="keyup changed delay:300ms"
+                           hx-target="#search-results"
+                           hx-include="#search-source"
+                           hx-vals='{"merge_mode": "true"}'
+                           class="w-full bg-terminal-bg border border-terminal-border px-4 py-2 text-sm focus:border-terminal-accent focus:outline-none">
+                    <input type="hidden" id="search-source" name="source" value="">
+                </div>
 
-                <!-- Options -->
+                <!-- Search Results -->
+                <div id="search-results" class="max-h-64 overflow-y-auto">
+                    <p class="text-terminal-muted text-sm text-center py-4">Search for skills to add to merge</p>
+                </div>
+            </div>
+
+            <!-- Selected Skills Queue -->
+            <div id="selected-skills-container" class="border-t border-terminal-border p-4 hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-sm font-medium">Selected Skills (<span id="selected-count">0</span>)</span>
+                    <button type="button" onclick="clearSelectedSkills()" class="text-xs text-terminal-muted hover:text-terminal-accent">
+                        Clear all
+                    </button>
+                </div>
+                <div id="selected-skills-list" class="space-y-2 mb-4"></div>
+
+                <!-- Merge Options for Selected Skills -->
                 <div class="space-y-4">
-                    <input type="text" name="name" placeholder="Merged skill name (optional)"
+                    <input type="text" id="merge-name" placeholder="Merged skill name (optional)"
                            class="w-full bg-terminal-bg border border-terminal-border px-3 py-2 text-sm focus:border-terminal-accent focus:outline-none">
 
-                    <label class="tooltip tooltip-right flex items-center space-x-2 cursor-pointer" data-tooltip="Remove duplicate endpoints and descriptions">
-                        <input type="checkbox" name="dedupe" class="w-4 h-4 bg-terminal-bg border border-terminal-border checked:bg-terminal-accent">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="merge-dedupe" class="w-4 h-4 bg-terminal-bg border border-terminal-border checked:bg-terminal-accent">
                         <span class="text-sm">Deduplicate similar content</span>
                     </label>
 
-                    <button type="submit" class="tooltip w-full px-4 py-2 text-sm bg-transparent border border-terminal-accent text-terminal-accent font-medium hover:bg-terminal-accent hover:text-terminal-bg transition-colors" data-tooltip="Combine selected files into one skill" aria-label="Merge skills into one file">
-                        Merge
+                    <button type="button" onclick="mergeSelectedSkills()" id="merge-selected-btn"
+                            class="w-full px-4 py-2 text-sm bg-terminal-bg text-terminal-text border border-terminal-border font-medium hover:border-terminal-accent hover:text-terminal-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Merge Selected Skills
                     </button>
                 </div>
-            </form>
+            </div>
         </div>
 
         <!-- Output Panel -->
         <div class="border border-terminal-border bg-terminal-surface">
             <div class="border-b border-terminal-border px-4 py-3 flex items-center justify-between">
                 <span class="text-sm font-medium">Merged Output</span>
-                <button id="merge-copy-btn" onclick="copyMergeOutput()" class="tooltip tooltip-left text-sm text-terminal-muted hover:text-terminal-accent transition-colors hidden" data-tooltip="Copy merged output to clipboard" aria-label="Copy merged output to clipboard">
+                <button id="merge-copy-btn" onclick="copyMergeOutput()" class="tooltip tooltip-left px-4 py-2 text-sm bg-terminal-bg text-terminal-text border border-terminal-border hover:border-terminal-accent hover:text-terminal-accent transition-colors hidden" data-tooltip="Copy merged output to clipboard" aria-label="Copy merged output to clipboard">
                     Copy
                 </button>
             </div>
             <div id="merge-output" class="p-4 min-h-[400px] overflow-auto">
-                <p class="text-terminal-muted text-sm">Select 2 or more SKILL.md files to merge.</p>
+                <p class="text-terminal-muted text-sm">Upload files or search and select skills to merge.</p>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+// Tab switching
+function switchTab(tab) {
+    const uploadTab = document.getElementById('tab-upload');
+    const searchTab = document.getElementById('tab-search');
+    const uploadContent = document.getElementById('content-upload');
+    const searchContent = document.getElementById('content-search');
+
+    if (tab === 'upload') {
+        uploadTab.classList.add('border-terminal-accent', 'text-terminal-accent');
+        uploadTab.classList.remove('border-transparent', 'text-terminal-muted');
+        searchTab.classList.remove('border-terminal-accent', 'text-terminal-accent');
+        searchTab.classList.add('border-transparent', 'text-terminal-muted');
+        uploadContent.classList.remove('hidden');
+        searchContent.classList.add('hidden');
+    } else {
+        searchTab.classList.add('border-terminal-accent', 'text-terminal-accent');
+        searchTab.classList.remove('border-transparent', 'text-terminal-muted');
+        uploadTab.classList.remove('border-terminal-accent', 'text-terminal-accent');
+        uploadTab.classList.add('border-transparent', 'text-terminal-muted');
+        searchContent.classList.remove('hidden');
+        uploadContent.classList.add('hidden');
+    }
+}
+
+// Source filter for search
+var currentSource = '';
+function setSource(source) {
+    currentSource = source;
+    document.getElementById('search-source').value = source;
+
+    // Update button styles
+    document.querySelectorAll('.source-btn').forEach(btn => {
+        btn.classList.remove('border-terminal-accent', 'text-terminal-accent', 'border-purple-500', 'text-purple-400', 'border-gray-400', 'text-gray-300', 'border-orange-500', 'text-orange-400');
+        btn.classList.add('border-terminal-border', 'text-terminal-text');
+    });
+
+    const activeBtn = document.getElementById('src-' + (source || 'all'));
+    if (activeBtn) {
+        activeBtn.classList.remove('border-terminal-border', 'text-terminal-text');
+        if (source === 'skills.sh') {
+            activeBtn.classList.add('border-purple-500', 'text-purple-400');
+        } else if (source === 'github') {
+            activeBtn.classList.add('border-gray-400', 'text-gray-300');
+        } else if (source === 'gitlab') {
+            activeBtn.classList.add('border-orange-500', 'text-orange-400');
+        } else {
+            activeBtn.classList.add('border-terminal-accent', 'text-terminal-accent');
+        }
+    }
+
+    // Trigger search if there's a query
+    const input = document.getElementById('skill-search-input');
+    if (input.value) {
+        htmx.trigger(input, 'keyup');
+    }
+}
+
+// Selected skills management
+var selectedSkills = [];
+
+function addSkillToMerge(id, source, name) {
+    // Check if already added
+    if (selectedSkills.find(s => s.id === id && s.source === source)) {
+        return;
+    }
+
+    selectedSkills.push({ id, source, name });
+    updateSelectedSkillsUI();
+}
+
+function removeSkillFromMerge(id, source) {
+    selectedSkills = selectedSkills.filter(s => !(s.id === id && s.source === source));
+    updateSelectedSkillsUI();
+}
+
+function clearSelectedSkills() {
+    selectedSkills = [];
+    updateSelectedSkillsUI();
+}
+
+function updateSelectedSkillsUI() {
+    const container = document.getElementById('selected-skills-container');
+    const list = document.getElementById('selected-skills-list');
+    const count = document.getElementById('selected-count');
+    const mergeBtn = document.getElementById('merge-selected-btn');
+
+    count.textContent = selectedSkills.length;
+
+    if (selectedSkills.length === 0) {
+        container.classList.add('hidden');
+        return;
+    }
+
+    container.classList.remove('hidden');
+
+    list.innerHTML = selectedSkills.map(skill => `
+        <div class="p-2 bg-terminal-bg border border-terminal-border text-sm flex items-center justify-between">
+            <span class="flex items-center gap-2 truncate">
+                <span class="px-1.5 py-0.5 text-xs border border-terminal-border">${skill.source}</span>
+                <span class="truncate">${escapeHtml(skill.name)}</span>
+            </span>
+            <button type="button" onclick="removeSkillFromMerge('${escapeJs(skill.id)}', '${skill.source}')"
+                    class="text-terminal-muted hover:text-terminal-accent ml-2">&times;</button>
+        </div>
+    `).join('');
+
+    mergeBtn.disabled = selectedSkills.length < 2;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function escapeJs(text) {
+    return text.replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+// Merge selected skills
+function mergeSelectedSkills() {
+    if (selectedSkills.length < 2) return;
+
+    const mergeBtn = document.getElementById('merge-selected-btn');
+    mergeBtn.disabled = true;
+    mergeBtn.textContent = 'Merging...';
+
+    const formData = new FormData();
+    formData.append('skill_refs', JSON.stringify(selectedSkills));
+    formData.append('name', document.getElementById('merge-name').value);
+    formData.append('dedupe', document.getElementById('merge-dedupe').checked ? 'on' : '');
+
+    fetch('/api/merge', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'HX-Request': 'true'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        document.getElementById('merge-output').innerHTML = html;
+        document.getElementById('merge-copy-btn').classList.remove('hidden');
+        mergeBtn.disabled = false;
+        mergeBtn.textContent = 'Merge Selected Skills';
+    })
+    .catch(err => {
+        document.getElementById('merge-output').innerHTML = `<div class="text-red-400">Error: ${err.message}</div>`;
+        mergeBtn.disabled = false;
+        mergeBtn.textContent = 'Merge Selected Skills';
+    });
+}
+
+// File upload handling
 document.getElementById('merge-files').addEventListener('change', function(e) {
     const fileList = document.getElementById('file-list');
     fileList.innerHTML = '';
