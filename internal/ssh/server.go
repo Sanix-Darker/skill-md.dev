@@ -22,6 +22,23 @@ import (
 	"github.com/sanixdarker/skill-md/internal/tui"
 )
 
+// validateKeyPermissions checks that the SSH key file has secure permissions (0600).
+func validateKeyPermissions(keyPath string) error {
+	info, err := os.Stat(keyPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil // Key doesn't exist yet, will be created
+		}
+		return fmt.Errorf("failed to stat key file: %w", err)
+	}
+
+	perms := info.Mode().Perm()
+	if perms != 0600 {
+		return fmt.Errorf("SSH key has insecure permissions %o, expected 0600", perms)
+	}
+	return nil
+}
+
 // Server represents the SSH server.
 type Server struct {
 	registry *registry.Service
@@ -55,6 +72,11 @@ func New(cfg Config) (*Server, error) {
 	keyDir := filepath.Dir(cfg.KeyPath)
 	if err := os.MkdirAll(keyDir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create key directory: %w", err)
+	}
+
+	// Validate key permissions if key exists
+	if err := validateKeyPermissions(cfg.KeyPath); err != nil {
+		return nil, err
 	}
 
 	s := &Server{

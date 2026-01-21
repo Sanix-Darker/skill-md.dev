@@ -1,6 +1,7 @@
 package sources
 
 import (
+	"strconv"
 	"sync"
 	"time"
 )
@@ -138,7 +139,7 @@ func (c *SearchCache) SetSearchResult(source SourceType, query string, page int,
 
 // searchKey generates a cache key for search results.
 func (c *SearchCache) searchKey(source SourceType, query string, page int) string {
-	return string(source) + ":" + query + ":" + string(rune(page))
+	return string(source) + ":" + query + ":" + strconv.Itoa(page)
 }
 
 // SkillCache provides specialized caching for individual skills.

@@ -96,9 +96,12 @@ func (c *URLConverter) validateURL(urlStr string) error {
 		"::1",
 		"metadata.google.internal",
 		"169.254.169.254", // AWS/GCP metadata endpoint
+		"metadata",
+		"kubernetes.default",
+		"kubernetes.default.svc",
 	}
 	for _, blocked := range blockedHosts {
-		if lowerHost == blocked {
+		if lowerHost == blocked || strings.HasSuffix(lowerHost, "."+blocked) {
 			return fmt.Errorf("requests to internal hosts are not allowed")
 		}
 	}
@@ -106,15 +109,46 @@ func (c *URLConverter) validateURL(urlStr string) error {
 	// Check if it's an IP address and validate
 	ip := net.ParseIP(host)
 	if ip != nil {
-		if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsUnspecified() {
-			return fmt.Errorf("requests to private IP addresses are not allowed")
+		if err := validateIP(ip); err != nil {
+			return err
 		}
-		// Check IPv4 link-local (169.254.x.x)
-		if ip4 := ip.To4(); ip4 != nil && ip4[0] == 169 && ip4[1] == 254 {
-			return fmt.Errorf("requests to link-local addresses are not allowed")
+	} else {
+		// Resolve hostname and check the IP(s)
+		ips, err := net.LookupIP(host)
+		if err == nil {
+			for _, resolvedIP := range ips {
+				if err := validateIP(resolvedIP); err != nil {
+					return fmt.Errorf("hostname resolves to blocked IP: %w", err)
+				}
+			}
 		}
 	}
 
+	return nil
+}
+
+// validateIP checks if an IP address is safe (not internal/private)
+func validateIP(ip net.IP) error {
+	if ip.IsLoopback() {
+		return fmt.Errorf("requests to loopback addresses are not allowed")
+	}
+	if ip.IsPrivate() {
+		return fmt.Errorf("requests to private IP addresses are not allowed")
+	}
+	if ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
+		return fmt.Errorf("requests to link-local addresses are not allowed")
+	}
+	if ip.IsUnspecified() {
+		return fmt.Errorf("requests to unspecified addresses are not allowed")
+	}
+	// Check IPv4 link-local (169.254.x.x)
+	if ip4 := ip.To4(); ip4 != nil && ip4[0] == 169 && ip4[1] == 254 {
+		return fmt.Errorf("requests to AWS/cloud metadata addresses are not allowed")
+	}
+	// Check for IPv6 unique local addresses (fc00::/7)
+	if len(ip) == 16 && (ip[0]&0xfe) == 0xfc {
+		return fmt.Errorf("requests to unique local IPv6 addresses are not allowed")
+	}
 	return nil
 }
 

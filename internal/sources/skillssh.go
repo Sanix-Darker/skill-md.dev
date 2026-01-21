@@ -5,10 +5,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
 )
+
+// Maximum content size for external skill content (1MB)
+const maxExternalContentSize = 1 * 1024 * 1024
 
 // Known skill repositories indexed by skills.sh
 var knownSkillRepos = []string{
@@ -43,7 +47,7 @@ type skillsshFileContent struct {
 func NewSkillsSHSource(githubToken string) *SkillsSHSource {
 	return &SkillsSHSource{
 		client: &http.Client{
-			Timeout: 15 * time.Second,
+			Timeout: 30 * time.Second,
 		},
 		enabled:     true,
 		githubToken: githubToken,
@@ -332,20 +336,10 @@ func (s *SkillsSHSource) GetContent(ctx context.Context, skill *ExternalSkill) (
 		return "", fmt.Errorf("unexpected status: %d", resp.StatusCode)
 	}
 
-	var content []byte
-	content = make([]byte, 0, 64*1024)
-	buf := make([]byte, 4096)
-	for {
-		n, err := resp.Body.Read(buf)
-		if n > 0 {
-			content = append(content, buf[:n]...)
-		}
-		if err != nil {
-			break
-		}
-		if len(content) > 1024*1024 { // 1MB limit
-			break
-		}
+	// Use LimitReader to prevent memory exhaustion
+	content, err := io.ReadAll(io.LimitReader(resp.Body, maxExternalContentSize))
+	if err != nil {
+		return "", fmt.Errorf("failed to read content: %w", err)
 	}
 
 	return string(content), nil

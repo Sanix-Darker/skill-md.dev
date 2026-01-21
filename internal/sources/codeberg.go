@@ -53,7 +53,7 @@ type codebergContentResponse struct {
 func NewCodebergSource(token string) *CodebergSource {
 	return &CodebergSource{
 		client: &http.Client{
-			Timeout: 15 * time.Second,
+			Timeout: 30 * time.Second,
 		},
 		token:   token,
 		enabled: true,
@@ -133,9 +133,17 @@ func (s *CodebergSource) Search(ctx context.Context, opts SearchOptions) (*Searc
 	}
 
 	// Check each repo for SKILL.md
+	// Limit sequential API calls to prevent timeout exhaustion
+	const maxChecks = 5
 	var skills []*ExternalSkill
+	checkCount := 0
+
 	for _, repo := range searchResp.Data {
+		if checkCount >= maxChecks {
+			break
+		}
 		hasSkill := s.checkForSkillMD(ctx, repo.Owner.Login, repo.Name, repo.DefaultBranch)
+		checkCount++
 		if hasSkill {
 			skills = append(skills, s.convertToExternal(&repo))
 		}

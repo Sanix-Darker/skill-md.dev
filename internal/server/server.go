@@ -17,16 +17,18 @@ import (
 
 // Server represents the HTTP server.
 type Server struct {
-	app    *app.App
-	server *http.Server
-	router *chi.Mux
+	app         *app.App
+	server      *http.Server
+	router      *chi.Mux
+	rateLimiter *servermw.RateLimiter
 }
 
 // New creates a new Server.
 func New(application *app.App) *Server {
 	s := &Server{
-		app:    application,
-		router: chi.NewRouter(),
+		app:         application,
+		router:      chi.NewRouter(),
+		rateLimiter: servermw.NewRateLimiter(5, 20), // 5 req/sec, burst of 20
 	}
 
 	s.setupMiddleware()
@@ -36,7 +38,7 @@ func New(application *app.App) *Server {
 		Addr:         fmt.Sprintf(":%d", application.Config.Port),
 		Handler:      s.router,
 		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		WriteTimeout: 90 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
 
@@ -46,6 +48,7 @@ func New(application *app.App) *Server {
 func (s *Server) setupMiddleware() {
 	s.router.Use(middleware.RequestID)
 	s.router.Use(middleware.RealIP)
+	s.router.Use(s.rateLimiter.Limit) // Rate limiting
 	s.router.Use(servermw.SecurityHeaders)
 	s.router.Use(servermw.Logger(s.app.Logger))
 	s.router.Use(middleware.Recoverer)

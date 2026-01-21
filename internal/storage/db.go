@@ -29,6 +29,7 @@ func NewDB(path string) (*sql.DB, error) {
 
 	for _, pragma := range pragmas {
 		if _, err := db.Exec(pragma); err != nil {
+			db.Close() // Close on failure to prevent connection leak
 			return nil, fmt.Errorf("failed to set pragma: %w", err)
 		}
 	}

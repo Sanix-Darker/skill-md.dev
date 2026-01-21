@@ -16,6 +16,12 @@ import (
 	"github.com/sanixdarker/skill-md/web"
 )
 
+// Upload limits for merge handler
+const (
+	maxMergeUploadSize = 10 << 20 // 10MB total
+	maxMergeFileSize   = 5 << 20  // 5MB per file
+)
+
 // SkillRef represents a reference to a skill for merging.
 type SkillRef struct {
 	ID     string `json:"id"`
@@ -47,8 +53,9 @@ func (h *MergeHandler) Index(w http.ResponseWriter, r *http.Request) {
 
 // Merge handles skill merging from files or skill references.
 func (h *MergeHandler) Merge(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseMultipartForm(50 << 20); err != nil { // 50MB max
-		h.renderError(w, r, "Failed to parse form: "+err.Error())
+	if err := r.ParseMultipartForm(maxMergeUploadSize); err != nil {
+		h.app.Logger.Error("failed to parse merge form", "error", err)
+		h.renderError(w, r, "Failed to parse form. Please try again.")
 		return
 	}
 
@@ -59,7 +66,8 @@ func (h *MergeHandler) Merge(w http.ResponseWriter, r *http.Request) {
 	if skillRefsJSON != "" {
 		var skillRefs []SkillRef
 		if err := json.Unmarshal([]byte(skillRefsJSON), &skillRefs); err != nil {
-			h.renderError(w, r, "Invalid skill references: "+err.Error())
+			h.app.Logger.Error("invalid skill references", "error", err)
+			h.renderError(w, r, "Invalid skill references. Please try again.")
 			return
 		}
 
@@ -75,13 +83,15 @@ func (h *MergeHandler) Merge(w http.ResponseWriter, r *http.Request) {
 		for _, ref := range skillRefs {
 			content, err := h.fetchSkillContent(ctx, ref)
 			if err != nil {
-				h.renderError(w, r, "Failed to fetch skill '"+ref.Name+"': "+err.Error())
+				h.app.Logger.Error("failed to fetch skill", "name", ref.Name, "error", err)
+				h.renderError(w, r, "Failed to fetch skill. Please try again.")
 				return
 			}
 
 			s, err := skill.Parse(content)
 			if err != nil {
-				h.renderError(w, r, "Failed to parse skill '"+ref.Name+"': "+err.Error())
+				h.app.Logger.Error("failed to parse skill", "name", ref.Name, "error", err)
+				h.renderError(w, r, "Failed to parse skill. Please check the skill format.")
 				return
 			}
 
@@ -97,22 +107,31 @@ func (h *MergeHandler) Merge(w http.ResponseWriter, r *http.Request) {
 
 		// Parse all skills from files
 		for _, fileHeader := range files {
+			// Validate per-file size
+			if fileHeader.Size > maxMergeFileSize {
+				h.renderError(w, r, "File too large (max 5MB per file)")
+				return
+			}
+
 			file, err := fileHeader.Open()
 			if err != nil {
-				h.renderError(w, r, "Failed to open file: "+err.Error())
+				h.app.Logger.Error("failed to open file", "filename", fileHeader.Filename, "error", err)
+				h.renderError(w, r, "Failed to open file. Please try again.")
 				return
 			}
 
 			content, err := io.ReadAll(file)
 			file.Close()
 			if err != nil {
-				h.renderError(w, r, "Failed to read file: "+err.Error())
+				h.app.Logger.Error("failed to read file", "filename", fileHeader.Filename, "error", err)
+				h.renderError(w, r, "Failed to read file. Please try again.")
 				return
 			}
 
 			s, err := skill.Parse(string(content))
 			if err != nil {
-				h.renderError(w, r, "Failed to parse "+fileHeader.Filename+": "+err.Error())
+				h.app.Logger.Error("failed to parse file", "filename", fileHeader.Filename, "error", err)
+				h.renderError(w, r, "Failed to parse file. Please check the skill format.")
 				return
 			}
 
@@ -130,7 +149,14 @@ func (h *MergeHandler) Merge(w http.ResponseWriter, r *http.Request) {
 		Deduplicate: dedupe,
 	})
 	if err != nil {
-		h.renderError(w, r, "Merge failed: "+err.Error())
+		h.app.Logger.Error("merge failed", "error", err)
+		h.renderError(w, r, "Merge failed. Please try again.")
+		return
+	}
+
+	// Check for nil result (empty skills array)
+	if result == nil {
+		h.renderError(w, r, "No skills to merge")
 		return
 	}
 
