@@ -1,9 +1,13 @@
-# Skill Forge
+# Skill MD
 
-Convert technical specifications into SKILL.md format for AI agents.
+Convert any technical specifications into SKILL.md format for AI agents.
 
 ![Go Version](https://img.shields.io/badge/go-1.23+-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
+
+
+![ssh](./ssh.png)
+
 
 ## Features
 
@@ -20,19 +24,19 @@ Convert technical specifications into SKILL.md format for AI agents.
 ### Quick Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sanixdarker/skillforge/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/sanixdarker/skill-md/main/scripts/install.sh | bash
 ```
 
 ### From Source
 
 ```bash
-go install github.com/sanixdarker/skillforge/cmd/skillforge@latest
+go install github.com/sanixdarker/skill-md/cmd/skillforge@latest
 ```
 
 ### Docker
 
 ```bash
-docker run -p 8080:8080 sanixdarker/skillforge
+docker run -p 8080:8080 sanixdarker/skill-md
 ```
 
 ## Usage
@@ -48,7 +52,7 @@ skillforge serve
 
 Options:
 - `--port, -p` - Port to listen on (default: 8080)
-- `--db` - Path to SQLite database (default: ./skillforge.db)
+- `--db` - Path to SQLite database (default: ./skill-md.db)
 - `--debug` - Enable debug mode
 
 ### Convert

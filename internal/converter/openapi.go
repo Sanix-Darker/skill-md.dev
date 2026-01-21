@@ -11,7 +11,7 @@ import (
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	v2 "github.com/pb33f/libopenapi/datamodel/high/v2"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
-	"github.com/sanixdarker/skillforge/pkg/skill"
+	"github.com/sanixdarker/skill-md/pkg/skill"
 )
 
 // OpenAPIConverter converts OpenAPI 3.x specs to SKILL.md.

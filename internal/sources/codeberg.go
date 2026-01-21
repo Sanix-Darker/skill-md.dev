@@ -303,7 +303,7 @@ func (s *CodebergSource) getFileContent(ctx context.Context, owner, repo, path, 
 // setHeaders sets common headers for Codeberg API requests.
 func (s *CodebergSource) setHeaders(req *http.Request) {
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("User-Agent", "SkillForge/1.0")
+	req.Header.Set("User-Agent", "SkillMD/1.0")
 	if s.token != "" {
 		req.Header.Set("Authorization", "token "+s.token)
 	}

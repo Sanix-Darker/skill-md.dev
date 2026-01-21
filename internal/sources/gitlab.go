@@ -287,7 +287,7 @@ func (s *GitLabSource) getFileContent(ctx context.Context, projectID, path, ref 
 // setHeaders sets common headers for GitLab API requests.
 func (s *GitLabSource) setHeaders(req *http.Request) {
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("User-Agent", "SkillForge/1.0")
+	req.Header.Set("User-Agent", "SkillMD/1.0")
 	if s.token != "" {
 		req.Header.Set("PRIVATE-TOKEN", s.token)
 	}

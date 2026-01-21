@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/sanixdarker/skillforge/internal/app"
-	"github.com/sanixdarker/skillforge/internal/server/middleware"
-	"github.com/sanixdarker/skillforge/internal/sources"
-	"github.com/sanixdarker/skillforge/web"
+	"github.com/sanixdarker/skill-md/internal/app"
+	"github.com/sanixdarker/skill-md/internal/server/middleware"
+	"github.com/sanixdarker/skill-md/internal/sources"
+	"github.com/sanixdarker/skill-md/web"
 )
 
 // SkillsHandler handles skill registry requests.
@@ -89,7 +89,7 @@ func (h *SkillsHandler) Browse(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data = map[string]interface{}{
-		"Title":      "Browse - Skill Forge",
+		"Title":      "Browse - Skill MD",
 		"Skills":     skills,
 		"Total":      total,
 		"Page":       page,
@@ -136,7 +136,7 @@ func (h *SkillsHandler) View(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]interface{}{
-		"Title": skill.Name + " - Skill Forge",
+		"Title": skill.Name + " - Skill MD",
 		"Skill": skill,
 	}
 
@@ -386,7 +386,7 @@ func (h *SkillsHandler) ViewExternal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]interface{}{
-		"Title": skill.Name + " - Skill Forge",
+		"Title": skill.Name + " - Skill MD",
 		"Skill": skill,
 	}
 

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sanixdarker/skillforge/pkg/skill"
+	"github.com/sanixdarker/skill-md/pkg/skill"
 )
 
 // Converter defines the interface for spec converters.

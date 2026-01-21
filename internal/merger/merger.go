@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sanixdarker/skillforge/pkg/skill"
+	"github.com/sanixdarker/skill-md/pkg/skill"
 )
 
 // Options holds merge options.

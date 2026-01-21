@@ -9,8 +9,8 @@ services:
     volumes:
       - skillmd_data:/data
     environment:
-      - SKILLFORGE_PORT=8080
-      - SKILLFORGE_DB=/data/skillforge.db
+      - SKILLMD_PORT=8080
+      - SKILLMD_DB=/data/skill-md.db
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]

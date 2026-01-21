@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sanixdarker/skillforge/pkg/skill"
+	"github.com/sanixdarker/skill-md/pkg/skill"
 )
 
 // ProtobufConverter converts Protocol Buffer definitions to skills.

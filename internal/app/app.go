@@ -7,11 +7,11 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/sanixdarker/skillforge/internal/converter"
-	"github.com/sanixdarker/skillforge/internal/merger"
-	"github.com/sanixdarker/skillforge/internal/registry"
-	"github.com/sanixdarker/skillforge/internal/sources"
-	"github.com/sanixdarker/skillforge/internal/storage"
+	"github.com/sanixdarker/skill-md/internal/converter"
+	"github.com/sanixdarker/skill-md/internal/merger"
+	"github.com/sanixdarker/skill-md/internal/registry"
+	"github.com/sanixdarker/skill-md/internal/sources"
+	"github.com/sanixdarker/skill-md/internal/storage"
 )
 
 // Config holds application configuration.
@@ -31,7 +31,7 @@ type Config struct {
 func DefaultConfig() *Config {
 	return &Config{
 		Port:   8080,
-		DBPath: "./skillforge.db",
+		DBPath: "./skill-md.db",
 		Debug:  false,
 	}
 }
@@ -87,7 +87,7 @@ func New(cfg *Config) (*App, error) {
 	federatedSource.RegisterSource(localSource)
 
 	// Register external sources
-	skillsshSource := sources.NewSkillsSHSource()
+	skillsshSource := sources.NewSkillsSHSource(cfg.GitHubToken)
 	federatedSource.RegisterSource(skillsshSource)
 
 	githubSource := sources.NewGitHubSource(cfg.GitHubToken)

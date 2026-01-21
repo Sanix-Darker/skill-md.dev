@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/sanixdarker/skillforge/internal/converter"
-	"github.com/sanixdarker/skillforge/pkg/skill"
+	"github.com/sanixdarker/skill-md/internal/converter"
+	"github.com/sanixdarker/skill-md/pkg/skill"
 	"github.com/spf13/cobra"
 )
 

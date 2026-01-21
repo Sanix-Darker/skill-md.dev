@@ -4,7 +4,7 @@
 BINARY_NAME=skillmd
 VERSION?=dev
 COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-LDFLAGS=-ldflags "-X github.com/sanixdarker/skillforge/internal/cli.Version=$(VERSION) -X github.com/sanixdarker/skillforge/internal/cli.Commit=$(COMMIT)"
+LDFLAGS=-ldflags "-X github.com/sanixdarker/skill-md/internal/cli.Version=$(VERSION) -X github.com/sanixdarker/skill-md/internal/cli.Commit=$(COMMIT)"
 
 # Build
 build:
@@ -41,14 +41,14 @@ test-coverage:
 clean:
 	rm -f $(BINARY_NAME) $(BINARY_NAME)-*
 	rm -f coverage.out coverage.html
-	rm -f skillforge.db
+	rm -f skill-md.db
 
 # Docker
 docker:
-	docker build -t skillforge:$(VERSION) .
+	docker build -t skill-md:$(VERSION) .
 
 docker-run:
-	docker run -p 8080:8080 -v skillforge_data:/data skillforge:$(VERSION)
+	docker run -p 8080:8080 -v skill-md_data:/data skill-md:$(VERSION)
 
 docker-compose:
 	docker compose up -d

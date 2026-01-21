@@ -7,11 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sanixdarker/skillforge/internal/app"
-	"github.com/sanixdarker/skillforge/internal/converter"
-	"github.com/sanixdarker/skillforge/internal/server/middleware"
-	"github.com/sanixdarker/skillforge/pkg/skill"
-	"github.com/sanixdarker/skillforge/web"
+	"github.com/sanixdarker/skill-md/internal/app"
+	"github.com/sanixdarker/skill-md/internal/converter"
+	"github.com/sanixdarker/skill-md/internal/server/middleware"
+	"github.com/sanixdarker/skill-md/pkg/skill"
+	"github.com/sanixdarker/skill-md/web"
 )
 
 // ConvertHandler handles conversion requests.
@@ -27,7 +27,7 @@ func NewConvertHandler(application *app.App) *ConvertHandler {
 // Index renders the convert page.
 func (h *ConvertHandler) Index(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{
-		"Title":   "Convert - Skill Forge",
+		"Title":   "Convert - Skill MD",
 		"Formats": h.app.ConverterManager.SupportedFormats(),
 	}
 

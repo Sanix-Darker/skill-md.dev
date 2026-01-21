@@ -9,10 +9,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/sanixdarker/skillforge/internal/app"
-	"github.com/sanixdarker/skillforge/internal/server/handlers"
-	servermw "github.com/sanixdarker/skillforge/internal/server/middleware"
-	"github.com/sanixdarker/skillforge/web"
+	"github.com/sanixdarker/skill-md/internal/app"
+	"github.com/sanixdarker/skill-md/internal/server/handlers"
+	servermw "github.com/sanixdarker/skill-md/internal/server/middleware"
+	"github.com/sanixdarker/skill-md/web"
 )
 
 // Server represents the HTTP server.

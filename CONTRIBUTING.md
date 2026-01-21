@@ -1,11 +1,11 @@
-# Contributing to Skill Forge
+# Contributing to Skill MD
 
-Thank you for your interest in contributing to Skill Forge!
+Thank you for your interest in contributing to Skill MD!
 
 ## Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/skillforge.git`
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/skill-md.git`
 3. Create a feature branch: `git checkout -b feat/your-feature`
 4. Make your changes
 5. Run tests: `go test ./...`
@@ -40,7 +40,7 @@ go test ./...
 
 ## Adding a New Converter
 
-Skill Forge supports adding new input formats. Here's how to add a new converter:
+Skill MD supports adding new input formats. Here's how to add a new converter:
 
 ### 1. Create the Converter File
 
@@ -50,7 +50,7 @@ Create `internal/converter/yourformat.go`:
 package converter
 
 import (
-    "github.com/sanixdarker/skillforge/pkg/skill"
+    "github.com/sanixdarker/skill-md/pkg/skill"
 )
 
 type YourFormatConverter struct{}

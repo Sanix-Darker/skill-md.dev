@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/ledongthuc/pdf"
-	"github.com/sanixdarker/skillforge/pkg/skill"
+	"github.com/sanixdarker/skill-md/pkg/skill"
 )
 
 // PDFConverter converts PDF documents to SKILL.md.
