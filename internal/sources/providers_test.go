@@ -416,3 +416,276 @@ func TestProviderCreation(t *testing.T) {
 		}
 	})
 }
+
+// TestSkillsSHSource_ParseFrontmatter tests frontmatter parsing for search filtering
+func TestSkillsSHSource_ParseFrontmatter(t *testing.T) {
+	source := NewSkillsSHSource("")
+
+	t.Run("parses name and description", func(t *testing.T) {
+		content := `---
+name: "Design System"
+description: "A comprehensive design system for UI"
+tags:
+  - "design"
+  - "ui"
+---
+
+## Overview
+Content here.
+`
+		name, description, tags := source.parseFrontmatter(content, "default-name")
+
+		if name != "Design System" {
+			t.Errorf("expected name 'Design System', got %q", name)
+		}
+		if description != "A comprehensive design system for UI" {
+			t.Errorf("expected description, got %q", description)
+		}
+		if len(tags) != 2 {
+			t.Errorf("expected 2 tags, got %d", len(tags))
+		}
+	})
+
+	t.Run("returns default name when no frontmatter", func(t *testing.T) {
+		content := `## Overview
+Just regular content.
+`
+		name, description, tags := source.parseFrontmatter(content, "fallback-name")
+
+		if name != "fallback-name" {
+			t.Errorf("expected fallback name, got %q", name)
+		}
+		if description != "" {
+			t.Errorf("expected empty description, got %q", description)
+		}
+		if len(tags) != 0 {
+			t.Errorf("expected no tags, got %d", len(tags))
+		}
+	})
+
+	t.Run("handles quoted values", func(t *testing.T) {
+		content := `---
+name: 'Single Quoted Name'
+description: "Double quoted description"
+---
+`
+		name, description, _ := source.parseFrontmatter(content, "default")
+
+		if name != "Single Quoted Name" {
+			t.Errorf("expected 'Single Quoted Name', got %q", name)
+		}
+		if description != "Double quoted description" {
+			t.Errorf("expected double quoted description, got %q", description)
+		}
+	})
+
+	t.Run("handles tags with quotes", func(t *testing.T) {
+		content := `---
+name: "Test"
+tags:
+  - "quoted-tag"
+  - unquoted-tag
+---
+`
+		_, _, tags := source.parseFrontmatter(content, "default")
+
+		if len(tags) != 2 {
+			t.Errorf("expected 2 tags, got %d", len(tags))
+		}
+		if len(tags) > 0 && tags[0] != "quoted-tag" {
+			t.Errorf("expected 'quoted-tag', got %q", tags[0])
+		}
+	})
+}
+
+// TestSkillsSHSource_MatchesTags tests tag matching for search
+func TestSkillsSHSource_MatchesTags(t *testing.T) {
+	source := NewSkillsSHSource("")
+
+	t.Run("matches exact tag", func(t *testing.T) {
+		tags := []string{"design", "ui", "frontend"}
+		if !source.matchesTags(tags, "design") {
+			t.Error("expected to match 'design' tag")
+		}
+	})
+
+	t.Run("matches partial tag", func(t *testing.T) {
+		tags := []string{"design-system", "ui-components"}
+		if !source.matchesTags(tags, "design") {
+			t.Error("expected to match partial 'design' in 'design-system'")
+		}
+	})
+
+	t.Run("case insensitive match", func(t *testing.T) {
+		tags := []string{"Design", "UI"}
+		if !source.matchesTags(tags, "design") {
+			t.Error("expected case insensitive match")
+		}
+	})
+
+	t.Run("no match returns false", func(t *testing.T) {
+		tags := []string{"api", "backend"}
+		if source.matchesTags(tags, "frontend") {
+			t.Error("expected no match for 'frontend'")
+		}
+	})
+
+	t.Run("empty tags returns false", func(t *testing.T) {
+		if source.matchesTags([]string{}, "anything") {
+			t.Error("expected no match for empty tags")
+		}
+	})
+}
+
+// TestSkillsSHSource_SearchFiltering tests the search filtering logic
+func TestSkillsSHSource_SearchFiltering(t *testing.T) {
+	// This is a unit test for the filtering logic - we can't easily test the full
+	// Search method without mocking HTTP calls, but we can verify the matching logic
+
+	source := NewSkillsSHSource("")
+
+	t.Run("empty query matches all", func(t *testing.T) {
+		skill := &ExternalSkill{
+			Name:        "Any Skill",
+			Description: "Any description",
+			Tags:        []string{"any"},
+		}
+		// With empty query, the search should return all skills
+		// The filtering logic: query == "" returns true
+		query := ""
+		matches := query == "" ||
+			containsIgnoreCase(skill.Name, query) ||
+			containsIgnoreCase(skill.Description, query) ||
+			source.matchesTags(skill.Tags, query)
+
+		if !matches {
+			t.Error("empty query should match all skills")
+		}
+	})
+
+	t.Run("matches by name", func(t *testing.T) {
+		skill := &ExternalSkill{
+			Name:        "Design System API",
+			Description: "Something else",
+			Tags:        []string{"api"},
+		}
+		query := "design"
+		matches := containsIgnoreCase(skill.Name, query)
+
+		if !matches {
+			t.Error("should match 'design' in name")
+		}
+	})
+
+	t.Run("matches by description", func(t *testing.T) {
+		skill := &ExternalSkill{
+			Name:        "Something",
+			Description: "A design tool for developers",
+			Tags:        []string{"tool"},
+		}
+		query := "design"
+		matches := containsIgnoreCase(skill.Description, query)
+
+		if !matches {
+			t.Error("should match 'design' in description")
+		}
+	})
+}
+
+// containsIgnoreCase checks if substr exists in s (case insensitive)
+func containsIgnoreCase(s, substr string) bool {
+	if substr == "" {
+		return true
+	}
+	if len(s) < len(substr) {
+		return false
+	}
+	// Convert both to lowercase and check
+	sLower := toLowerASCII(s)
+	substrLower := toLowerASCII(substr)
+	for i := 0; i <= len(sLower)-len(substrLower); i++ {
+		if sLower[i:i+len(substrLower)] == substrLower {
+			return true
+		}
+	}
+	return false
+}
+
+// toLowerASCII converts ASCII uppercase to lowercase
+func toLowerASCII(s string) string {
+	result := make([]byte, len(s))
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c >= 'A' && c <= 'Z' {
+			c = c + 32
+		}
+		result[i] = c
+	}
+	return string(result)
+}
+
+// TestSearchQueryMatching tests search query matching logic
+func TestSearchQueryMatching(t *testing.T) {
+	// Test cases that mirror the SkillsSH search logic
+	tests := []struct {
+		name        string
+		description string
+		slug        string
+		tags        []string
+		query       string
+		shouldMatch bool
+	}{
+		{
+			name:        "Design System",
+			description: "UI components library",
+			tags:        []string{"ui", "design"},
+			query:       "design",
+			shouldMatch: true,
+		},
+		{
+			name:        "API Gateway",
+			description: "REST API management",
+			tags:        []string{"api", "gateway"},
+			query:       "design",
+			shouldMatch: false,
+		},
+		{
+			name:        "Frontend Tools",
+			description: "Design tools for frontend",
+			tags:        []string{"tools"},
+			query:       "design",
+			shouldMatch: true, // matches description
+		},
+		{
+			name:        "Backend Service",
+			description: "Server implementation",
+			tags:        []string{"design-patterns"},
+			query:       "design",
+			shouldMatch: true, // matches tag
+		},
+		{
+			name:        "Any Skill",
+			description: "Any description",
+			tags:        []string{},
+			query:       "",
+			shouldMatch: true, // empty query matches all
+		},
+	}
+
+	source := NewSkillsSHSource("")
+
+	for _, tt := range tests {
+		t.Run(tt.name+" with query "+tt.query, func(t *testing.T) {
+			query := tt.query
+			matches := query == "" ||
+				containsIgnoreCase(tt.name, query) ||
+				containsIgnoreCase(tt.description, query) ||
+				containsIgnoreCase(tt.slug, query) ||
+				source.matchesTags(tt.tags, query)
+
+			if matches != tt.shouldMatch {
+				t.Errorf("expected match=%v, got match=%v", tt.shouldMatch, matches)
+			}
+		})
+	}
+}
