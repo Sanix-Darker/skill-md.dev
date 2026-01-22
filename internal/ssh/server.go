@@ -19,6 +19,7 @@ import (
 	"github.com/charmbracelet/wish/bubbletea"
 	"github.com/charmbracelet/wish/logging"
 	"github.com/sanixdarker/skill-md/internal/registry"
+	"github.com/sanixdarker/skill-md/internal/sources"
 	"github.com/sanixdarker/skill-md/internal/tui"
 )
 
@@ -41,17 +42,19 @@ func validateKeyPermissions(keyPath string) error {
 
 // Server represents the SSH server.
 type Server struct {
-	registry *registry.Service
-	server   *ssh.Server
-	port     int
-	keyPath  string
+	registry        *registry.Service
+	federatedSource *sources.FederatedSource
+	server          *ssh.Server
+	port            int
+	keyPath         string
 }
 
 // Config holds server configuration.
 type Config struct {
-	Port     int
-	KeyPath  string
-	Registry *registry.Service
+	Port            int
+	KeyPath         string
+	Registry        *registry.Service
+	FederatedSource *sources.FederatedSource
 }
 
 // New creates a new SSH server.
@@ -80,9 +83,10 @@ func New(cfg Config) (*Server, error) {
 	}
 
 	s := &Server{
-		registry: cfg.Registry,
-		port:     cfg.Port,
-		keyPath:  cfg.KeyPath,
+		registry:        cfg.Registry,
+		federatedSource: cfg.FederatedSource,
+		port:            cfg.Port,
+		keyPath:         cfg.KeyPath,
 	}
 
 	server, err := wish.NewServer(
@@ -110,7 +114,7 @@ func (s *Server) teaHandler(sess ssh.Session) (tea.Model, []tea.ProgramOption) {
 	// Override lipgloss renderer for this session
 	lipgloss.SetDefaultRenderer(renderer)
 
-	model := tui.NewModel(s.registry)
+	model := tui.NewModel(s.registry, s.federatedSource)
 
 	// Send initial window size
 	return model, []tea.ProgramOption{

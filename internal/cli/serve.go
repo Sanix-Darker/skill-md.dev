@@ -67,8 +67,9 @@ Connect via SSH:
 		var sshSrv *sshserver.Server
 		if !serveNoSSH {
 			sshSrv, err = sshserver.New(sshserver.Config{
-				Port:     serveSSHPort,
-				Registry: application.RegistryService,
+				Port:            serveSSHPort,
+				Registry:        application.RegistryService,
+				FederatedSource: application.FederatedSource,
 			})
 			if err != nil {
 				application.Logger.Warn("failed to initialize SSH server", "error", err)

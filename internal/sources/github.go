@@ -113,12 +113,18 @@ func (s *GitHubSource) Search(ctx context.Context, opts SearchOptions) (*SearchR
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusUnauthorized {
-		// Rate limited or unauthorized - return empty results
+		// Rate limited or unauthorized - return empty results with auth message
+		errorMsg := "GitHub code search requires authentication. Set GITHUB_TOKEN environment variable."
+		if resp.StatusCode == http.StatusForbidden {
+			errorMsg = "GitHub API rate limit exceeded. Set GITHUB_TOKEN for higher limits."
+		}
 		return &SearchResult{
-			Skills:  []*ExternalSkill{},
-			Source:  SourceTypeGitHub,
-			Page:    opts.Page,
-			PerPage: opts.PerPage,
+			Skills:       []*ExternalSkill{},
+			Source:       SourceTypeGitHub,
+			Page:         opts.Page,
+			PerPage:      opts.PerPage,
+			AuthRequired: true,
+			Error:        errorMsg,
 		}, nil
 	}
 

@@ -1,4 +1,13 @@
 {{define "skill-list.html"}}
+{{if .SourceErrors}}
+<div class="mb-4 space-y-2">
+    {{range $source, $error := .SourceErrors}}
+    <div class="px-3 py-2 text-xs bg-terminal-bg border border-yellow-600/50 text-yellow-500">
+        <span class="font-medium">{{if eq $source "github"}}GitHub{{else if eq $source "gitlab"}}GitLab{{else if eq $source "skills.sh"}}SKILLS.sh{{else}}{{$source}}{{end}}:</span> {{$error}}
+    </div>
+    {{end}}
+</div>
+{{end}}
 {{if .Skills}}
 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
     {{range .Skills}}

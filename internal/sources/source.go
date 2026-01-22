@@ -46,12 +46,14 @@ type SearchOptions struct {
 
 // SearchResult contains search results from a source.
 type SearchResult struct {
-	Skills     []*ExternalSkill
-	Total      int
-	Page       int
-	PerPage    int
-	SearchTime time.Duration
-	Source     SourceType
+	Skills       []*ExternalSkill
+	Total        int
+	Page         int
+	PerPage      int
+	SearchTime   time.Duration
+	Source       SourceType
+	AuthRequired bool   // True if the source requires authentication
+	Error        string // Error message for display (e.g., "Authentication required")
 }
 
 // Source defines the interface for skill sources.

@@ -1,8 +1,10 @@
 package tui
 
 import (
+	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
@@ -11,6 +13,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/sanixdarker/skill-md/internal/converter"
 	"github.com/sanixdarker/skill-md/internal/registry"
+	"github.com/sanixdarker/skill-md/internal/sources"
 	"github.com/sanixdarker/skill-md/pkg/skill"
 )
 
@@ -419,19 +422,21 @@ func truncate(s string, max int) string {
 
 // SearchModel is the search view model.
 type SearchModel struct {
-	keys       KeyMap
-	styles     Styles
-	width      int
-	height     int
-	registry   *registry.Service
-	input      textinput.Model
-	source     int // 0=all, 1=local, 2=github, 3=gitlab, 4=skills.sh
-	sources    []string
-	results    []searchResult
-	selected   int
-	err        error
-	searching  bool
-	detail     *searchResult
+	keys            KeyMap
+	styles          Styles
+	width           int
+	height          int
+	registry        *registry.Service
+	federatedSource *sources.FederatedSource
+	input           textinput.Model
+	source          int // 0=all, 1=local, 2=github, 3=gitlab, 4=skills.sh
+	sources         []string
+	sourceTypes     []sources.SourceType
+	results         []searchResult
+	selected        int
+	err             error
+	searching       bool
+	detail          *searchResult
 }
 
 type searchResult struct {
@@ -443,19 +448,27 @@ type searchResult struct {
 }
 
 // NewSearchModel creates a new search model.
-func NewSearchModel(keys KeyMap, styles Styles, registryService *registry.Service) SearchModel {
+func NewSearchModel(keys KeyMap, styles Styles, registryService *registry.Service, federatedSource *sources.FederatedSource) SearchModel {
 	ti := textinput.New()
 	ti.Placeholder = "Enter search query..."
 	ti.Width = 50
 	ti.Focus()
 
 	return SearchModel{
-		keys:     keys,
-		styles:   styles,
-		registry: registryService,
-		input:    ti,
-		source:   0,
-		sources:  []string{"All", "Local", "GitHub", "GitLab", "skills.sh"},
+		keys:            keys,
+		styles:          styles,
+		registry:        registryService,
+		federatedSource: federatedSource,
+		input:           ti,
+		source:          0,
+		sources:         []string{"All", "Local", "GitHub", "GitLab", "skills.sh"},
+		sourceTypes: []sources.SourceType{
+			"",                        // All
+			sources.SourceTypeLocal,   // Local
+			sources.SourceTypeGitHub,  // GitHub
+			sources.SourceTypeGitLab,  // GitLab
+			sources.SourceTypeSkillsSH, // skills.sh
+		},
 	}
 }
 
@@ -543,9 +556,41 @@ func (m SearchModel) doSearch() tea.Cmd {
 			}
 		}
 
-		// Note: External sources would require importing the sources package
-		// and making HTTP requests. For now, show local results only.
-		// Full external search integration would require async HTTP calls.
+		// Search external sources using FederatedSource
+		if m.federatedSource != nil && m.source != 1 { // Not local-only
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+
+			opts := sources.SearchOptions{
+				Query:   query,
+				Page:    1,
+				PerPage: 20,
+			}
+
+			var sourcesToSearch []sources.SourceType
+			if m.source > 1 && m.source < len(m.sourceTypes) {
+				// Specific external source selected
+				sourcesToSearch = []sources.SourceType{m.sourceTypes[m.source]}
+			}
+			// If source == 0 (All), sourcesToSearch stays nil to search all
+
+			result, err := m.federatedSource.SearchSources(ctx, opts, sourcesToSearch)
+			if err == nil && result != nil {
+				for _, sk := range result.Skills {
+					// Skip local results as we already have them
+					if sk.Source == sources.SourceTypeLocal {
+						continue
+					}
+					results = append(results, searchResult{
+						Name:        sk.Name,
+						Description: sk.Description,
+						Source:      string(sk.Source),
+						ID:          sk.ID,
+						Content:     sk.Content,
+					})
+				}
+			}
+		}
 
 		if len(results) == 0 {
 			return searchResultsMsg{err: fmt.Errorf("no results found")}

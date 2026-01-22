@@ -19,11 +19,12 @@ type FederatedSource struct {
 
 // FederatedResult contains combined results from multiple sources.
 type FederatedResult struct {
-	Skills      []*ExternalSkill
-	Total       int
-	BySource    map[SourceType]int
-	SearchTime  time.Duration
-	SourceTimes map[SourceType]time.Duration
+	Skills       []*ExternalSkill
+	Total        int
+	BySource     map[SourceType]int
+	SearchTime   time.Duration
+	SourceTimes  map[SourceType]time.Duration
+	SourceErrors map[SourceType]string // Error messages per source (e.g., auth required)
 }
 
 // NewFederatedSource creates a new federated source manager.
@@ -154,9 +155,10 @@ func (f *FederatedSource) SearchSources(ctx context.Context, opts SearchOptions,
 
 	// Collect results
 	fedResult := &FederatedResult{
-		Skills:      make([]*ExternalSkill, 0),
-		BySource:    make(map[SourceType]int),
-		SourceTimes: make(map[SourceType]time.Duration),
+		Skills:       make([]*ExternalSkill, 0),
+		BySource:     make(map[SourceType]int),
+		SourceTimes:  make(map[SourceType]time.Duration),
+		SourceErrors: make(map[SourceType]string),
 	}
 
 	for result := range resultCh {
@@ -164,6 +166,9 @@ func (f *FederatedSource) SearchSources(ctx context.Context, opts SearchOptions,
 		fedResult.Total += result.Total
 		fedResult.BySource[result.Source] = result.Total
 		fedResult.SourceTimes[result.Source] = result.SearchTime
+		if result.Error != "" {
+			fedResult.SourceErrors[result.Source] = result.Error
+		}
 	}
 
 	// Sort results by relevance (stars for external, then by name)

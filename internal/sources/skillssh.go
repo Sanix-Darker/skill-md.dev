@@ -8,8 +8,12 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
+
+// maxConcurrentRequests limits concurrent GitHub API requests
+const maxConcurrentRequests = 5
 
 // Maximum content size for external skill content (1MB)
 const maxExternalContentSize = 1 * 1024 * 1024
@@ -90,28 +94,59 @@ func (s *SkillsSHSource) Search(ctx context.Context, opts SearchOptions) (*Searc
 		opts.Page = 1
 	}
 
-	var allSkills []*ExternalSkill
 	query := strings.ToLower(opts.Query)
 
-	// Search through known skill repositories
+	// Use a semaphore to limit concurrent requests
+	sem := make(chan struct{}, maxConcurrentRequests)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	var allSkills []*ExternalSkill
+
+	// Search through known skill repositories in parallel
 	for _, repoPath := range knownSkillRepos {
-		skills, err := s.listSkillsFromRepo(ctx, repoPath)
-		if err != nil {
-			continue // Skip repos that fail
+		// Check for context cancellation
+		if ctx.Err() != nil {
+			break
 		}
 
-		// Filter by query
-		for _, skill := range skills {
-			if query == "" ||
-				strings.Contains(strings.ToLower(skill.Name), query) ||
-				strings.Contains(strings.ToLower(skill.Description), query) ||
-				strings.Contains(strings.ToLower(skill.Slug), query) ||
-				s.matchesTags(skill.Tags, query) ||
-				(len(query) >= 3 && strings.Contains(strings.ToLower(skill.Content), query)) {
-				allSkills = append(allSkills, skill)
+		wg.Add(1)
+		go func(repo string) {
+			defer wg.Done()
+
+			// Acquire semaphore
+			select {
+			case sem <- struct{}{}:
+				defer func() { <-sem }()
+			case <-ctx.Done():
+				return
 			}
-		}
+
+			skills, err := s.listSkillsFromRepo(ctx, repo)
+			if err != nil {
+				return // Skip repos that fail
+			}
+
+			// Filter by query
+			var filtered []*ExternalSkill
+			for _, skill := range skills {
+				if query == "" ||
+					strings.Contains(strings.ToLower(skill.Name), query) ||
+					strings.Contains(strings.ToLower(skill.Description), query) ||
+					strings.Contains(strings.ToLower(skill.Slug), query) ||
+					s.matchesTags(skill.Tags, query) ||
+					(len(query) >= 3 && strings.Contains(strings.ToLower(skill.Content), query)) {
+					filtered = append(filtered, skill)
+				}
+			}
+
+			// Safely append results
+			mu.Lock()
+			allSkills = append(allSkills, filtered...)
+			mu.Unlock()
+		}(repoPath)
 	}
+
+	wg.Wait()
 
 	// Apply pagination
 	total := len(allSkills)

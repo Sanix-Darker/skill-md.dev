@@ -6,6 +6,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/sanixdarker/skill-md/internal/registry"
+	"github.com/sanixdarker/skill-md/internal/sources"
 )
 
 // View represents different views in the TUI.
@@ -188,34 +189,36 @@ func DefaultStyles() Styles {
 
 // Model is the main TUI model.
 type Model struct {
-	registry     *registry.Service
-	keys         KeyMap
-	styles       Styles
-	width        int
-	height       int
-	view         View
-	homeModel    HomeModel
-	convertModel ConvertModel
-	browseModel  BrowseModel
-	searchModel  SearchModel
-	mergeModel   MergeModel
+	registry        *registry.Service
+	federatedSource *sources.FederatedSource
+	keys            KeyMap
+	styles          Styles
+	width           int
+	height          int
+	view            View
+	homeModel       HomeModel
+	convertModel    ConvertModel
+	browseModel     BrowseModel
+	searchModel     SearchModel
+	mergeModel      MergeModel
 }
 
 // NewModel creates a new TUI model.
-func NewModel(registryService *registry.Service) Model {
+func NewModel(registryService *registry.Service, federatedSource *sources.FederatedSource) Model {
 	keys := DefaultKeyMap()
 	styles := DefaultStyles()
 
 	return Model{
-		registry:     registryService,
-		keys:         keys,
-		styles:       styles,
-		view:         ViewHome,
-		homeModel:    NewHomeModel(keys, styles),
-		convertModel: NewConvertModel(keys, styles),
-		browseModel:  NewBrowseModel(keys, styles, registryService),
-		searchModel:  NewSearchModel(keys, styles, registryService),
-		mergeModel:   NewMergeModel(keys, styles, registryService),
+		registry:        registryService,
+		federatedSource: federatedSource,
+		keys:            keys,
+		styles:          styles,
+		view:            ViewHome,
+		homeModel:       NewHomeModel(keys, styles),
+		convertModel:    NewConvertModel(keys, styles),
+		browseModel:     NewBrowseModel(keys, styles, registryService),
+		searchModel:     NewSearchModel(keys, styles, registryService, federatedSource),
+		mergeModel:      NewMergeModel(keys, styles, registryService),
 	}
 }
 
