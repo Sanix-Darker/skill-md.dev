@@ -117,6 +117,7 @@ func (h *SkillsHandler) Browse(w http.ResponseWriter, r *http.Request) {
 	total := 0
 	var skills []*sources.ExternalSkill
 	bySource := make(map[string]int)
+	sourceErrors := make(map[string]string)
 	var searchTime string
 
 	if result != nil {
@@ -125,24 +126,28 @@ func (h *SkillsHandler) Browse(w http.ResponseWriter, r *http.Request) {
 		for src, count := range result.BySource {
 			bySource[string(src)] = count
 		}
+		for src, errMsg := range result.SourceErrors {
+			sourceErrors[string(src)] = errMsg
+		}
 		searchTime = result.SearchTime.Round(time.Millisecond).String()
 	}
 
 	data = map[string]interface{}{
-		"Title":      "Browse - Skill MD",
-		"Skills":     skills,
-		"Total":      total,
-		"Page":       page,
-		"Query":      query,
-		"Tag":        tag,
-		"Tags":       tags,
-		"Source":     source,
-		"BySource":   bySource,
-		"SearchTime": searchTime,
-		"HasNext":    total > page*20,
-		"HasPrev":    page > 1,
-		"NextPage":   page + 1,
-		"PrevPage":   page - 1,
+		"Title":        "Browse - Skill MD",
+		"Skills":       skills,
+		"Total":        total,
+		"Page":         page,
+		"Query":        query,
+		"Tag":          tag,
+		"Tags":         tags,
+		"Source":       source,
+		"BySource":     bySource,
+		"SourceErrors": sourceErrors,
+		"SearchTime":   searchTime,
+		"HasNext":      total > page*20,
+		"HasPrev":      page > 1,
+		"NextPage":     page + 1,
+		"PrevPage":     page - 1,
 	}
 
 	htmxReq := middleware.GetHTMX(r)
@@ -315,6 +320,7 @@ func (h *SkillsHandler) Search(w http.ResponseWriter, r *http.Request) {
 	total := 0
 	var skills []*sources.ExternalSkill
 	bySource := make(map[string]int)
+	sourceErrors := make(map[string]string)
 	var searchTime string
 
 	if result != nil {
@@ -323,21 +329,25 @@ func (h *SkillsHandler) Search(w http.ResponseWriter, r *http.Request) {
 		for src, count := range result.BySource {
 			bySource[string(src)] = count
 		}
+		for src, errMsg := range result.SourceErrors {
+			sourceErrors[string(src)] = errMsg
+		}
 		searchTime = result.SearchTime.Round(time.Millisecond).String()
 	}
 
 	data := map[string]interface{}{
-		"Skills":     skills,
-		"Total":      total,
-		"Page":       page,
-		"Query":      query,
-		"Source":     source,
-		"BySource":   bySource,
-		"SearchTime": searchTime,
-		"HasNext":    total > page*20,
-		"HasPrev":    page > 1,
-		"NextPage":   page + 1,
-		"PrevPage":   page - 1,
+		"Skills":       skills,
+		"Total":        total,
+		"Page":         page,
+		"Query":        query,
+		"Source":       source,
+		"BySource":     bySource,
+		"SourceErrors": sourceErrors,
+		"SearchTime":   searchTime,
+		"HasNext":      total > page*20,
+		"HasPrev":      page > 1,
+		"NextPage":     page + 1,
+		"PrevPage":     page - 1,
 	}
 
 	// Use merge-specific template when in merge mode
