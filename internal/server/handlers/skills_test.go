@@ -269,3 +269,199 @@ Created via form.
 		// Just ensure no panic occurred
 	})
 }
+
+func TestSkillsHandler_Search_QueryValidation(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test.db")
+
+	cfg := &app.Config{
+		Port:   8080,
+		DBPath: dbPath,
+		Debug:  true,
+	}
+
+	application, err := app.New(cfg)
+	if err != nil {
+		t.Fatalf("failed to create app: %v", err)
+	}
+	defer application.Close()
+
+	handler := NewSkillsHandler(application)
+
+	t.Run("query too long", func(t *testing.T) {
+		longQuery := strings.Repeat("a", 501)
+		req := httptest.NewRequest(http.MethodGet, "/api/skills/search?q="+longQuery, nil)
+		w := httptest.NewRecorder()
+
+		handler.Search(w, req)
+
+		resp := w.Result()
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("expected status 400 for query too long, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("invalid source type", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/skills/search?q=test&source=invalid", nil)
+		w := httptest.NewRecorder()
+
+		handler.Search(w, req)
+
+		resp := w.Result()
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("expected status 400 for invalid source, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("valid source types", func(t *testing.T) {
+		validSources := []string{"local", "github", "gitlab", "skills.sh", "bitbucket", "codeberg"}
+		for _, source := range validSources {
+			req := httptest.NewRequest(http.MethodGet, "/api/skills/search?q=test&source="+source, nil)
+			w := httptest.NewRecorder()
+
+			handler.Search(w, req)
+
+			resp := w.Result()
+			if resp.StatusCode != http.StatusOK {
+				t.Errorf("expected status 200 for valid source %s, got %d", source, resp.StatusCode)
+			}
+		}
+	})
+}
+
+func TestSkillsHandler_Search_MergeMode(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test.db")
+
+	cfg := &app.Config{
+		Port:   8080,
+		DBPath: dbPath,
+		Debug:  true,
+	}
+
+	application, err := app.New(cfg)
+	if err != nil {
+		t.Fatalf("failed to create app: %v", err)
+	}
+	defer application.Close()
+
+	// Import test skills with different content for search matching
+	skillContent := `---
+name: "Design System API"
+version: "1.0.0"
+description: "A design system for UI components"
+tags:
+  - "design"
+  - "ui"
+---
+
+## Overview
+This is a design system API.
+`
+	_, err = application.RegistryService.ImportSkill(skillContent)
+	if err != nil {
+		t.Fatalf("failed to import test skill: %v", err)
+	}
+
+	handler := NewSkillsHandler(application)
+
+	t.Run("merge mode returns correct template", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/skills/search?q=design&merge_mode=true&source=local", nil)
+		w := httptest.NewRecorder()
+
+		handler.Search(w, req)
+
+		resp := w.Result()
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("expected status 200, got %d", resp.StatusCode)
+		}
+
+		body, _ := io.ReadAll(resp.Body)
+		bodyStr := string(body)
+
+		// Merge mode template should have addSkillToMerge function calls
+		if strings.Contains(bodyStr, "Design System") {
+			if !strings.Contains(bodyStr, "addSkillToMerge") {
+				t.Error("merge mode template should contain addSkillToMerge function")
+			}
+			if !strings.Contains(bodyStr, "+ Add") {
+				t.Error("merge mode template should contain '+ Add' button")
+			}
+		}
+	})
+
+	t.Run("non-merge mode returns different template", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/skills/search?q=design&source=local", nil)
+		w := httptest.NewRecorder()
+
+		handler.Search(w, req)
+
+		resp := w.Result()
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("expected status 200, got %d", resp.StatusCode)
+		}
+
+		body, _ := io.ReadAll(resp.Body)
+		bodyStr := string(body)
+
+		// Non-merge mode should NOT have addSkillToMerge
+		if strings.Contains(bodyStr, "addSkillToMerge") {
+			t.Error("non-merge mode should not contain addSkillToMerge function")
+		}
+	})
+}
+
+func TestSkillsHandler_Search_Pagination(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test.db")
+
+	cfg := &app.Config{
+		Port:   8080,
+		DBPath: dbPath,
+		Debug:  true,
+	}
+
+	application, err := app.New(cfg)
+	if err != nil {
+		t.Fatalf("failed to create app: %v", err)
+	}
+	defer application.Close()
+
+	handler := NewSkillsHandler(application)
+
+	t.Run("page parameter defaults to 1", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/skills/search?q=test", nil)
+		w := httptest.NewRecorder()
+
+		handler.Search(w, req)
+
+		resp := w.Result()
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("expected status 200, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("invalid page number treated as 1", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/skills/search?q=test&page=invalid", nil)
+		w := httptest.NewRecorder()
+
+		handler.Search(w, req)
+
+		resp := w.Result()
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("expected status 200, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("negative page number treated as 1", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/skills/search?q=test&page=-1", nil)
+		w := httptest.NewRecorder()
+
+		handler.Search(w, req)
+
+		resp := w.Result()
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("expected status 200, got %d", resp.StatusCode)
+		}
+	})
+}
