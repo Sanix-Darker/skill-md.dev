@@ -16,10 +16,10 @@ type APIBlueprintConverter struct{}
 
 // API Blueprint parsed types
 type apibSpec struct {
-	Format        string
-	Host          string
-	Name          string
-	Description   string
+	Format         string
+	Host           string
+	Name           string
+	Description    string
 	ResourceGroups []apibResourceGroup
 	DataStructures []apibDataStructure
 }
@@ -39,14 +39,14 @@ type apibResource struct {
 }
 
 type apibAction struct {
-	Method       string
-	Name         string
-	Description  string
-	URIParams    []apibParam
-	QueryParams  []apibParam
-	Headers      []apibHeader
-	Request      *apibPayload
-	Responses    []apibResponse
+	Method      string
+	Name        string
+	Description string
+	URIParams   []apibParam
+	QueryParams []apibParam
+	Headers     []apibHeader
+	Request     *apibPayload
+	Responses   []apibResponse
 }
 
 type apibParam struct {

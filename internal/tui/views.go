@@ -463,10 +463,10 @@ func NewSearchModel(keys KeyMap, styles Styles, registryService *registry.Servic
 		source:          0,
 		sources:         []string{"All", "Local", "GitHub", "GitLab", "skills.sh"},
 		sourceTypes: []sources.SourceType{
-			"",                        // All
-			sources.SourceTypeLocal,   // Local
-			sources.SourceTypeGitHub,  // GitHub
-			sources.SourceTypeGitLab,  // GitLab
+			"",                         // All
+			sources.SourceTypeLocal,    // Local
+			sources.SourceTypeGitHub,   // GitHub
+			sources.SourceTypeGitLab,   // GitLab
 			sources.SourceTypeSkillsSH, // skills.sh
 		},
 	}
@@ -679,17 +679,17 @@ func (m SearchModel) View() string {
 
 // MergeModel is the merge view model.
 type MergeModel struct {
-	keys       KeyMap
-	styles     Styles
-	width      int
-	height     int
-	registry   *registry.Service
-	skills     []*skill.StoredSkill
-	selected   []bool
-	cursor     int
-	err        error
-	result     string
-	merging    bool
+	keys     KeyMap
+	styles   Styles
+	width    int
+	height   int
+	registry *registry.Service
+	skills   []*skill.StoredSkill
+	selected []bool
+	cursor   int
+	err      error
+	result   string
+	merging  bool
 }
 
 // NewMergeModel creates a new merge model.

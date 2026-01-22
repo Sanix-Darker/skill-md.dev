@@ -22,19 +22,19 @@ type CodebergSource struct {
 
 // codebergSearchResponse represents the Codeberg search response.
 type codebergSearchResponse struct {
-	OK   bool            `json:"ok"`
-	Data []codebergRepo  `json:"data"`
+	OK   bool           `json:"ok"`
+	Data []codebergRepo `json:"data"`
 }
 
 type codebergRepo struct {
-	ID              int64  `json:"id"`
-	Name            string `json:"name"`
-	FullName        string `json:"full_name"`
-	Description     string `json:"description"`
-	HTMLURL         string `json:"html_url"`
-	StarsCount      int    `json:"stars_count"`
-	DefaultBranch   string `json:"default_branch"`
-	Owner           codebergOwner `json:"owner"`
+	ID            int64         `json:"id"`
+	Name          string        `json:"name"`
+	FullName      string        `json:"full_name"`
+	Description   string        `json:"description"`
+	HTMLURL       string        `json:"html_url"`
+	StarsCount    int           `json:"stars_count"`
+	DefaultBranch string        `json:"default_branch"`
+	Owner         codebergOwner `json:"owner"`
 }
 
 type codebergOwner struct {

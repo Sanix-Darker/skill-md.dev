@@ -51,19 +51,19 @@ type ramlResource struct {
 	URIParams    map[string]ramlParam     `yaml:"uriParameters"`
 	Methods      map[string]*ramlMethod   `yaml:"-"`
 	SubResources map[string]*ramlResource `yaml:"-"`
-	Is           []string                 `yaml:"is"` // traits
+	Is           []string                 `yaml:"is"`   // traits
 	Type         string                   `yaml:"type"` // resource type
 }
 
 type ramlMethod struct {
-	DisplayName string                      `yaml:"displayName"`
-	Description string                      `yaml:"description"`
-	QueryParams map[string]ramlParam        `yaml:"queryParameters"`
-	Headers     map[string]ramlParam        `yaml:"headers"`
-	Body        map[string]ramlBody         `yaml:"body"`
-	Responses   map[string]ramlResponse     `yaml:"responses"`
-	SecuredBy   []interface{}               `yaml:"securedBy"`
-	Is          []string                    `yaml:"is"` // traits
+	DisplayName string                  `yaml:"displayName"`
+	Description string                  `yaml:"description"`
+	QueryParams map[string]ramlParam    `yaml:"queryParameters"`
+	Headers     map[string]ramlParam    `yaml:"headers"`
+	Body        map[string]ramlBody     `yaml:"body"`
+	Responses   map[string]ramlResponse `yaml:"responses"`
+	SecuredBy   []interface{}           `yaml:"securedBy"`
+	Is          []string                `yaml:"is"` // traits
 }
 
 type ramlParam struct {
@@ -88,7 +88,7 @@ type ramlBody struct {
 }
 
 type ramlResponse struct {
-	Description string              `yaml:"description"`
+	Description string               `yaml:"description"`
 	Headers     map[string]ramlParam `yaml:"headers"`
 	Body        map[string]ramlBody  `yaml:"body"`
 }

@@ -533,9 +533,9 @@ func (c *GraphQLConverter) buildDirectivesSection(schema *ast.Schema) string {
 
 	// Collect custom directives (exclude built-in)
 	builtIn := map[string]bool{
-		"deprecated": true,
-		"skip":       true,
-		"include":    true,
+		"deprecated":  true,
+		"skip":        true,
+		"include":     true,
 		"specifiedBy": true,
 	}
 

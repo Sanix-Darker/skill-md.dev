@@ -25,22 +25,22 @@ type GitLabSource struct {
 
 // gitlabSearchResponse represents the GitLab search response.
 type gitlabSearchResponse struct {
-	Data       string `json:"data"`
-	Filename   string `json:"filename"`
-	Ref        string `json:"ref"`
-	Startline  int    `json:"startline"`
-	ProjectID  int    `json:"project_id"`
-	Path       string `json:"path"`
+	Data      string `json:"data"`
+	Filename  string `json:"filename"`
+	Ref       string `json:"ref"`
+	Startline int    `json:"startline"`
+	ProjectID int    `json:"project_id"`
+	Path      string `json:"path"`
 }
 
 type gitlabProject struct {
-	ID              int    `json:"id"`
-	Name            string `json:"name"`
-	Description     string `json:"description"`
-	PathWithNS      string `json:"path_with_namespace"`
-	WebURL          string `json:"web_url"`
-	StarCount       int    `json:"star_count"`
-	DefaultBranch   string `json:"default_branch"`
+	ID            int    `json:"id"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	PathWithNS    string `json:"path_with_namespace"`
+	WebURL        string `json:"web_url"`
+	StarCount     int    `json:"star_count"`
+	DefaultBranch string `json:"default_branch"`
 }
 
 // NewGitLabSource creates a new GitLab source.

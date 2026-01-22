@@ -17,22 +17,22 @@ type AsyncAPIConverter struct{}
 
 // AsyncAPI spec types for parsing
 type asyncAPISpec struct {
-	AsyncAPI    string                       `yaml:"asyncapi" json:"asyncapi"`
-	Info        asyncAPIInfo                 `yaml:"info" json:"info"`
-	Servers     map[string]asyncAPIServer    `yaml:"servers" json:"servers"`
-	Channels    map[string]asyncAPIChannel   `yaml:"channels" json:"channels"`
-	Components  *asyncAPIComponents          `yaml:"components" json:"components"`
-	Tags        []asyncAPITag                `yaml:"tags" json:"tags"`
-	DefaultHost string                       `yaml:"defaultContentType" json:"defaultContentType"`
+	AsyncAPI    string                     `yaml:"asyncapi" json:"asyncapi"`
+	Info        asyncAPIInfo               `yaml:"info" json:"info"`
+	Servers     map[string]asyncAPIServer  `yaml:"servers" json:"servers"`
+	Channels    map[string]asyncAPIChannel `yaml:"channels" json:"channels"`
+	Components  *asyncAPIComponents        `yaml:"components" json:"components"`
+	Tags        []asyncAPITag              `yaml:"tags" json:"tags"`
+	DefaultHost string                     `yaml:"defaultContentType" json:"defaultContentType"`
 }
 
 type asyncAPIInfo struct {
-	Title          string         `yaml:"title" json:"title"`
-	Version        string         `yaml:"version" json:"version"`
-	Description    string         `yaml:"description" json:"description"`
-	TermsOfService string         `yaml:"termsOfService" json:"termsOfService"`
-	Contact        *asyncContact  `yaml:"contact" json:"contact"`
-	License        *asyncLicense  `yaml:"license" json:"license"`
+	Title          string        `yaml:"title" json:"title"`
+	Version        string        `yaml:"version" json:"version"`
+	Description    string        `yaml:"description" json:"description"`
+	TermsOfService string        `yaml:"termsOfService" json:"termsOfService"`
+	Contact        *asyncContact `yaml:"contact" json:"contact"`
+	License        *asyncLicense `yaml:"license" json:"license"`
 }
 
 type asyncContact struct {
@@ -47,12 +47,12 @@ type asyncLicense struct {
 }
 
 type asyncAPIServer struct {
-	URL         string                    `yaml:"url" json:"url"`
-	Protocol    string                    `yaml:"protocol" json:"protocol"`
-	Description string                    `yaml:"description" json:"description"`
-	Security    []map[string][]string     `yaml:"security" json:"security"`
-	Bindings    map[string]interface{}    `yaml:"bindings" json:"bindings"`
-	Variables   map[string]asyncAPIVar    `yaml:"variables" json:"variables"`
+	URL         string                 `yaml:"url" json:"url"`
+	Protocol    string                 `yaml:"protocol" json:"protocol"`
+	Description string                 `yaml:"description" json:"description"`
+	Security    []map[string][]string  `yaml:"security" json:"security"`
+	Bindings    map[string]interface{} `yaml:"bindings" json:"bindings"`
+	Variables   map[string]asyncAPIVar `yaml:"variables" json:"variables"`
 }
 
 type asyncAPIVar struct {
@@ -62,22 +62,22 @@ type asyncAPIVar struct {
 }
 
 type asyncAPIChannel struct {
-	Description string                  `yaml:"description" json:"description"`
-	Subscribe   *asyncAPIOperation      `yaml:"subscribe" json:"subscribe"`
-	Publish     *asyncAPIOperation      `yaml:"publish" json:"publish"`
-	Parameters  map[string]interface{}  `yaml:"parameters" json:"parameters"`
-	Bindings    map[string]interface{}  `yaml:"bindings" json:"bindings"`
+	Description string                 `yaml:"description" json:"description"`
+	Subscribe   *asyncAPIOperation     `yaml:"subscribe" json:"subscribe"`
+	Publish     *asyncAPIOperation     `yaml:"publish" json:"publish"`
+	Parameters  map[string]interface{} `yaml:"parameters" json:"parameters"`
+	Bindings    map[string]interface{} `yaml:"bindings" json:"bindings"`
 	// AsyncAPI 3.x style
-	Messages    map[string]asyncAPIMessageRef `yaml:"messages" json:"messages"`
+	Messages map[string]asyncAPIMessageRef `yaml:"messages" json:"messages"`
 }
 
 type asyncAPIOperation struct {
-	OperationID string                   `yaml:"operationId" json:"operationId"`
-	Summary     string                   `yaml:"summary" json:"summary"`
-	Description string                   `yaml:"description" json:"description"`
-	Message     *asyncAPIMessageRef      `yaml:"message" json:"message"`
-	Tags        []asyncAPITag            `yaml:"tags" json:"tags"`
-	Bindings    map[string]interface{}   `yaml:"bindings" json:"bindings"`
+	OperationID string                 `yaml:"operationId" json:"operationId"`
+	Summary     string                 `yaml:"summary" json:"summary"`
+	Description string                 `yaml:"description" json:"description"`
+	Message     *asyncAPIMessageRef    `yaml:"message" json:"message"`
+	Tags        []asyncAPITag          `yaml:"tags" json:"tags"`
+	Bindings    map[string]interface{} `yaml:"bindings" json:"bindings"`
 }
 
 type asyncAPIMessageRef struct {
@@ -93,9 +93,9 @@ type asyncAPIMessageRef struct {
 }
 
 type asyncAPIComponents struct {
-	Messages        map[string]asyncAPIMessageRef      `yaml:"messages" json:"messages"`
-	Schemas         map[string]map[string]interface{}  `yaml:"schemas" json:"schemas"`
-	SecuritySchemes map[string]asyncAPISecurityScheme  `yaml:"securitySchemes" json:"securitySchemes"`
+	Messages        map[string]asyncAPIMessageRef     `yaml:"messages" json:"messages"`
+	Schemas         map[string]map[string]interface{} `yaml:"schemas" json:"schemas"`
+	SecuritySchemes map[string]asyncAPISecurityScheme `yaml:"securitySchemes" json:"securitySchemes"`
 }
 
 type asyncAPISecurityScheme struct {

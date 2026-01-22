@@ -46,7 +46,7 @@ func init() {
 			}
 			return s[:n] + "..."
 		},
-		"join": strings.Join,
+		"join":     strings.Join,
 		"contains": strings.Contains,
 	})
 

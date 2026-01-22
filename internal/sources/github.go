@@ -27,12 +27,12 @@ type githubSearchResponse struct {
 }
 
 type githubItem struct {
-	Name       string         `json:"name"`
-	Path       string         `json:"path"`
-	HTMLURL    string         `json:"html_url"`
-	Repository githubRepo     `json:"repository"`
-	SHA        string         `json:"sha"`
-	URL        string         `json:"url"`
+	Name       string     `json:"name"`
+	Path       string     `json:"path"`
+	HTMLURL    string     `json:"html_url"`
+	Repository githubRepo `json:"repository"`
+	SHA        string     `json:"sha"`
+	URL        string     `json:"url"`
 }
 
 type githubRepo struct {

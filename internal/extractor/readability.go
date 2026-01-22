@@ -187,16 +187,16 @@ func (e *Extractor) detectLanguage(code string) string {
 
 	// Check for common patterns
 	patterns := map[string][]string{
-		"bash": {"#!/bin/bash", "curl ", "wget ", "$ "},
+		"bash":       {"#!/bin/bash", "curl ", "wget ", "$ "},
 		"javascript": {"const ", "let ", "function ", "=>", "async ", "await "},
 		"typescript": {"interface ", "type ", ": string", ": number"},
-		"python": {"def ", "import ", "from ", "print(", "if __name__"},
-		"go": {"func ", "package ", "import (", "type ", "struct {"},
-		"json": {`{"`, `":`},
-		"yaml": {"---", "  -"},
-		"graphql": {"query ", "mutation ", "type Query", "type Mutation"},
-		"sql": {"select ", "insert ", "update ", "delete ", "create table"},
-		"html": {"<html", "<div", "<span", "<!doctype"},
+		"python":     {"def ", "import ", "from ", "print(", "if __name__"},
+		"go":         {"func ", "package ", "import (", "type ", "struct {"},
+		"json":       {`{"`, `":`},
+		"yaml":       {"---", "  -"},
+		"graphql":    {"query ", "mutation ", "type Query", "type Mutation"},
+		"sql":        {"select ", "insert ", "update ", "delete ", "create table"},
+		"html":       {"<html", "<div", "<span", "<!doctype"},
 	}
 
 	for lang, keywords := range patterns {

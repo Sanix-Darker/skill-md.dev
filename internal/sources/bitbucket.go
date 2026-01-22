@@ -30,10 +30,10 @@ type bitbucketSearchResponse struct {
 }
 
 type bitbucketValue struct {
-	Type          string             `json:"type"`
-	ContentMatch  bool               `json:"content_match"`
-	PathMatches   []bitbucketMatch   `json:"path_matches"`
-	File          bitbucketFile      `json:"file"`
+	Type         string           `json:"type"`
+	ContentMatch bool             `json:"content_match"`
+	PathMatches  []bitbucketMatch `json:"path_matches"`
+	File         bitbucketFile    `json:"file"`
 }
 
 type bitbucketMatch struct {
@@ -42,10 +42,10 @@ type bitbucketMatch struct {
 }
 
 type bitbucketFile struct {
-	Path   string               `json:"path"`
-	Type   string               `json:"type"`
-	Links  bitbucketFileLinks   `json:"links"`
-	Commit bitbucketCommit      `json:"commit"`
+	Path   string             `json:"path"`
+	Type   string             `json:"type"`
+	Links  bitbucketFileLinks `json:"links"`
+	Commit bitbucketCommit    `json:"commit"`
 }
 
 type bitbucketFileLinks struct {
@@ -61,10 +61,10 @@ type bitbucketCommit struct {
 }
 
 type bitbucketRepo struct {
-	Name      string            `json:"name"`
-	FullName  string            `json:"full_name"`
-	UUID      string            `json:"uuid"`
-	Links     bitbucketLinks    `json:"links"`
+	Name     string         `json:"name"`
+	FullName string         `json:"full_name"`
+	UUID     string         `json:"uuid"`
+	Links    bitbucketLinks `json:"links"`
 }
 
 type bitbucketLinks struct {

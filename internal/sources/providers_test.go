@@ -276,7 +276,7 @@ func TestSourceLabel(t *testing.T) {
 
 func TestSourceColor(t *testing.T) {
 	tests := []struct {
-		source  SourceType
+		source   SourceType
 		notEmpty bool
 	}{
 		{SourceTypeLocal, true},

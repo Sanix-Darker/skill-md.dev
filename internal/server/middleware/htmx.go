@@ -11,12 +11,12 @@ const htmxKey contextKey = "htmx"
 
 // HTMXRequest holds HTMX-specific request information.
 type HTMXRequest struct {
-	IsHTMX       bool
-	IsBoosted    bool
-	CurrentURL   string
-	Target       string
-	TriggerName  string
-	TriggerID    string
+	IsHTMX         bool
+	IsBoosted      bool
+	CurrentURL     string
+	Target         string
+	TriggerName    string
+	TriggerID      string
 	HistoryRestore bool
 }
 

@@ -22,12 +22,12 @@ type RateLimit struct {
 // DefaultRateLimits returns the default rate limits per source.
 func DefaultRateLimits() map[SourceType]RateLimit {
 	return map[SourceType]RateLimit{
-		SourceTypeLocal:     {RequestsPerMinute: 0, BurstSize: 0},     // No limit for local
-		SourceTypeSkillsSH:  {RequestsPerMinute: 60, BurstSize: 10},   // 60/min
-		SourceTypeGitHub:    {RequestsPerMinute: 10, BurstSize: 5},    // 10/min (unauthenticated)
-		SourceTypeGitLab:    {RequestsPerMinute: 10, BurstSize: 5},    // 10/min
-		SourceTypeBitbucket: {RequestsPerMinute: 10, BurstSize: 5},    // 10/min
-		SourceTypeCodeberg:  {RequestsPerMinute: 20, BurstSize: 5},    // 20/min
+		SourceTypeLocal:     {RequestsPerMinute: 0, BurstSize: 0},   // No limit for local
+		SourceTypeSkillsSH:  {RequestsPerMinute: 60, BurstSize: 10}, // 60/min
+		SourceTypeGitHub:    {RequestsPerMinute: 10, BurstSize: 5},  // 10/min (unauthenticated)
+		SourceTypeGitLab:    {RequestsPerMinute: 10, BurstSize: 5},  // 10/min
+		SourceTypeBitbucket: {RequestsPerMinute: 10, BurstSize: 5},  // 10/min
+		SourceTypeCodeberg:  {RequestsPerMinute: 20, BurstSize: 5},  // 20/min
 	}
 }
 

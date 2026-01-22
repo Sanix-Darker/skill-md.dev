@@ -28,10 +28,10 @@ func (c *PostmanConverter) CanHandle(filename string, content []byte) bool {
 
 // PostmanCollection represents a Postman collection.
 type PostmanCollection struct {
-	Info      PostmanInfo      `json:"info"`
-	Items     []PostmanItem    `json:"item"`
-	Variables []PostmanVar     `json:"variable,omitempty"`
-	Auth      *PostmanAuth     `json:"auth,omitempty"`
+	Info      PostmanInfo   `json:"info"`
+	Items     []PostmanItem `json:"item"`
+	Variables []PostmanVar  `json:"variable,omitempty"`
+	Auth      *PostmanAuth  `json:"auth,omitempty"`
 }
 
 type PostmanInfo struct {
@@ -98,11 +98,11 @@ type PostmanFormData struct {
 }
 
 type PostmanAuth struct {
-	Type   string           `json:"type"`
-	Bearer []PostmanAuthKV  `json:"bearer,omitempty"`
-	Basic  []PostmanAuthKV  `json:"basic,omitempty"`
-	ApiKey []PostmanAuthKV  `json:"apikey,omitempty"`
-	OAuth2 []PostmanAuthKV  `json:"oauth2,omitempty"`
+	Type   string          `json:"type"`
+	Bearer []PostmanAuthKV `json:"bearer,omitempty"`
+	Basic  []PostmanAuthKV `json:"basic,omitempty"`
+	ApiKey []PostmanAuthKV `json:"apikey,omitempty"`
+	OAuth2 []PostmanAuthKV `json:"oauth2,omitempty"`
 }
 
 type PostmanAuthKV struct {

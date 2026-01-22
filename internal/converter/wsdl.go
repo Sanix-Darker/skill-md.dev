@@ -16,15 +16,15 @@ type WSDLConverter struct{}
 
 // WSDL XML types
 type wsdlDefinitions struct {
-	XMLName      xml.Name       `xml:"definitions"`
-	Name         string         `xml:"name,attr"`
-	TargetNS     string         `xml:"targetNamespace,attr"`
-	Documentation string        `xml:"documentation"`
-	Types        wsdlTypes      `xml:"types"`
-	Messages     []wsdlMessage  `xml:"message"`
-	PortTypes    []wsdlPortType `xml:"portType"`
-	Bindings     []wsdlBinding  `xml:"binding"`
-	Services     []wsdlService  `xml:"service"`
+	XMLName       xml.Name       `xml:"definitions"`
+	Name          string         `xml:"name,attr"`
+	TargetNS      string         `xml:"targetNamespace,attr"`
+	Documentation string         `xml:"documentation"`
+	Types         wsdlTypes      `xml:"types"`
+	Messages      []wsdlMessage  `xml:"message"`
+	PortTypes     []wsdlPortType `xml:"portType"`
+	Bindings      []wsdlBinding  `xml:"binding"`
+	Services      []wsdlService  `xml:"service"`
 }
 
 type wsdlTypes struct {
@@ -39,18 +39,18 @@ type xsdSchema struct {
 }
 
 type xsdElement struct {
-	Name      string `xml:"name,attr"`
-	Type      string `xml:"type,attr"`
-	MinOccurs string `xml:"minOccurs,attr"`
-	MaxOccurs string `xml:"maxOccurs,attr"`
-	Nillable  string `xml:"nillable,attr"`
+	Name        string          `xml:"name,attr"`
+	Type        string          `xml:"type,attr"`
+	MinOccurs   string          `xml:"minOccurs,attr"`
+	MaxOccurs   string          `xml:"maxOccurs,attr"`
+	Nillable    string          `xml:"nillable,attr"`
 	ComplexType *xsdComplexType `xml:"complexType"`
 }
 
 type xsdComplexType struct {
-	Name       string       `xml:"name,attr"`
-	Sequence   *xsdSequence `xml:"sequence"`
-	All        *xsdSequence `xml:"all"`
+	Name       string         `xml:"name,attr"`
+	Sequence   *xsdSequence   `xml:"sequence"`
+	All        *xsdSequence   `xml:"all"`
 	Annotation *xsdAnnotation `xml:"annotation"`
 }
 
@@ -64,11 +64,11 @@ type xsdSimpleType struct {
 }
 
 type xsdRestriction struct {
-	Base        string           `xml:"base,attr"`
+	Base         string           `xml:"base,attr"`
 	Enumerations []xsdEnumeration `xml:"enumeration"`
-	MinLength   *xsdFacet        `xml:"minLength"`
-	MaxLength   *xsdFacet        `xml:"maxLength"`
-	Pattern     *xsdFacet        `xml:"pattern"`
+	MinLength    *xsdFacet        `xml:"minLength"`
+	MaxLength    *xsdFacet        `xml:"maxLength"`
+	Pattern      *xsdFacet        `xml:"pattern"`
 }
 
 type xsdEnumeration struct {
@@ -84,8 +84,8 @@ type xsdAnnotation struct {
 }
 
 type wsdlMessage struct {
-	Name  string       `xml:"name,attr"`
-	Parts []wsdlPart   `xml:"part"`
+	Name  string     `xml:"name,attr"`
+	Parts []wsdlPart `xml:"part"`
 }
 
 type wsdlPart struct {
@@ -100,11 +100,11 @@ type wsdlPortType struct {
 }
 
 type wsdlOperation struct {
-	Name          string       `xml:"name,attr"`
-	Documentation string       `xml:"documentation"`
-	Input         *wsdlParam   `xml:"input"`
-	Output        *wsdlParam   `xml:"output"`
-	Fault         []wsdlFault  `xml:"fault"`
+	Name          string      `xml:"name,attr"`
+	Documentation string      `xml:"documentation"`
+	Input         *wsdlParam  `xml:"input"`
+	Output        *wsdlParam  `xml:"output"`
+	Fault         []wsdlFault `xml:"fault"`
 }
 
 type wsdlParam struct {
@@ -118,10 +118,10 @@ type wsdlFault struct {
 }
 
 type wsdlBinding struct {
-	Name       string              `xml:"name,attr"`
-	Type       string              `xml:"type,attr"`
-	SoapBinding *soapBinding       `xml:"binding"`
-	Operations []wsdlBindingOp     `xml:"operation"`
+	Name        string          `xml:"name,attr"`
+	Type        string          `xml:"type,attr"`
+	SoapBinding *soapBinding    `xml:"binding"`
+	Operations  []wsdlBindingOp `xml:"operation"`
 }
 
 type soapBinding struct {
@@ -139,14 +139,14 @@ type soapOperation struct {
 }
 
 type wsdlService struct {
-	Name          string      `xml:"name,attr"`
-	Documentation string      `xml:"documentation"`
-	Ports         []wsdlPort  `xml:"port"`
+	Name          string     `xml:"name,attr"`
+	Documentation string     `xml:"documentation"`
+	Ports         []wsdlPort `xml:"port"`
 }
 
 type wsdlPort struct {
-	Name    string      `xml:"name,attr"`
-	Binding string      `xml:"binding,attr"`
+	Name    string       `xml:"name,attr"`
+	Binding string       `xml:"binding,attr"`
 	Address *soapAddress `xml:"address"`
 }
 
