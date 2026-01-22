@@ -83,7 +83,7 @@ func (h *SkillsHandler) Browse(w http.ResponseWriter, r *http.Request) {
 	opts := sources.SearchOptions{
 		Query:   query,
 		Page:    page,
-		PerPage: 20,
+		PerPage: 10,
 	}
 	if tag != "" {
 		opts.Tags = []string{tag}
@@ -144,7 +144,7 @@ func (h *SkillsHandler) Browse(w http.ResponseWriter, r *http.Request) {
 		"BySource":     bySource,
 		"SourceErrors": sourceErrors,
 		"SearchTime":   searchTime,
-		"HasNext":      total > page*20,
+		"HasNext":      total > page*10,
 		"HasPrev":      page > 1,
 		"NextPage":     page + 1,
 		"PrevPage":     page - 1,
@@ -254,7 +254,7 @@ func (h *SkillsHandler) List(w http.ResponseWriter, r *http.Request) {
 		page = 1
 	}
 
-	skills, total, err := h.app.RegistryService.ListSkills(page, 20)
+	skills, total, err := h.app.RegistryService.ListSkills(page, 10)
 	if err != nil {
 		h.app.Logger.Error("failed to list skills", "error", err)
 	}
@@ -263,7 +263,7 @@ func (h *SkillsHandler) List(w http.ResponseWriter, r *http.Request) {
 		"Skills":   skills,
 		"Total":    total,
 		"Page":     page,
-		"HasNext":  total > page*20,
+		"HasNext":  total > page*10,
 		"HasPrev":  page > 1,
 		"NextPage": page + 1,
 		"PrevPage": page - 1,
@@ -304,7 +304,7 @@ func (h *SkillsHandler) Search(w http.ResponseWriter, r *http.Request) {
 	opts := sources.SearchOptions{
 		Query:   query,
 		Page:    page,
-		PerPage: 20,
+		PerPage: 10,
 	}
 
 	var sourcesToSearch []sources.SourceType
@@ -344,10 +344,11 @@ func (h *SkillsHandler) Search(w http.ResponseWriter, r *http.Request) {
 		"BySource":     bySource,
 		"SourceErrors": sourceErrors,
 		"SearchTime":   searchTime,
-		"HasNext":      total > page*20,
+		"HasNext":      total > page*10,
 		"HasPrev":      page > 1,
 		"NextPage":     page + 1,
 		"PrevPage":     page - 1,
+		"MergeMode":    mergeMode,
 	}
 
 	// Use merge-specific template when in merge mode

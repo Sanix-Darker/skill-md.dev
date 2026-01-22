@@ -47,6 +47,7 @@ func init() {
 			return s[:n] + "..."
 		},
 		"join": strings.Join,
+		"contains": strings.Contains,
 	})
 
 	// Parse layouts

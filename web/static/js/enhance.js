@@ -77,7 +77,14 @@
         };
 
         worker.onerror = function(error) {
-          showStatus('Worker error: ' + error.message, 'error');
+          // Show user-friendly error message
+          const userMessage = 'AI features temporarily unavailable';
+          if (currentTarget === 'input') {
+            showInputAssistStatus(userMessage, 'error');
+          } else {
+            showStatus(userMessage, 'error');
+          }
+          worker = null;
           reject(error);
         };
 
@@ -144,11 +151,32 @@
       case 'error':
         isProcessing = false;
         isLoading = false;
+
+        // Handle error gracefully with auto-dismiss
         if (isInputMode) {
           showInputAssistStatus(data.message, 'error');
+          // Auto-hide error after 5 seconds
+          setTimeout(() => {
+            if (inputAssistStatus && inputAssistStatus.classList.contains('text-red-400')) {
+              inputAssistStatus.classList.add('hidden');
+            }
+          }, 5000);
         } else {
           showStatus(data.message, 'error');
+          // Auto-hide error after 5 seconds
+          setTimeout(() => {
+            if (statusEl && statusEl.classList.contains('text-red-400')) {
+              statusEl.classList.add('hidden');
+            }
+          }, 5000);
         }
+
+        // If it's a network error, reset worker so user can retry
+        if (data.isNetworkError) {
+          worker = null;
+          isReady = false;
+        }
+
         updateButtonState();
         break;
     }
@@ -198,7 +226,13 @@
       });
 
     } catch (error) {
-      showStatus('Enhancement failed: ' + error.message, 'error');
+      showStatus('AI features unavailable', 'error');
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        if (statusEl && statusEl.classList.contains('text-red-400')) {
+          statusEl.classList.add('hidden');
+        }
+      }, 5000);
     }
   }
 
@@ -248,7 +282,13 @@
       });
 
     } catch (error) {
-      showInputAssistStatus('Assist failed: ' + error.message, 'error');
+      showInputAssistStatus('AI assist unavailable', 'error');
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        if (inputAssistStatus && inputAssistStatus.classList.contains('text-red-400')) {
+          inputAssistStatus.classList.add('hidden');
+        }
+      }, 5000);
     }
   }
 

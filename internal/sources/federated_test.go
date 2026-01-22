@@ -539,3 +539,207 @@ func TestFederatedSource_Search_Timing(t *testing.T) {
 		t.Error("expected SearchTime to be set")
 	}
 }
+
+func TestFederatedSource_Search_Pagination10Items(t *testing.T) {
+	fs := NewFederatedSource(newTestLogger())
+
+	// Create 15 skills to test pagination
+	skills := make([]*ExternalSkill, 15)
+	for i := 0; i < 15; i++ {
+		skills[i] = &ExternalSkill{
+			ID:     string(rune('A' + i)),
+			Name:   "Skill " + string(rune('A'+i)),
+			Source: SourceTypeGitHub,
+			Stars:  100 - i,
+		}
+	}
+
+	mockSource := NewMockSource(SourceTypeGitHub)
+	mockSource.SetSearchResult(&SearchResult{
+		Skills: skills,
+		Total:  15,
+		Source: SourceTypeGitHub,
+	})
+
+	fs.RegisterSource(mockSource)
+
+	t.Run("search returns all from source - pagination at handler level", func(t *testing.T) {
+		result, err := fs.Search(context.Background(), SearchOptions{
+			Query:   "skill",
+			Page:    1,
+			PerPage: 10,
+		})
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result == nil {
+			t.Fatal("expected non-nil result")
+		}
+		// The federated source returns all results from sources
+		// Pagination limiting is handled by handlers, not federated source
+		if result.Total != 15 {
+			t.Errorf("expected total 15, got %d", result.Total)
+		}
+	})
+
+	t.Run("search options can specify page and perPage", func(t *testing.T) {
+		opts := SearchOptions{
+			Query:   "test",
+			Page:    2,
+			PerPage: 10,
+		}
+
+		result, err := fs.Search(context.Background(), opts)
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result == nil {
+			t.Fatal("expected non-nil result")
+		}
+		// Options are passed to underlying sources
+	})
+}
+
+func TestFederatedSource_Search_PageBoundaries(t *testing.T) {
+	fs := NewFederatedSource(newTestLogger())
+
+	// Create 25 skills
+	skills := make([]*ExternalSkill, 25)
+	for i := 0; i < 25; i++ {
+		skills[i] = &ExternalSkill{
+			ID:     string(rune('A' + i%26)),
+			Name:   "Boundary Skill " + string(rune('A'+i%26)),
+			Source: SourceTypeLocal,
+		}
+	}
+
+	mockSource := NewMockSource(SourceTypeLocal)
+	mockSource.SetSearchResult(&SearchResult{
+		Skills: skills,
+		Total:  25,
+		Source: SourceTypeLocal,
+	})
+
+	fs.RegisterSource(mockSource)
+
+	t.Run("search with page 1 works", func(t *testing.T) {
+		result, err := fs.Search(context.Background(), SearchOptions{
+			Query:   "boundary",
+			Page:    1,
+			PerPage: 10,
+		})
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result == nil {
+			t.Fatal("expected non-nil result")
+		}
+	})
+
+	t.Run("search with page 2 works", func(t *testing.T) {
+		result, err := fs.Search(context.Background(), SearchOptions{
+			Query:   "boundary",
+			Page:    2,
+			PerPage: 10,
+		})
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result == nil {
+			t.Fatal("expected non-nil result")
+		}
+	})
+
+	t.Run("search with page 3 works", func(t *testing.T) {
+		result, err := fs.Search(context.Background(), SearchOptions{
+			Query:   "boundary",
+			Page:    3,
+			PerPage: 10,
+		})
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result == nil {
+			t.Fatal("expected non-nil result")
+		}
+	})
+
+	t.Run("out of bounds page returns empty results from source", func(t *testing.T) {
+		// Mock source returns empty for out of bounds
+		emptySource := NewMockSource(SourceTypeGitLab)
+		emptySource.SetSearchResult(&SearchResult{
+			Skills: []*ExternalSkill{},
+			Total:  0,
+			Source: SourceTypeGitLab,
+		})
+
+		fs2 := NewFederatedSource(newTestLogger())
+		fs2.RegisterSource(emptySource)
+
+		result, _ := fs2.Search(context.Background(), SearchOptions{
+			Query:   "nonexistent",
+			Page:    100,
+			PerPage: 10,
+		})
+
+		if len(result.Skills) != 0 {
+			t.Errorf("expected 0 skills for out of bounds page, got %d", len(result.Skills))
+		}
+	})
+}
+
+func TestFederatedSource_SearchOptions_PerPage10(t *testing.T) {
+	fs := NewFederatedSource(newTestLogger())
+
+	mockSource := NewMockSource(SourceTypeSkillsSH)
+	mockSource.SetSearchResult(&SearchResult{
+		Skills: []*ExternalSkill{
+			{ID: "1", Name: "Test 1", Source: SourceTypeSkillsSH},
+			{ID: "2", Name: "Test 2", Source: SourceTypeSkillsSH},
+		},
+		Total:  2,
+		Source: SourceTypeSkillsSH,
+	})
+
+	fs.RegisterSource(mockSource)
+
+	t.Run("perPage 10 is accepted in options", func(t *testing.T) {
+		opts := SearchOptions{
+			Query:   "test",
+			Page:    1,
+			PerPage: 10,
+		}
+
+		result, err := fs.Search(context.Background(), opts)
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result == nil {
+			t.Fatal("expected non-nil result")
+		}
+		// Options are passed through to sources
+	})
+
+	t.Run("search works when perPage not specified", func(t *testing.T) {
+		opts := SearchOptions{
+			Query: "test",
+			Page:  1,
+			// PerPage not set - will use default
+		}
+
+		result, err := fs.Search(context.Background(), opts)
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result == nil {
+			t.Fatal("expected non-nil result")
+		}
+	})
+}

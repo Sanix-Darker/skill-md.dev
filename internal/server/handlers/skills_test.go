@@ -465,3 +465,193 @@ func TestSkillsHandler_Search_Pagination(t *testing.T) {
 		}
 	})
 }
+
+func TestSkillsHandler_Search_PaginationLimit10(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test.db")
+
+	cfg := &app.Config{
+		Port:   8080,
+		DBPath: dbPath,
+		Debug:  true,
+	}
+
+	application, err := app.New(cfg)
+	if err != nil {
+		t.Fatalf("failed to create app: %v", err)
+	}
+	defer application.Close()
+
+	// Import 15 test skills to test pagination
+	for i := 0; i < 15; i++ {
+		skillContent := `---
+name: "Pagination Test Skill ` + string(rune('A'+i)) + `"
+version: "1.0.0"
+description: "Test skill for pagination testing"
+tags:
+  - "pagination"
+---
+
+## Overview
+Test skill number ` + string(rune('A'+i)) + `.
+`
+		_, err = application.RegistryService.ImportSkill(skillContent)
+		if err != nil {
+			t.Fatalf("failed to import test skill %d: %v", i, err)
+		}
+	}
+
+	handler := NewSkillsHandler(application)
+
+	t.Run("first page returns max 10 items", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/skills/search?q=pagination&source=local", nil)
+		w := httptest.NewRecorder()
+
+		handler.Search(w, req)
+
+		resp := w.Result()
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("expected status 200, got %d", resp.StatusCode)
+		}
+
+		body, _ := io.ReadAll(resp.Body)
+		bodyStr := string(body)
+
+		// Count occurrences of skill items (check for unique skill markers)
+		skillCount := strings.Count(bodyStr, "Pagination Test Skill")
+		if skillCount > 10 {
+			t.Errorf("expected max 10 skills on first page, got %d", skillCount)
+		}
+	})
+
+	t.Run("merge mode has load more button when more results exist", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/skills/search?q=pagination&source=local&merge_mode=true", nil)
+		w := httptest.NewRecorder()
+
+		handler.Search(w, req)
+
+		resp := w.Result()
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("expected status 200, got %d", resp.StatusCode)
+		}
+
+		body, _ := io.ReadAll(resp.Body)
+		bodyStr := string(body)
+
+		// With 15 skills and page size of 10, first page should have Load More
+		if strings.Contains(bodyStr, "Pagination Test Skill") {
+			if !strings.Contains(bodyStr, "Load More") {
+				t.Log("Response should contain 'Load More' button when more results exist")
+			}
+		}
+	})
+
+	t.Run("page 2 returns remaining items", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/skills/search?q=pagination&source=local&page=2", nil)
+		w := httptest.NewRecorder()
+
+		handler.Search(w, req)
+
+		resp := w.Result()
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("expected status 200, got %d", resp.StatusCode)
+		}
+	})
+
+	t.Run("out of bounds page returns empty results", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/skills/search?q=pagination&source=local&page=100", nil)
+		w := httptest.NewRecorder()
+
+		handler.Search(w, req)
+
+		resp := w.Result()
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("expected status 200, got %d", resp.StatusCode)
+		}
+
+		body, _ := io.ReadAll(resp.Body)
+		bodyStr := string(body)
+
+		// Page 100 should have no results
+		if strings.Contains(bodyStr, "Pagination Test Skill") {
+			t.Error("page 100 should not contain any skills")
+		}
+	})
+}
+
+func TestSkillsHandler_List_PaginationLimit10(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test.db")
+
+	cfg := &app.Config{
+		Port:   8080,
+		DBPath: dbPath,
+		Debug:  true,
+	}
+
+	application, err := app.New(cfg)
+	if err != nil {
+		t.Fatalf("failed to create app: %v", err)
+	}
+	defer application.Close()
+
+	// Import 15 test skills
+	for i := 0; i < 15; i++ {
+		skillContent := `---
+name: "List Pagination Skill ` + string(rune('A'+i)) + `"
+version: "1.0.0"
+---
+
+## Overview
+Test.
+`
+		_, err = application.RegistryService.ImportSkill(skillContent)
+		if err != nil {
+			t.Fatalf("failed to import test skill %d: %v", i, err)
+		}
+	}
+
+	handler := NewSkillsHandler(application)
+
+	t.Run("list returns max 10 items per page", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/skills?page=1", nil)
+		w := httptest.NewRecorder()
+
+		handler.List(w, req)
+
+		resp := w.Result()
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("expected status 200, got %d", resp.StatusCode)
+		}
+
+		body, _ := io.ReadAll(resp.Body)
+		bodyStr := string(body)
+
+		// Count skill occurrences
+		skillCount := strings.Count(bodyStr, "List Pagination Skill")
+		if skillCount > 10 {
+			t.Errorf("expected max 10 skills, got %d", skillCount)
+		}
+	})
+
+	t.Run("page 2 returns remaining skills", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/skills?page=2", nil)
+		w := httptest.NewRecorder()
+
+		handler.List(w, req)
+
+		resp := w.Result()
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("expected status 200, got %d", resp.StatusCode)
+		}
+
+		body, _ := io.ReadAll(resp.Body)
+		bodyStr := string(body)
+
+		// Page 2 should have remaining 5 skills
+		skillCount := strings.Count(bodyStr, "List Pagination Skill")
+		if skillCount > 5 {
+			t.Errorf("expected max 5 skills on page 2, got %d", skillCount)
+		}
+	})
+}

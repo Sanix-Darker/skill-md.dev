@@ -9,8 +9,7 @@
         <div class="border border-terminal-border bg-terminal-surface">
             <div class="border-b border-terminal-border px-4 py-3 flex items-center justify-between">
                 <span class="text-sm font-medium">Input</span>
-                <select id="format-select" name="format" class="tooltip tooltip-left bg-terminal-bg text-terminal-text border border-terminal-border px-4 py-2 text-sm focus:border-terminal-accent focus:outline-none" data-tooltip="Auto-detect analyzes content structure" aria-label="Format selection">
-                    <option value="auto">Auto-detect</option>
+                <select id="format-select" name="format" class="tooltip tooltip-left bg-terminal-bg text-terminal-text border border-terminal-border px-4 py-2 text-sm focus:border-terminal-accent focus:outline-none" data-tooltip="Select input format" aria-label="Format selection">
                     {{range .Formats}}
                     <option value="{{.}}">{{.}}</option>
                     {{end}}
@@ -47,29 +46,31 @@
                           class="w-full h-64 bg-terminal-bg border border-terminal-border p-3 text-sm font-mono resize-none focus:border-terminal-accent focus:outline-none"></textarea>
 
                 <!-- Input AI Assistant -->
-                <div class="mt-2 flex items-center gap-2">
-                    <button type="button" id="input-assist-btn"
-                            class="tooltip px-4 py-2 text-sm bg-terminal-bg text-terminal-text border border-terminal-border hover:border-terminal-accent hover:text-terminal-accent transition-colors"
-                            data-tooltip="AI suggests improvements to your input"
-                            aria-label="AI Assist for input">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                        Assist
-                    </button>
-                    <select id="input-assist-mode" class="tooltip tooltip-bottom bg-terminal-bg text-terminal-text border border-terminal-border px-4 py-2 text-sm focus:border-terminal-accent focus:outline-none" data-tooltip="Choose assistance type">
-                        <option value="format">Format & Clean</option>
-                        <option value="expand">Expand Spec</option>
-                        <option value="validate">Suggest Fixes</option>
-                    </select>
-                    <span id="input-assist-status" class="text-xs text-terminal-muted hidden"></span>
+                <div class="mt-2">
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="input-assist-btn"
+                                class="tooltip px-4 py-2 text-sm bg-terminal-bg text-terminal-text border border-terminal-border hover:border-terminal-accent hover:text-terminal-accent transition-colors"
+                                data-tooltip="AI suggests improvements to your input"
+                                aria-label="AI Assist for input">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                            Assist
+                        </button>
+                        <select id="input-assist-mode" class="tooltip tooltip-bottom bg-terminal-bg text-terminal-text border border-terminal-border px-4 py-2 text-sm focus:border-terminal-accent focus:outline-none" data-tooltip="Choose assistance type">
+                            <option value="format">Format & Clean</option>
+                            <option value="expand">Expand Spec</option>
+                            <option value="validate">Suggest Fixes</option>
+                        </select>
+                    </div>
+                    <div id="input-assist-status" class="mt-2 text-xs text-terminal-muted hidden"></div>
                 </div>
 
                 <!-- Options -->
                 <div class="mt-4 flex flex-col sm:flex-row gap-4">
                     <input type="text" name="name" placeholder="Skill name (optional)"
                            class="flex-1 bg-terminal-bg border border-terminal-border px-3 py-2 text-sm focus:border-terminal-accent focus:outline-none">
-                    <input type="hidden" name="format" id="format-hidden" value="auto">
+                    <input type="hidden" name="format" id="format-hidden" value="">
                     <button type="submit" class="tooltip px-4 py-2 text-sm bg-terminal-bg text-terminal-text border border-terminal-border font-medium hover:border-terminal-accent hover:text-terminal-accent transition-colors" data-tooltip="Transform spec into SKILL.md format" aria-label="Convert to SKILL.md">
                         Convert
                     </button>
@@ -93,6 +94,15 @@
 </div>
 
 <script>
+// Initialize hidden field with first option value on load
+(function() {
+    const formatSelect = document.getElementById('format-select');
+    const formatHidden = document.getElementById('format-hidden');
+    if (formatSelect && formatHidden && formatSelect.options.length > 0) {
+        formatHidden.value = formatSelect.value;
+    }
+})();
+
 document.getElementById('format-select').addEventListener('change', function() {
     document.getElementById('format-hidden').value = this.value;
 });

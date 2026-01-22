@@ -82,9 +82,29 @@ async function initModel(modelType) {
 
   } catch (error) {
     isLoading = false;
+
+    // Detect specific error types and provide user-friendly messages
+    let userMessage = 'AI model unavailable';
+    let isNetworkError = false;
+
+    if (error.name === 'TypeError' && error.message.includes('NetworkError')) {
+      userMessage = 'Network error - AI features require internet connection';
+      isNetworkError = true;
+    } else if (error.message.includes('Failed to fetch') || error.message.includes('network')) {
+      userMessage = 'Unable to download AI model - check your connection';
+      isNetworkError = true;
+    } else if (error.message.includes('CORS') || error.message.includes('cross-origin')) {
+      userMessage = 'AI model blocked by browser security settings';
+      isNetworkError = true;
+    } else if (error.message.includes('out of memory') || error.message.includes('OOM')) {
+      userMessage = 'Not enough memory to load AI model';
+    }
+
     self.postMessage({
       type: 'error',
-      message: `Failed to load model: ${error.message}`
+      message: userMessage,
+      isNetworkError: isNetworkError,
+      canRetry: isNetworkError
     });
   }
 }

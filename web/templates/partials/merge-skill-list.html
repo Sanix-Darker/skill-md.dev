@@ -2,16 +2,19 @@
 {{if .SourceErrors}}
 <div class="mb-3 space-y-1">
     {{range $source, $error := .SourceErrors}}
+    {{/* Skip auth-related error messages */}}
+    {{if and (not (contains $error "GITHUB_TOKEN")) (not (contains $error "authentication")) (not (contains $error "rate limit"))}}
     <div class="px-2 py-1 text-xs bg-terminal-bg border border-yellow-600/50 text-yellow-500">
         <span class="font-medium">{{if eq $source "github"}}GitHub{{else if eq $source "gitlab"}}GitLab{{else if eq $source "skills.sh"}}SKILLS.sh{{else}}{{$source}}{{end}}:</span> {{$error}}
     </div>
     {{end}}
+    {{end}}
 </div>
 {{end}}
 {{if .Skills}}
-<div class="space-y-2">
+<div class="space-y-2" id="merge-skill-results">
     {{range .Skills}}
-    <div class="p-3 border border-terminal-border bg-terminal-bg hover:border-terminal-accent transition-colors">
+    <div class="p-3 border border-terminal-border bg-terminal-bg hover:border-terminal-accent transition-colors skill-item">
         <div class="flex items-start justify-between gap-2">
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-1">
@@ -33,6 +36,50 @@
     </div>
     {{end}}
 </div>
+{{if .HasNext}}
+<div id="load-more-container" class="mt-4 text-center">
+    <button type="button"
+            hx-get="/api/skills/search?page={{.NextPage}}{{if .Query}}&q={{.Query}}{{end}}{{if .Source}}&source={{.Source}}{{end}}&merge_mode=true"
+            hx-target="#merge-skill-results"
+            hx-swap="beforeend"
+            hx-indicator="#load-more-indicator"
+            hx-on::after-request="updateLoadMoreButton(event)"
+            class="px-4 py-2 text-sm bg-terminal-bg text-terminal-text border border-terminal-border hover:border-terminal-accent hover:text-terminal-accent transition-colors">
+        <span id="load-more-text">Load More</span>
+        <span id="load-more-indicator" class="htmx-indicator ml-2">
+            <svg class="animate-spin h-4 w-4 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </span>
+    </button>
+</div>
+<script>
+function updateLoadMoreButton(event) {
+    // Check if response contains HasNext data attribute or more items
+    var response = event.detail.xhr.response;
+    var container = document.getElementById('load-more-container');
+    // If response doesn't contain skill-item class elements, hide the button
+    var tempDiv = document.createElement('div');
+    tempDiv.innerHTML = response;
+    var hasItems = tempDiv.querySelectorAll('.skill-item').length > 0;
+    if (!hasItems && container) {
+        container.style.display = 'none';
+    }
+    // Update page number for next request
+    var btn = container ? container.querySelector('button') : null;
+    if (btn) {
+        var currentUrl = btn.getAttribute('hx-get');
+        var pageMatch = currentUrl.match(/page=(\d+)/);
+        if (pageMatch) {
+            var nextPage = parseInt(pageMatch[1]) + 1;
+            btn.setAttribute('hx-get', currentUrl.replace(/page=\d+/, 'page=' + nextPage));
+            htmx.process(btn);
+        }
+    }
+}
+</script>
+{{end}}
 {{else}}
 <div class="text-center py-6 text-terminal-muted">
     <p class="text-sm">{{if .Query}}No skills found for "{{.Query}}"{{else}}Enter a search term to find skills{{end}}</p>
