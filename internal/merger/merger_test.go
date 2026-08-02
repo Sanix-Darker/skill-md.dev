@@ -3,7 +3,7 @@ package merger
 import (
 	"testing"
 
-	"github.com/sanixdarker/skill-md/pkg/skill"
+	"github.com/sanixdarker/skillf/pkg/skill"
 )
 
 func TestMerger_Merge_EmptySkillsArray(t *testing.T) {

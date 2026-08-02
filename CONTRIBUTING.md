@@ -50,7 +50,7 @@ Create `internal/converter/yourformat.go`:
 package converter
 
 import (
-    "github.com/sanixdarker/skill-md/pkg/skill"
+    "github.com/sanixdarker/skillf/pkg/skill"
 )
 
 type YourFormatConverter struct{}

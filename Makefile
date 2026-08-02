@@ -4,7 +4,7 @@
 BINARY_NAME=skillmd
 VERSION?=dev
 COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-LDFLAGS=-ldflags "-X github.com/sanixdarker/skill-md/internal/cli.Version=$(VERSION) -X github.com/sanixdarker/skill-md/internal/cli.Commit=$(COMMIT)"
+LDFLAGS=-ldflags "-X github.com/sanixdarker/skillf/internal/cli.Version=$(VERSION) -X github.com/sanixdarker/skillf/internal/cli.Commit=$(COMMIT)"
 
 # Build
 build:

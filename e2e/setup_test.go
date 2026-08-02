@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sanixdarker/skill-md/internal/app"
-	"github.com/sanixdarker/skill-md/internal/server"
+	"github.com/sanixdarker/skillf/internal/app"
+	"github.com/sanixdarker/skillf/internal/server"
 )
 
 var (
