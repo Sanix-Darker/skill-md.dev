@@ -15,7 +15,7 @@ Environment=GIT_TERMINAL_PROMPT=0
 EnvironmentFile=-/etc/skillf/skillf.env
 ExecStart=/usr/local/bin/skillf serve \
   --listen-host 127.0.0.1 \
-  --port 8080 \
+  --port 8082 \
   --ssh-port 2222 \
   --db /var/lib/skillf/skillf.db \
   --ssh-key /var/lib/skillf/skillf_ed25519 \

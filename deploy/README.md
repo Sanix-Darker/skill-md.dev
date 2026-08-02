@@ -12,6 +12,7 @@
 - Keep the public example files generic and operator-owned.
 - Apply the real production hostname only in server-local config during rollout.
 - The tracked systemd unit uses `StateDirectory=skillf`, so SQLite state and the SSH host key live under `/var/lib/skillf/`.
+- The example binds the web process to `127.0.0.1:8082` so it can coexist with other local reverse-proxied services on the same host.
 
 ## Production rollout (manual)
 
@@ -29,7 +30,7 @@ sudo systemctl enable --now skillf.service
 6. Verify:
 
 ```bash
-curl -fsS http://127.0.0.1:8080/health
+curl -fsS http://127.0.0.1:8082/health
 curl -fsS https://example.com/health
 curl -fsS https://example.com/api/system
 ssh -p 2222 example.com
