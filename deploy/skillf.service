@@ -8,17 +8,22 @@ Type=simple
 User=skillf
 Group=skillf
 WorkingDirectory=/opt/skillf
+StateDirectory=skillf
+StateDirectoryMode=0750
 Environment=SKILLF_PUBLIC_HOST=example.com
 Environment=GIT_TERMINAL_PROMPT=0
 EnvironmentFile=-/etc/skillf/skillf.env
 ExecStart=/usr/local/bin/skillf serve \
+  --listen-host 127.0.0.1 \
   --port 8080 \
   --ssh-port 2222 \
   --db /var/lib/skillf/skillf.db \
+  --ssh-key /var/lib/skillf/skillf_ed25519 \
   --public-host example.com
 Restart=always
 RestartSec=3
 NoNewPrivileges=true
+UMask=0077
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true

@@ -165,7 +165,7 @@ func (c *URLConverter) fetchURL(urlStr string) ([]byte, error) {
 	collector.SetRequestTimeout(30 * time.Second)
 
 	// Set User-Agent to avoid being blocked
-	collector.UserAgent = "Mozilla/5.0 (compatible; SkillMD/1.0; +https://github.com/sanixdarker/skillf)"
+	collector.UserAgent = "Mozilla/5.0 (compatible; Skillf/1.0; +https://github.com/sanixdarker/skillf)"
 
 	collector.OnResponse(func(r *colly.Response) {
 		htmlContent = r.Body

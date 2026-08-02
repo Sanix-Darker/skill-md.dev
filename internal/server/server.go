@@ -3,8 +3,10 @@ package server
 
 import (
 	"context"
-	"fmt"
+	"net"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -35,7 +37,7 @@ func New(application *app.App) *Server {
 	s.setupRoutes()
 
 	s.server = &http.Server{
-		Addr:         fmt.Sprintf(":%d", application.Config.Port),
+		Addr:         net.JoinHostPort(resolveListenHost(application.Config.ListenHost), strconv.Itoa(application.Config.Port)),
 		Handler:      s.router,
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 90 * time.Second,
@@ -106,4 +108,12 @@ func (s *Server) Shutdown() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	return s.server.Shutdown(ctx)
+}
+
+func resolveListenHost(host string) string {
+	trimmedHost := strings.TrimSpace(strings.Trim(host, "[]"))
+	if trimmedHost == "" {
+		return "0.0.0.0"
+	}
+	return trimmedHost
 }

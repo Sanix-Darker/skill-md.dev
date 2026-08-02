@@ -56,7 +56,7 @@ skillf serve
 SSH console and diagnostics:
 
 ```bash
-skillf serve --public-host example.com --ssh-port 2222
+skillf serve --public-host example.com --listen-host 127.0.0.1 --ssh-port 2222
 ssh example.com -p 2222
 curl -fsS https://example.com/health
 curl -fsS https://example.com/api/system
@@ -64,6 +64,7 @@ curl -fsS https://example.com/api/system
 
 Options:
 - `--port, -p` - Port to listen on (default: 8080)
+- `--listen-host` - Bind address for the HTTP server (default: `0.0.0.0`)
 - `--db` - Path to SQLite database (default: ./skillf.db)
 - `--debug` - Enable debug mode
 

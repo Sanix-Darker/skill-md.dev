@@ -22,6 +22,7 @@ type Config struct {
 	Debug             bool
 	Version           string
 	PublicHost        string
+	ListenHost        string
 	GitHubToken       string
 	GitLabToken       string
 	BitbucketUsername string
@@ -38,9 +39,10 @@ type Config struct {
 // DefaultConfig returns the default configuration.
 func DefaultConfig() *Config {
 	return &Config{
-		Port:   8080,
-		DBPath: "./skillf.db",
-		Debug:  false,
+		Port:       8080,
+		DBPath:     "./skillf.db",
+		Debug:      false,
+		ListenHost: "0.0.0.0",
 		// Public runtime defaults.
 		PublicHost: "127.0.0.1",
 		Version:    "dev",

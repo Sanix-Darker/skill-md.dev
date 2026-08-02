@@ -543,10 +543,11 @@ Issues and suggestions:`
   }
 
   // Expose for debugging
-  window.SkillMDEnhance = {
+  window.SkillfEnhance = {
     init: init,
     getStatus: () => ({ isReady, isLoading, isProcessing })
   };
+  window.SkillMDEnhance = window.SkillfEnhance;
 
   // Toggle enhance info panel
   window.toggleEnhanceInfo = function() {

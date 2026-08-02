@@ -133,6 +133,7 @@ func (h *SystemHandler) System(w http.ResponseWriter, r *http.Request) {
 			"port":         h.app.Config.Port,
 			"host":         publicHost,
 			"hostOnly":     publicHostOnly,
+			"listen_host":  strings.TrimSpace(h.app.Config.ListenHost),
 			"scheme":       scheme,
 			"base_url":     webBaseURL,
 			"public_url":   webBaseURL,
