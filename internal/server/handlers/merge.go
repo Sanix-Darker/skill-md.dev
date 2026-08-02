@@ -3,17 +3,20 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
+	"sort"
+	"strings"
 	"time"
 
-	"github.com/sanixdarker/skill-md/internal/app"
-	"github.com/sanixdarker/skill-md/internal/merger"
-	"github.com/sanixdarker/skill-md/internal/server/middleware"
-	"github.com/sanixdarker/skill-md/internal/sources"
-	"github.com/sanixdarker/skill-md/pkg/skill"
-	"github.com/sanixdarker/skill-md/web"
+	"github.com/sanixdarker/skillf/internal/app"
+	"github.com/sanixdarker/skillf/internal/merger"
+	"github.com/sanixdarker/skillf/internal/server/middleware"
+	"github.com/sanixdarker/skillf/internal/sources"
+	"github.com/sanixdarker/skillf/pkg/skill"
+	"github.com/sanixdarker/skillf/web"
 )
 
 // Upload limits for merge handler
@@ -29,6 +32,29 @@ type SkillRef struct {
 	Name   string `json:"name"`
 }
 
+type mergeInputMetadata struct {
+	Index      int
+	Name       string
+	Source     string
+	Type       string
+	Identifier string
+	Version    string
+}
+
+type mergeConflictValueMetadata struct {
+	Source     string
+	Name       string
+	Version    string
+	SourceType string
+	Value      string
+}
+
+type mergeConflictMetadata struct {
+	Field    string
+	Values   []mergeConflictValueMetadata
+	Resolved string
+}
+
 // MergeHandler handles merge requests.
 type MergeHandler struct {
 	app *app.App
@@ -42,7 +68,7 @@ func NewMergeHandler(application *app.App) *MergeHandler {
 // Index renders the merge page.
 func (h *MergeHandler) Index(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{
-		"Title": "Merge - Skill MD",
+		"Title": "Merge - Skillf",
 	}
 
 	if err := web.RenderPage(w, "merge.html", data); err != nil {
@@ -60,6 +86,7 @@ func (h *MergeHandler) Merge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var skills []*skill.Skill
+	var inputMetadata []*mergeInputMetadata
 
 	// Check for skill references first (from search/browse)
 	skillRefsJSON := r.FormValue("skill_refs")
@@ -94,6 +121,15 @@ func (h *MergeHandler) Merge(w http.ResponseWriter, r *http.Request) {
 				h.renderError(w, r, "Failed to parse skill. Please check the skill format.")
 				return
 			}
+			s = applySourceMetadata(s, ref.Source, ref.Name)
+			inputMetadata = append(inputMetadata, &mergeInputMetadata{
+				Index:      len(inputMetadata) + 1,
+				Name:       pickMergeInputName(s, ref.Name),
+				Source:     skillSourceLabel(s, len(inputMetadata)),
+				Type:       mergeSourceTypeFromRef(ref.Source),
+				Identifier: ref.ID,
+				Version:    strings.TrimSpace(s.Frontmatter.Version),
+			})
 
 			skills = append(skills, s)
 		}
@@ -134,6 +170,15 @@ func (h *MergeHandler) Merge(w http.ResponseWriter, r *http.Request) {
 				h.renderError(w, r, "Failed to parse file. Please check the skill format.")
 				return
 			}
+			s = applySourceMetadata(s, "upload", fileHeader.Filename)
+			inputMetadata = append(inputMetadata, &mergeInputMetadata{
+				Index:      len(inputMetadata) + 1,
+				Name:       pickMergeInputName(s, fileHeader.Filename),
+				Source:     skillSourceLabel(s, len(inputMetadata)),
+				Type:       "upload",
+				Identifier: fileHeader.Filename,
+				Version:    strings.TrimSpace(s.Frontmatter.Version),
+			})
 
 			skills = append(skills, s)
 		}
@@ -141,12 +186,21 @@ func (h *MergeHandler) Merge(w http.ResponseWriter, r *http.Request) {
 
 	// Get options
 	name := r.FormValue("name")
+	description := r.FormValue("description")
 	dedupe := r.FormValue("dedupe") == "true" || r.FormValue("dedupe") == "on"
+	strategy, err := merger.ParseConflictStrategy(r.FormValue("strategy"))
+	if err != nil {
+		h.app.Logger.Error("invalid conflict strategy", "value", r.FormValue("strategy"), "error", err)
+		h.renderError(w, r, "Invalid merge strategy. Use keep_first, keep_last, keep_longer, or combine.")
+		return
+	}
 
 	// Merge
 	result, err := h.app.Merger.Merge(skills, &merger.Options{
-		Name:        name,
-		Deduplicate: dedupe,
+		Name:             name,
+		Description:      description,
+		Deduplicate:      dedupe,
+		ConflictStrategy: strategy,
 	})
 	if err != nil {
 		h.app.Logger.Error("merge failed", "error", err)
@@ -162,13 +216,32 @@ func (h *MergeHandler) Merge(w http.ResponseWriter, r *http.Request) {
 
 	// Render output
 	output := skill.Render(result)
+	conflicts := merger.DetectConflicts(skills, strategy)
+	metadataConflicts := buildMergeConflictMetadata(conflicts, inputMetadata)
+	sourcesSummary := summarizeMergeSources(inputMetadata)
+
+	mergeInputs := make([]mergeInputMetadata, 0, len(inputMetadata))
+	for _, input := range inputMetadata {
+		if input != nil {
+			mergeInputs = append(mergeInputs, *input)
+		}
+	}
 
 	// Return result
 	if middleware.IsHTMXRequest(r) {
 		data := map[string]interface{}{
-			"Content":    output,
-			"Name":       result.Frontmatter.Name,
-			"SkillCount": len(skills),
+			"Content":            output,
+			"Name":               result.Frontmatter.Name,
+			"SkillCount":         len(skills),
+			"Conflicts":          conflicts,
+			"MergeConflicts":     metadataConflicts,
+			"ConflictCount":      len(conflicts),
+			"ConflictStrategy":   strategy.String(),
+			"MergeInputCount":    len(mergeInputs),
+			"MergeInputs":        mergeInputs,
+			"MergeSourceSummary": sourcesSummary,
+			"MergeStrategyLabel": mergeStrategyDisplayName(strategy),
+			"MergeDedupe":        dedupe,
 		}
 		if err := web.RenderPartial(w, "code-preview.html", data); err != nil {
 			h.app.Logger.Error("failed to render preview", "error", err)
@@ -177,6 +250,155 @@ func (h *MergeHandler) Merge(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.Header().Set("Content-Type", "text/markdown")
 		w.Write([]byte(output))
+	}
+}
+
+func buildMergeConflictMetadata(conflicts []merger.Conflict, inputMetadata []*mergeInputMetadata) []mergeConflictMetadata {
+	metadataBySource := map[string]mergeInputMetadata{}
+	for _, input := range inputMetadata {
+		if input == nil {
+			continue
+		}
+		metadataBySource[input.Source] = *input
+	}
+
+	mergedConflicts := make([]mergeConflictMetadata, 0, len(conflicts))
+	for _, conflict := range conflicts {
+		values := make([]mergeConflictValueMetadata, 0, len(conflict.Values))
+		for _, value := range conflict.Values {
+			item := mergeConflictValueMetadata{
+				Source: value.Source,
+				Value:  value.Value,
+			}
+			if meta, ok := metadataBySource[value.Source]; ok {
+				item.Name = meta.Name
+				item.Version = meta.Version
+				item.SourceType = meta.Type
+			}
+			values = append(values, item)
+		}
+		mergedConflicts = append(mergedConflicts, mergeConflictMetadata{
+			Field:    conflict.Field,
+			Values:   values,
+			Resolved: conflict.Resolved,
+		})
+	}
+
+	return mergedConflicts
+}
+
+func summarizeMergeSources(inputs []*mergeInputMetadata) []string {
+	counts := make(map[string]int)
+	for _, input := range inputs {
+		if input == nil {
+			continue
+		}
+		counts[humanizeMergeSource(input.Type)]++
+	}
+
+	keys := make([]string, 0, len(counts))
+	for source := range counts {
+		keys = append(keys, source)
+	}
+	sort.Strings(keys)
+
+	summary := make([]string, 0, len(keys))
+	for _, source := range keys {
+		summary = append(summary, fmt.Sprintf("%s %d", source, counts[source]))
+	}
+
+	return summary
+}
+
+func mergeSourceTypeFromRef(source string) string {
+	source = strings.TrimSpace(strings.ToLower(source))
+	if source == "" {
+		return "upload"
+	}
+	return source
+}
+
+func mergeStrategyDisplayName(strategy merger.ConflictStrategy) string {
+	switch strategy {
+	case merger.KeepFirst:
+		return "keep_first (safe default)"
+	case merger.KeepLast:
+		return "keep_last"
+	case merger.KeepLonger:
+		return "keep_longer"
+	case merger.Combine:
+		return "combine"
+	default:
+		return strategy.String()
+	}
+}
+
+func pickMergeInputName(s *skill.Skill, fallback string) string {
+	name := strings.TrimSpace(s.Frontmatter.Name)
+	if name == "" {
+		name = strings.TrimSpace(fallback)
+	}
+	if name == "" {
+		name = "(unnamed)"
+	}
+	return name
+}
+
+func skillSourceLabel(s *skill.Skill, index int) string {
+	source := strings.TrimSpace(s.Frontmatter.Source)
+	if source == "" {
+		source = "uploaded"
+	}
+	return fmt.Sprintf("%s #%d", source, index+1)
+}
+
+func humanizeMergeSource(source string) string {
+	switch source {
+	case "local":
+		return "Local"
+	case "skills.sh":
+		return "SKILLS.sh"
+	case "github":
+		return "GitHub"
+	case "gitlab":
+		return "GitLab"
+	case "bitbucket":
+		return "Bitbucket"
+	case "codeberg":
+		return "Codeberg"
+	case "upload":
+		return "Upload"
+	default:
+		if source == "" {
+			return "Upload"
+		}
+		return source
+	}
+}
+
+// Strategies returns the supported merge strategies.
+func (h *MergeHandler) Strategies(w http.ResponseWriter, r *http.Request) {
+	type strategyPayload struct {
+		Value       string `json:"value"`
+		Label       string `json:"label"`
+		Description string `json:"description"`
+	}
+
+	strategies := merger.SupportedStrategies()
+	payload := make([]strategyPayload, 0, len(strategies))
+
+	for _, strategy := range strategies {
+		payload = append(payload, strategyPayload{
+			Value:       strategy.Value,
+			Label:       strategy.Label,
+			Description: strategy.Description,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(payload); err != nil {
+		h.app.Logger.Error("failed to render merge strategies", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
@@ -234,8 +456,25 @@ func (h *MergeHandler) parseSkillFromFile(fh *multipart.FileHeader) (*skill.Skil
 	return skill.Parse(string(content))
 }
 
+func applySourceMetadata(s *skill.Skill, source string, hint string) *skill.Skill {
+	if s == nil {
+		return s
+	}
+	if s.Frontmatter.Source == "" {
+		s.Frontmatter.Source = source
+	}
+	if s.Frontmatter.SourceType == "" {
+		s.Frontmatter.SourceType = source
+	}
+	if s.Frontmatter.Name == "" && strings.TrimSpace(hint) != "" {
+		s.Frontmatter.Name = strings.TrimSpace(hint)
+	}
+	return s
+}
+
 func (h *MergeHandler) renderError(w http.ResponseWriter, r *http.Request, msg string) {
 	if middleware.IsHTMXRequest(r) {
+		w.Header().Set("X-Skillf-Error", "true")
 		data := map[string]interface{}{
 			"Error": msg,
 		}

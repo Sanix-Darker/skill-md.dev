@@ -1,9 +1,11 @@
 package merger
 
 import (
+	"fmt"
+	"sort"
 	"strings"
 
-	"github.com/sanixdarker/skill-md/pkg/skill"
+	"github.com/sanixdarker/skillf/pkg/skill"
 )
 
 // ConflictStrategy defines how to resolve conflicts.
@@ -19,6 +21,39 @@ const (
 	// Combine combines all values.
 	Combine
 )
+
+// String returns a display name for the strategy.
+func (s ConflictStrategy) String() string {
+	switch s {
+	case KeepFirst:
+		return "keep_first"
+	case KeepLast:
+		return "keep_last"
+	case KeepLonger:
+		return "keep_longer"
+	case Combine:
+		return "combine"
+	default:
+		return fmt.Sprintf("unknown:%d", s)
+	}
+}
+
+// ParseConflictStrategy parses a user-provided strategy value into a supported
+// conflict strategy.
+func ParseConflictStrategy(value string) (ConflictStrategy, error) {
+	switch strings.TrimSpace(strings.ToLower(strings.ReplaceAll(value, "-", "_"))) {
+	case "", "keep_first", "first":
+		return KeepFirst, nil
+	case "keep_last", "last":
+		return KeepLast, nil
+	case "keep_longer", "longer":
+		return KeepLonger, nil
+	case "combine":
+		return Combine, nil
+	default:
+		return KeepFirst, fmt.Errorf("unknown conflict strategy: %s", value)
+	}
+}
 
 // ConflictResolver handles merge conflicts.
 type ConflictResolver struct {
@@ -100,79 +135,190 @@ func (r *ConflictResolver) ResolveSections(sections []skill.Section) skill.Secti
 	return result
 }
 
+// ConflictValue maps a conflicting value back to its source.
+type ConflictValue struct {
+	Source string
+	Value  string
+}
+
 // Conflict represents a merge conflict.
 type Conflict struct {
 	Field    string
-	Values   []string
+	Values   []ConflictValue
 	Resolved string
 }
 
-// DetectConflicts detects potential conflicts between skills.
-func DetectConflicts(skills []*skill.Skill) []Conflict {
+// StrategyInfo describes a supported conflict strategy.
+type StrategyInfo struct {
+	Value       string
+	Label       string
+	Description string
+}
+
+// SupportedStrategies returns metadata for every supported conflict strategy.
+func SupportedStrategies() []StrategyInfo {
+	return []StrategyInfo{
+		{
+			Value:       KeepFirst.String(),
+			Label:       "keep_first (safe default)",
+			Description: "Keeps the first non-empty value encountered.",
+		},
+		{
+			Value:       KeepLast.String(),
+			Label:       "keep_last",
+			Description: "Keeps the last non-empty value encountered.",
+		},
+		{
+			Value:       KeepLonger.String(),
+			Label:       "keep_longer",
+			Description: "Keeps the longest non-empty value.",
+		},
+		{
+			Value:       Combine.String(),
+			Label:       "combine",
+			Description: "Concatenates values with blank lines.",
+		},
+	}
+}
+
+// DetectConflicts detects potential conflicts between skills and resolves the
+// conflict strategy for each field.
+func DetectConflicts(skills []*skill.Skill, strategy ConflictStrategy) []Conflict {
 	var conflicts []Conflict
 
-	// Check name conflicts
-	names := make(map[string]int)
-	for _, s := range skills {
-		if s.Frontmatter.Name != "" {
-			names[s.Frontmatter.Name]++
+	appendIfConflict := func(field string, values []ConflictValue) {
+		if len(values) < 2 {
+			return
 		}
-	}
-	if len(names) > 1 {
-		values := make([]string, 0, len(names))
-		for name := range names {
-			values = append(values, name)
+		uniq := uniqueConflictValues(values)
+		if len(uniq) <= 1 {
+			return
 		}
+		resolved := resolveConflictValues(uniq, strategy)
+		if resolved == "" {
+			return
+		}
+
 		conflicts = append(conflicts, Conflict{
-			Field:  "name",
-			Values: values,
+			Field:    field,
+			Values:   uniq,
+			Resolved: resolved,
 		})
 	}
 
-	// Check version conflicts
-	versions := make(map[string]int)
-	for _, s := range skills {
-		if s.Frontmatter.Version != "" {
-			versions[s.Frontmatter.Version]++
-		}
-	}
-	if len(versions) > 1 {
-		values := make([]string, 0, len(versions))
-		for ver := range versions {
-			values = append(values, ver)
-		}
-		conflicts = append(conflicts, Conflict{
-			Field:  "version",
-			Values: values,
-		})
-	}
-
-	// Check section title conflicts (same title, different content)
-	sectionsByTitle := make(map[string][]string)
-	for _, s := range skills {
-		for _, sec := range s.Sections {
-			key := strings.ToLower(sec.Title)
-			sectionsByTitle[key] = append(sectionsByTitle[key], sec.Content)
-		}
-	}
-
-	for title, contents := range sectionsByTitle {
-		if len(contents) <= 1 {
+	// Name conflicts.
+	nameValues := make([]ConflictValue, 0, len(skills))
+	for i, s := range skills {
+		if s == nil {
 			continue
 		}
-
-		// Check if contents differ
-		unique := make(map[string]bool)
-		for _, c := range contents {
-			unique[c] = true
+		name := strings.TrimSpace(s.Frontmatter.Name)
+		if name == "" {
+			continue
 		}
-		if len(unique) > 1 {
-			conflicts = append(conflicts, Conflict{
-				Field:  "section:" + title,
-				Values: contents,
+		nameValues = append(nameValues, ConflictValue{
+			Source: skillSourceLabel(s, i),
+			Value:  name,
+		})
+	}
+	appendIfConflict("name", nameValues)
+
+	// Version conflicts.
+	versionValues := make([]ConflictValue, 0, len(skills))
+	for i, s := range skills {
+		if s == nil {
+			continue
+		}
+		version := strings.TrimSpace(s.Frontmatter.Version)
+		if version == "" {
+			continue
+		}
+		versionValues = append(versionValues, ConflictValue{
+			Source: skillSourceLabel(s, i),
+			Value:  version,
+		})
+	}
+	appendIfConflict("version", versionValues)
+
+	// Section title conflicts (same title, different content).
+	sectionsByTitle := make(map[string][]ConflictValue)
+	sectionOrder := make([]string, 0)
+	for i, s := range skills {
+		if s == nil {
+			continue
+		}
+		source := skillSourceLabel(s, i)
+		for _, sec := range s.Sections {
+			title := strings.TrimSpace(sec.Title)
+			if title == "" {
+				continue
+			}
+			content := strings.TrimSpace(sec.Content)
+			if content == "" {
+				continue
+			}
+
+			key := strings.ToLower(title)
+			if _, ok := sectionsByTitle[key]; !ok {
+				sectionOrder = append(sectionOrder, key)
+			}
+			sectionsByTitle[key] = append(sectionsByTitle[key], ConflictValue{
+				Source: source,
+				Value:  content,
 			})
 		}
 	}
 
+	for _, key := range sectionOrder {
+		appendIfConflict("section:"+key, sectionsByTitle[key])
+	}
+
+	sort.Slice(conflicts, func(i, j int) bool {
+		return conflicts[i].Field < conflicts[j].Field
+	})
+
 	return conflicts
+}
+
+// DetectConflictsLegacy keeps backward compatibility for existing internal callers.
+//
+// Deprecated: use DetectConflicts(skills, strategy) instead.
+func DetectConflictsLegacy(skills []*skill.Skill) []Conflict {
+	return DetectConflicts(skills, KeepFirst)
+}
+
+func resolveConflictValues(values []ConflictValue, strategy ConflictStrategy) string {
+	vals := make([]string, 0, len(values))
+	for _, value := range values {
+		if trimmed := strings.TrimSpace(value.Value); trimmed != "" {
+			vals = append(vals, trimmed)
+		}
+	}
+	return NewConflictResolver(strategy).ResolveString(vals)
+}
+
+func uniqueConflictValues(values []ConflictValue) []ConflictValue {
+	seen := make(map[string]bool, len(values))
+	unique := make([]ConflictValue, 0, len(values))
+	for _, value := range values {
+		trimmed := strings.TrimSpace(value.Value)
+		if trimmed == "" {
+			continue
+		}
+		if seen[trimmed] {
+			continue
+		}
+		seen[trimmed] = true
+		value.Value = trimmed
+		unique = append(unique, value)
+	}
+	return unique
+}
+
+func skillSourceLabel(s *skill.Skill, index int) string {
+	source := strings.TrimSpace(s.Frontmatter.Source)
+	if source == "" {
+		source = "uploaded"
+	}
+	return fmt.Sprintf("%s #%d", source, index+1)
 }

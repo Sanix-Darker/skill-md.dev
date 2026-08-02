@@ -267,7 +267,7 @@ func (s *GitHubSource) getRepoInfo(ctx context.Context, owner, repo string) (*gi
 // setHeaders sets common headers for GitHub API requests.
 func (s *GitHubSource) setHeaders(req *http.Request) {
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	req.Header.Set("User-Agent", "SkillMD/1.0")
+	req.Header.Set("User-Agent", "Skillf/1.0")
 	if s.token != "" {
 		req.Header.Set("Authorization", "Bearer "+s.token)
 	}

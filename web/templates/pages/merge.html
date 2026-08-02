@@ -3,6 +3,9 @@
     <h1 class="text-2xl font-semibold mb-6">
         <span class="text-terminal-accent">&gt;</span> Merge Skills
     </h1>
+    <p class="text-terminal-muted mb-6">
+        Build a merge queue from uploaded files or registry search results, choose a conflict strategy, and consolidate the final skill. For terminal-first merging, open the <a href="/ssh" class="text-terminal-accent hover:underline">SSH console</a>.
+    </p>
 
     <div class="grid lg:grid-cols-2 gap-6">
         <!-- Input Panel -->
@@ -40,16 +43,44 @@
 
                     <!-- File List -->
                     <div id="file-list" class="space-y-2 mb-4"></div>
+                    <button type="button" id="clear-upload-btn" onclick="clearUploadFiles()" class="hidden text-xs text-terminal-muted hover:text-terminal-accent">Clear selected files</button>
+                    <div id="upload-hint" class="text-xs text-terminal-muted hidden mb-3" aria-live="polite"></div>
 
                     <!-- Options -->
                     <div class="space-y-4">
-                        <input type="text" name="name" placeholder="Merged skill name (optional)"
+                        <input type="text" name="name" id="merge-name-upload" placeholder="Merged skill name (optional)"
                                class="w-full bg-terminal-bg border border-terminal-border px-3 py-2 text-sm focus:border-terminal-accent focus:outline-none">
 
+                        <input type="text" name="description" id="merge-description-upload" placeholder="Merged description (optional)"
+                               class="w-full bg-terminal-bg border border-terminal-border px-3 py-2 text-sm focus:border-terminal-accent focus:outline-none">
+
+                        <label class="block text-sm text-terminal-muted">Conflict strategy</label>
+                        <select name="strategy" id="merge-strategy"
+                                class="w-full bg-terminal-bg border border-terminal-border px-3 py-2 text-sm focus:border-terminal-accent focus:outline-none">
+                            <option value="keep_first" selected>Keep first section (safe default)</option>
+                            <option value="keep_last">Keep last section</option>
+                            <option value="keep_longer">Keep longest section</option>
+                            <option value="combine">Combine all sections</option>
+                        </select>
+                        <div id="merge-strategy-presets-upload" class="mt-2 flex flex-wrap gap-2" aria-label="Upload strategy presets">
+                            <button type="button" onclick="setMergeStrategy('keep_first')"
+                                    class="px-2 py-1 text-xs border border-terminal-border text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent transition-colors">Keep first</button>
+                            <button type="button" onclick="setMergeStrategy('keep_last')"
+                                    class="px-2 py-1 text-xs border border-terminal-border text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent transition-colors">Keep last</button>
+                            <button type="button" onclick="setMergeStrategy('keep_longer')"
+                                    class="px-2 py-1 text-xs border border-terminal-border text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent transition-colors">Keep longer</button>
+                            <button type="button" onclick="setMergeStrategy('combine')"
+                                    class="px-2 py-1 text-xs border border-terminal-border text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent transition-colors">Combine</button>
+                        </div>
+                        <p id="merge-strategy-description-upload" class="mt-1 text-xs text-terminal-muted">
+                            Keep first section is currently selected.
+                        </p>
+
                         <label class="tooltip tooltip-right flex items-center space-x-2 cursor-pointer" data-tooltip="Remove duplicate endpoints and descriptions">
-                            <input type="checkbox" name="dedupe" class="w-4 h-4 bg-terminal-bg border border-terminal-border checked:bg-terminal-accent">
+                            <input type="checkbox" id="merge-dedupe-upload" name="dedupe" class="w-4 h-4 bg-terminal-bg border border-terminal-border checked:bg-terminal-accent">
                             <span class="text-sm">Deduplicate similar content</span>
                         </label>
+                        <p id="merge-upload-plan" class="text-xs text-terminal-muted">Select at least 2 files to preview the merge plan.</p>
 
                         <button type="submit" class="tooltip w-full px-4 py-2 text-sm bg-terminal-bg text-terminal-text border border-terminal-border font-medium hover:border-terminal-accent hover:text-terminal-accent transition-colors" data-tooltip="Combine selected files into one skill" aria-label="Merge skills into one file">
                             Merge Files
@@ -109,7 +140,7 @@
 
                 <!-- Search Results -->
                 <div id="search-results" class="max-h-64 overflow-y-auto">
-                    <p class="text-terminal-muted text-sm text-center py-4">Search for skills to add to merge</p>
+                    <p class="text-terminal-muted text-sm text-center py-4">Search by name, tag, or domain to add skills into the merge queue.</p>
                 </div>
             </div>
 
@@ -121,15 +152,43 @@
                         Clear all
                     </button>
                 </div>
+                <p id="selected-summary" class="text-xs text-terminal-muted mb-3 hidden"></p>
+                <p id="merge-search-plan" class="text-xs text-terminal-muted mb-3">Select at least 2 skills to build a merge plan.</p>
                 <div id="selected-skills-list" class="space-y-2 mb-4"></div>
+                <p id="selected-empty-hint" class="text-xs text-terminal-muted">Select at least two skills from the search results.</p>
 
                 <!-- Merge Options for Selected Skills -->
                 <div class="space-y-4">
                     <input type="text" id="merge-name" placeholder="Merged skill name (optional)"
                            class="w-full bg-terminal-bg border border-terminal-border px-3 py-2 text-sm focus:border-terminal-accent focus:outline-none">
 
+                    <input type="text" id="merge-description" placeholder="Merged description (optional)"
+                           class="w-full bg-terminal-bg border border-terminal-border px-3 py-2 text-sm focus:border-terminal-accent focus:outline-none">
+
+                        <label class="block text-sm text-terminal-muted">Conflict strategy</label>
+                        <select id="merge-strategy-search"
+                                class="w-full bg-terminal-bg border border-terminal-border px-3 py-2 text-sm focus:border-terminal-accent focus:outline-none">
+                            <option value="keep_first" selected>Keep first section (safe default)</option>
+                            <option value="keep_last">Keep last section</option>
+                            <option value="keep_longer">Keep longest section</option>
+                            <option value="combine">Combine all sections</option>
+                        </select>
+                        <div id="merge-strategy-presets-search" class="mt-2 flex flex-wrap gap-2" aria-label="Search strategy presets">
+                            <button type="button" onclick="setMergeStrategy('keep_first')"
+                                    class="px-2 py-1 text-xs border border-terminal-border text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent transition-colors">Keep first</button>
+                            <button type="button" onclick="setMergeStrategy('keep_last')"
+                                    class="px-2 py-1 text-xs border border-terminal-border text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent transition-colors">Keep last</button>
+                            <button type="button" onclick="setMergeStrategy('keep_longer')"
+                                    class="px-2 py-1 text-xs border border-terminal-border text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent transition-colors">Keep longer</button>
+                            <button type="button" onclick="setMergeStrategy('combine')"
+                                    class="px-2 py-1 text-xs border border-terminal-border text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent transition-colors">Combine</button>
+                        </div>
+                        <p id="merge-strategy-description" class="mt-1 text-xs text-terminal-muted">
+                            Keep first section is currently selected.
+                        </p>
+
                     <label class="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" id="merge-dedupe" class="w-4 h-4 bg-terminal-bg border border-terminal-border checked:bg-terminal-accent">
+                        <input type="checkbox" id="merge-dedupe-search" class="w-4 h-4 bg-terminal-bg border border-terminal-border checked:bg-terminal-accent">
                         <span class="text-sm">Deduplicate similar content</span>
                     </label>
 
@@ -157,6 +216,112 @@
 </div>
 
 <script>
+const defaultMergeStrategies = [
+  { value: 'keep_first', label: 'keep_first (safe default)', description: 'Keeps the first non-empty value encountered.' },
+  { value: 'keep_last', label: 'keep_last', description: 'Keeps the last non-empty value encountered.' },
+  { value: 'keep_longer', label: 'keep_longer', description: 'Keeps the longest non-empty value.' },
+  { value: 'combine', label: 'combine', description: 'Concatenates values with blank lines.' },
+];
+
+let mergeStrategies = defaultMergeStrategies;
+
+function strategyButtonLabel(value) {
+  if (value === 'keep_first') return 'Keep first';
+  if (value === 'keep_last') return 'Keep last';
+  if (value === 'keep_longer') return 'Keep longer';
+  if (value === 'combine') return 'Combine';
+  return value || 'Unknown';
+}
+
+function setMergeStrategies(strategies) {
+  mergeStrategies = (Array.isArray(strategies) && strategies.length ? strategies : defaultMergeStrategies)
+    .map((strategy) => ({
+      value: String(strategy.value || ''),
+      label: String(strategy.label || strategy.value || ''),
+      description: String(strategy.description || ''),
+    }))
+    .filter((strategy) => strategy.value);
+
+  const uploadSelect = document.getElementById('merge-strategy');
+  const searchSelect = document.getElementById('merge-strategy-search');
+  const active = getMergeStrategy() || 'keep_first';
+  const uploadPresets = document.getElementById('merge-strategy-presets-upload');
+  const searchPresets = document.getElementById('merge-strategy-presets-search');
+
+  [uploadSelect, searchSelect].forEach((select) => {
+    if (!select) return;
+    const current = select.value || active;
+    select.innerHTML = '';
+    mergeStrategies.forEach((strategy) => {
+      const option = document.createElement('option');
+      option.value = strategy.value;
+      option.textContent = strategy.label;
+      option.selected = strategy.value === current;
+      select.appendChild(option);
+    });
+    if (!select.value) {
+      select.value = current;
+    }
+  });
+
+  [uploadPresets, searchPresets].forEach((container) => {
+    if (!container) return;
+    container.innerHTML = '';
+    mergeStrategies.forEach((strategy) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'px-2 py-1 text-xs border border-terminal-border text-terminal-muted hover:border-terminal-accent hover:text-terminal-accent transition-colors';
+      button.textContent = strategyButtonLabel(strategy.value);
+      button.setAttribute('data-strategy', strategy.value);
+      button.onclick = function () {
+        setMergeStrategy(strategy.value);
+      };
+      container.appendChild(button);
+    });
+  });
+
+  updateStrategyHint();
+}
+
+function loadMergeStrategies() {
+  fetch('/api/merge/strategies')
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error('Unable to fetch merge strategies');
+      }
+      return response.json();
+    })
+    .then((payload) => {
+      setMergeStrategies(payload);
+    })
+    .catch(() => {
+      setMergeStrategies(defaultMergeStrategies);
+    });
+}
+
+function getStrategyDescription(value) {
+  const selected = (mergeStrategies || []).find((strategy) => strategy.value === value);
+  return selected && selected.description ? selected.description : '';
+}
+
+function getStrategyLabel(value) {
+  const selected = (mergeStrategies || []).find((strategy) => strategy.value === value);
+  return selected && selected.label ? selected.label : value || '';
+}
+
+function updateStrategyHint() {
+  const strategy = getMergeStrategy();
+  const label = getStrategyLabel(strategy);
+  const details = getStrategyDescription(strategy);
+  const text = details ? `${label}: ${details}` : label;
+  ['merge-strategy-description', 'merge-strategy-description-upload'].forEach((id) => {
+    const hint = document.getElementById(id);
+    if (hint) {
+      hint.textContent = text;
+    }
+  });
+}
+
 // Tab switching
 function switchTab(tab) {
     const uploadTab = document.getElementById('tab-upload');
@@ -179,6 +344,8 @@ function switchTab(tab) {
         searchContent.classList.remove('hidden');
         uploadContent.classList.add('hidden');
     }
+    updateStrategyHint();
+    showMergeSummary();
 }
 
 // Source filter for search
@@ -217,14 +384,22 @@ function setSource(source) {
 // Selected skills management
 var selectedSkills = [];
 
-function addSkillToMerge(id, source, name) {
+function addSkillToMerge(id, source, name, version) {
     // Check if already added
     if (selectedSkills.find(s => s.id === id && s.source === source)) {
+        if (window.showToast) {
+            window.showToast('Skill is already in the merge queue.', 'warn');
+        }
+        syncSearchSelectionState();
         return;
     }
 
-    selectedSkills.push({ id, source, name });
+    const normalizedVersion = version || '';
+    selectedSkills.push({ id, source, name, version: normalizedVersion });
     updateSelectedSkillsUI();
+    if (window.showToast) {
+        window.showToast('Skill added to merge queue.', 'success');
+    }
 }
 
 function removeSkillFromMerge(id, source) {
@@ -242,21 +417,52 @@ function updateSelectedSkillsUI() {
     const list = document.getElementById('selected-skills-list');
     const count = document.getElementById('selected-count');
     const mergeBtn = document.getElementById('merge-selected-btn');
+    const emptyHint = document.getElementById('selected-empty-hint');
+    const summary = document.getElementById('selected-summary');
+    const searchPlan = document.getElementById('merge-search-plan');
 
     count.textContent = selectedSkills.length;
 
     if (selectedSkills.length === 0) {
         container.classList.add('hidden');
+        if (summary) {
+            summary.classList.add('hidden');
+        }
+        if (emptyHint) {
+            emptyHint.classList.remove('hidden');
+        }
+        if (mergeBtn) {
+            mergeBtn.disabled = true;
+        }
+        if (searchPlan) {
+            searchPlan.textContent = `Select at least 2 skills to build a merge plan. Current strategy: ${getStrategyLabel(getMergeStrategy())}.`;
+        }
+        syncSearchSelectionState();
         return;
     }
 
     container.classList.remove('hidden');
+    if (emptyHint) {
+        emptyHint.classList.add('hidden');
+    }
+    if (summary) {
+        const sourceSummary = summarizeSourceCounts();
+        summary.classList.remove('hidden');
+        summary.textContent = `${selectedSkills.length} selected · strategy ${getStrategyLabel(getMergeStrategy())} · dedupe ${isMergeDedupeEnabled() ? 'on' : 'off'} · ${sourceSummary}`;
+    }
+    if (searchPlan) {
+        if (selectedSkills.length >= 2) {
+            searchPlan.textContent = `Plan: merge ${selectedSkills.length} queued skill(s) with ${getStrategyLabel(getMergeStrategy())} and dedupe ${isMergeDedupeEnabled() ? 'on' : 'off'}.`;
+        } else {
+            searchPlan.textContent = `Add ${2 - selectedSkills.length} more skill to enable merge.`;
+        }
+    }
 
     list.innerHTML = selectedSkills.map(skill => `
         <div class="p-2 bg-terminal-bg border border-terminal-border text-sm flex items-center justify-between">
             <span class="flex items-center gap-2 truncate">
-                <span class="px-1.5 py-0.5 text-xs border border-terminal-border">${skill.source}</span>
-                <span class="truncate">${escapeHtml(skill.name)}</span>
+                <span class="px-1.5 py-0.5 text-xs border border-terminal-border">${sourceLabel(skill.source)}</span>
+                <span class="truncate">${escapeHtml(skill.name)}${skill.version ? ` (v${escapeHtml(skill.version)})` : ''}</span>
             </span>
             <button type="button" onclick="removeSkillFromMerge('${escapeJs(skill.id)}', '${skill.source}')"
                     class="text-terminal-muted hover:text-terminal-accent ml-2">&times;</button>
@@ -264,6 +470,59 @@ function updateSelectedSkillsUI() {
     `).join('');
 
     mergeBtn.disabled = selectedSkills.length < 2;
+    syncSearchSelectionState();
+}
+
+function syncSearchSelectionState() {
+    document.querySelectorAll('[data-merge-add="true"]').forEach((button) => {
+        const id = button.getAttribute('data-skill-id') || '';
+        const source = button.getAttribute('data-skill-source') || '';
+        const selected = selectedSkills.some((skill) => skill.id === id && skill.source === source);
+
+        button.disabled = selected;
+        button.textContent = selected ? 'Added' : '+ Add';
+        button.classList.toggle('opacity-50', selected);
+        button.classList.toggle('border-terminal-accent', selected);
+        button.classList.toggle('text-terminal-accent', selected);
+    });
+}
+
+function summarizeSourceCounts() {
+    const counts = new Map();
+    selectedSkills.forEach((skill) => {
+        const label = sourceLabel(skill.source);
+        const current = counts.get(label) || 0;
+        counts.set(label, current + 1);
+    });
+
+    const items = [];
+    counts.forEach((count, source) => {
+        items.push(`${source}: ${count}`);
+    });
+
+    if (items.length === 0) {
+        return 'no source breakdown';
+    }
+    return items.join(', ');
+}
+
+function sourceLabel(source) {
+    switch (source) {
+        case 'local':
+            return 'Local';
+        case 'skills.sh':
+            return 'SKILLS.sh';
+        case 'github':
+            return 'GitHub';
+        case 'gitlab':
+            return 'GitLab';
+        case 'bitbucket':
+            return 'Bitbucket';
+        case 'codeberg':
+            return 'Codeberg';
+        default:
+            return 'Upload';
+    }
 }
 
 function escapeHtml(text) {
@@ -283,11 +542,14 @@ function mergeSelectedSkills() {
     const mergeBtn = document.getElementById('merge-selected-btn');
     mergeBtn.disabled = true;
     mergeBtn.textContent = 'Merging...';
+    clearMergeOutputState();
 
     const formData = new FormData();
     formData.append('skill_refs', JSON.stringify(selectedSkills));
     formData.append('name', document.getElementById('merge-name').value);
-    formData.append('dedupe', document.getElementById('merge-dedupe').checked ? 'on' : '');
+    formData.append('description', document.getElementById('merge-description').value);
+    formData.append('strategy', getMergeStrategy());
+    formData.append('dedupe', isMergeDedupeEnabled() ? 'on' : '');
 
     fetch('/api/merge', {
         method: 'POST',
@@ -296,12 +558,24 @@ function mergeSelectedSkills() {
             'HX-Request': 'true'
         }
     })
-    .then(response => response.text())
-    .then(html => {
+    .then(async (response) => {
+        return {
+            html: await response.text(),
+            isError: response.headers.get('X-Skillf-Error') === 'true',
+        };
+    })
+    .then(({ html, isError }) => {
         document.getElementById('merge-output').innerHTML = html;
-        document.getElementById('merge-copy-btn').classList.remove('hidden');
+        const copyBtn = document.getElementById('merge-copy-btn');
+        if (copyBtn) {
+            copyBtn.classList.toggle('hidden', isError);
+        }
         mergeBtn.disabled = false;
         mergeBtn.textContent = 'Merge Selected Skills';
+        showMergeSummary();
+        if (!isError && window.showToast) {
+            window.showToast('Merge completed.', 'success');
+        }
     })
     .catch(err => {
         // Use textContent to prevent XSS from error messages
@@ -317,7 +591,22 @@ function mergeSelectedSkills() {
 // File upload handling
 document.getElementById('merge-files').addEventListener('change', function(e) {
     const fileList = document.getElementById('file-list');
+    const uploadHint = document.getElementById('upload-hint');
+    const clearBtn = document.getElementById('clear-upload-btn');
     fileList.innerHTML = '';
+
+    const files = Array.from(e.target.files);
+    if (files.length === 0) {
+        if (clearBtn) {
+            clearBtn.classList.add('hidden');
+        }
+        if (uploadHint) {
+            uploadHint.classList.add('hidden');
+            uploadHint.textContent = '';
+        }
+        showMergeSummary();
+        return;
+    }
 
     Array.from(e.target.files).forEach((file, index) => {
         const item = document.createElement('div');
@@ -334,10 +623,38 @@ document.getElementById('merge-files').addEventListener('change', function(e) {
         fileList.appendChild(item);
     });
 
-    if (e.target.files.length > 0) {
+    if (files.length > 0) {
         document.getElementById('merge-upload').classList.add('hidden');
+        if (clearBtn) {
+            clearBtn.classList.remove('hidden');
+        }
+        if (uploadHint) {
+            uploadHint.classList.remove('hidden');
+            uploadHint.textContent = `${files.length} file(s) selected for merge · ${(getUploadTotalSize() / 1024).toFixed(1)} KB total.`;
+        }
     }
+    showMergeSummary();
 });
+
+function clearUploadFiles() {
+    const fileInput = document.getElementById('merge-files');
+    const fileList = document.getElementById('file-list');
+    const uploadHint = document.getElementById('upload-hint');
+    const uploadBox = document.getElementById('merge-upload');
+    const clearBtn = document.getElementById('clear-upload-btn');
+
+    fileInput.value = '';
+    fileList.innerHTML = '';
+    uploadBox.classList.remove('hidden');
+    if (clearBtn) {
+        clearBtn.classList.add('hidden');
+    }
+    if (uploadHint) {
+        uploadHint.classList.add('hidden');
+        uploadHint.textContent = '';
+    }
+    showMergeSummary();
+}
 
 function copyMergeOutput() {
     const content = document.getElementById('merge-output').querySelector('pre')?.textContent;
@@ -349,10 +666,147 @@ function copyMergeOutput() {
     }
 }
 
+function getMergeStrategy() {
+    const searchContent = document.getElementById('content-search');
+    const searchStrategy = document.getElementById('merge-strategy-search');
+    const uploadStrategy = document.getElementById('merge-strategy');
+    if (searchContent && !searchContent.classList.contains('hidden') && searchStrategy) {
+        return searchStrategy.value;
+    }
+    if (uploadStrategy) {
+        return uploadStrategy.value;
+    }
+    return 'keep_first';
+}
+
+function isMergeDedupeEnabled() {
+    const upload = document.getElementById('merge-dedupe-upload');
+    const search = document.getElementById('merge-dedupe-search');
+    return Boolean((upload && upload.checked) || (search && search.checked));
+}
+
+function setMergeStrategy(value) {
+    const searchStrategy = document.getElementById('merge-strategy-search');
+    const uploadStrategy = document.getElementById('merge-strategy');
+    if (searchStrategy) {
+        searchStrategy.value = value;
+    }
+    if (uploadStrategy) {
+        uploadStrategy.value = value;
+    }
+    showMergeSummary();
+    updateStrategyHint();
+}
+
+function clearMergeOutputState() {
+    const output = document.getElementById('merge-output');
+    output.classList.remove('hidden');
+    output.innerHTML = `<p class="text-terminal-muted text-sm">${escapeHtml(buildMergeInProgressMessage())}</p>`;
+    const copyBtn = document.getElementById('merge-copy-btn');
+    if (copyBtn) {
+        copyBtn.classList.add('hidden');
+    }
+}
+
+function showMergeSummary() {
+    const hint = document.getElementById('upload-hint');
+    const uploadPlan = document.getElementById('merge-upload-plan');
+    const searchPlan = document.getElementById('merge-search-plan');
+    const summary = document.getElementById('selected-summary');
+    const strategy = getMergeStrategy();
+    const label = getStrategyLabel(strategy);
+    const uploadCount = getUploadFileCount();
+    if (hint) {
+        if (uploadCount > 0) {
+            hint.classList.remove('hidden');
+            hint.textContent = `${uploadCount} file(s) selected for merge · ${(getUploadTotalSize() / 1024).toFixed(1)} KB total.`;
+        } else {
+            hint.classList.add('hidden');
+            hint.textContent = '';
+        }
+    }
+    if (uploadPlan) {
+        if (uploadCount >= 2) {
+            uploadPlan.textContent = `Plan: merge ${uploadCount} uploaded file(s) with ${label} and dedupe ${isMergeDedupeEnabled() ? 'on' : 'off'}.`;
+        } else if (uploadCount === 1) {
+            uploadPlan.textContent = `Add 1 more file to merge with ${label}.`;
+        } else {
+            uploadPlan.textContent = `Select at least 2 files to preview the merge plan. Current strategy: ${label}.`;
+        }
+    }
+    if (summary && selectedSkills.length > 0) {
+        const sourceSummary = summarizeSourceCounts();
+        summary.textContent = `${selectedSkills.length} selected · strategy ${label} · dedupe ${isMergeDedupeEnabled() ? 'on' : 'off'} · ${sourceSummary}`;
+    }
+    if (searchPlan) {
+        if (selectedSkills.length >= 2) {
+            searchPlan.textContent = `Plan: merge ${selectedSkills.length} queued skill(s) with ${label} and dedupe ${isMergeDedupeEnabled() ? 'on' : 'off'}.`;
+        } else {
+            searchPlan.textContent = `Select at least 2 skills to build a merge plan. Current strategy: ${label}.`;
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadMergeStrategies);
+document.addEventListener('DOMContentLoaded', () => {
+    const uploadDedupe = document.getElementById('merge-dedupe-upload');
+    const searchDedupe = document.getElementById('merge-dedupe-search');
+    const uploadStrategy = document.getElementById('merge-strategy');
+    const searchStrategy = document.getElementById('merge-strategy-search');
+    if (uploadDedupe) {
+        uploadDedupe.addEventListener('change', showMergeSummary);
+    }
+    if (searchDedupe) {
+        searchDedupe.addEventListener('change', showMergeSummary);
+    }
+    if (uploadStrategy) {
+        uploadStrategy.addEventListener('change', showMergeSummary);
+    }
+    if (searchStrategy) {
+        searchStrategy.addEventListener('change', showMergeSummary);
+    }
+    showMergeSummary();
+    syncSearchSelectionState();
+});
+
 document.body.addEventListener('htmx:afterSwap', function(e) {
+    if (e.detail.target.id === 'search-results') {
+        syncSearchSelectionState();
+    }
     if (e.detail.target.id === 'merge-output') {
-        document.getElementById('merge-copy-btn').classList.remove('hidden');
+        const copyBtn = document.getElementById('merge-copy-btn');
+        const isError = e.detail.xhr && e.detail.xhr.getResponseHeader('X-Skillf-Error') === 'true';
+        if (copyBtn) {
+            copyBtn.classList.toggle('hidden', isError);
+        }
     }
 });
+
+function getUploadFiles() {
+    const input = document.getElementById('merge-files');
+    return input && input.files ? Array.from(input.files) : [];
+}
+
+function getUploadFileCount() {
+    return getUploadFiles().length;
+}
+
+function getUploadTotalSize() {
+    return getUploadFiles().reduce((total, file) => total + file.size, 0);
+}
+
+function buildMergeInProgressMessage() {
+    const strategy = getStrategyLabel(getMergeStrategy());
+    const dedupe = isMergeDedupeEnabled() ? 'on' : 'off';
+    if (activeMergeMode() === 'search') {
+        return `Merging ${selectedSkills.length} queued skill(s) with ${strategy} and dedupe ${dedupe}.`;
+    }
+    return `Merging ${getUploadFileCount()} uploaded file(s) with ${strategy} and dedupe ${dedupe}.`;
+}
+
+function activeMergeMode() {
+    const searchContent = document.getElementById('content-search');
+    return searchContent && !searchContent.classList.contains('hidden') ? 'search' : 'upload';
+}
 </script>
 {{end}}

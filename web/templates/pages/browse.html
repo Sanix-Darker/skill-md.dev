@@ -1,0 +1,81 @@
+{{define "browse.html"}}
+<div class="max-w-6xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-semibold mb-2">
+        <span class="text-terminal-accent">&gt;</span> Browse Registry
+    </h1>
+    <p class="text-terminal-muted mb-6">
+        Search local and connected sources, then open the generated SKILL.md in one place.
+    </p>
+
+    <div class="border border-terminal-border bg-terminal-surface">
+        <div class="border-b border-terminal-border px-4 py-4">
+            <form method="GET" action="/browse" class="grid md:grid-cols-4 gap-3">
+                <input type="text"
+                       name="q"
+                       value="{{.Query}}"
+                       placeholder="Search skills by name, tags, or description"
+                       class="md:col-span-2 w-full bg-terminal-bg border border-terminal-border px-3 py-2 text-sm focus:border-terminal-accent focus:outline-none">
+
+                <select name="source" class="bg-terminal-bg border border-terminal-border px-3 py-2 text-sm focus:border-terminal-accent focus:outline-none">
+                    <option value="" {{if eq .Source ""}}selected{{end}}>All sources</option>
+                    <option value="local" {{if eq .Source "local"}}selected{{end}}>Local</option>
+                    <option value="skills.sh" {{if eq .Source "skills.sh"}}selected{{end}}>SKILLS.sh</option>
+                    <option value="github" {{if eq .Source "github"}}selected{{end}}>GitHub</option>
+                    <option value="gitlab" {{if eq .Source "gitlab"}}selected{{end}}>GitLab</option>
+                    <option value="bitbucket" {{if eq .Source "bitbucket"}}selected{{end}}>Bitbucket</option>
+                    <option value="codeberg" {{if eq .Source "codeberg"}}selected{{end}}>Codeberg</option>
+                </select>
+
+                {{if .Tag}}
+                <input type="hidden" name="tag" value="{{.Tag}}">
+                {{end}}
+
+                <button type="submit" class="w-full px-4 py-2 text-sm bg-terminal-bg text-terminal-text border border-terminal-border font-medium hover:border-terminal-accent hover:text-terminal-accent transition-colors">
+                    Search
+                </button>
+            </form>
+            <p class="text-xs text-terminal-muted mt-3">
+                Showing {{if gt .Total 0}}{{.Total}}{{else}}0{{end}} matches.
+            </p>
+            {{if .BySource}}
+            <div class="mt-3 flex flex-wrap gap-2 text-xs">
+                {{if index .BySource "local"}}<span class="px-2 py-1 border border-terminal-border text-terminal-muted">Local {{index .BySource "local"}}</span>{{end}}
+                {{if index .BySource "skills.sh"}}<span class="px-2 py-1 border border-purple-500 text-purple-400">SKILLS.sh {{index .BySource "skills.sh"}}</span>{{end}}
+                {{if index .BySource "github"}}<span class="px-2 py-1 border border-gray-400 text-gray-300">GitHub {{index .BySource "github"}}</span>{{end}}
+                {{if index .BySource "gitlab"}}<span class="px-2 py-1 border border-orange-500 text-orange-400">GitLab {{index .BySource "gitlab"}}</span>{{end}}
+                {{if index .BySource "bitbucket"}}<span class="px-2 py-1 border border-blue-500 text-blue-400">Bitbucket {{index .BySource "bitbucket"}}</span>{{end}}
+                {{if index .BySource "codeberg"}}<span class="px-2 py-1 border border-green-500 text-green-400">Codeberg {{index .BySource "codeberg"}}</span>{{end}}
+            </div>
+            {{end}}
+            {{if .SearchTime}}
+            <p class="text-xs text-terminal-muted mt-1">Search time: {{.SearchTime}}</p>
+            {{end}}
+            {{if .SourceErrors}}
+            <p class="text-xs text-yellow-400 mt-2">
+                Some sources are currently unavailable. Results include best-effort fallback entries.
+            </p>
+            {{end}}
+        </div>
+
+        <div class="p-4">
+            {{template "skill-list.html" .}}
+        </div>
+    </div>
+
+    <div class="mt-8 grid md:grid-cols-3 gap-4">
+        <a href="/convert" class="p-4 border border-terminal-border bg-terminal-surface hover:border-terminal-accent transition-colors">
+            <h2 class="font-semibold mb-2">Need to create one?</h2>
+            <p class="text-sm text-terminal-muted">Convert a spec to SKILL.md and save it locally.</p>
+        </a>
+        <a href="/merge" class="p-4 border border-terminal-border bg-terminal-surface hover:border-terminal-accent transition-colors">
+            <h2 class="font-semibold mb-2">Need alignment?</h2>
+            <p class="text-sm text-terminal-muted">Merge multiple SKILL.md files with conflict strategy controls.</p>
+        </a>
+        <a href="/ssh" class="p-4 border border-terminal-border bg-terminal-surface hover:border-terminal-accent transition-colors">
+            <h2 class="font-semibold mb-2">SSH mode</h2>
+            <p class="text-sm text-terminal-muted">Open terminal workflows from SSH with merge and search views.</p>
+            <p class="text-xs text-terminal-accent mt-2">Open SSH console →</p>
+        </a>
+    </div>
+</div>
+{{end}}

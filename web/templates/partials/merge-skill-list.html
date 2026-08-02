@@ -26,9 +26,15 @@
                 {{if .Description}}
                 <p class="text-xs text-terminal-muted line-clamp-1">{{truncate .Description 80}}</p>
                 {{end}}
+                {{if .Version}}
+                <p class="text-xs text-terminal-muted mt-1">v{{.Version}}</p>
+                {{end}}
             </div>
             <button type="button"
-                    onclick="addSkillToMerge('{{.ID}}', '{{.Source}}', '{{js .Name}}')"
+                    onclick="addSkillToMerge('{{.ID}}', '{{.Source}}', '{{js .Name}}', '{{js .Version}}')"
+                    data-merge-add="true"
+                    data-skill-id="{{.ID}}"
+                    data-skill-source="{{.Source}}"
                     class="flex-shrink-0 px-3 py-1 text-xs bg-terminal-bg text-terminal-text border border-terminal-border hover:border-terminal-accent hover:text-terminal-accent transition-colors">
                 + Add
             </button>

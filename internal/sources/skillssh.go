@@ -202,7 +202,7 @@ func (s *SkillsSHSource) listSkillsFromDir(ctx context.Context, repoPath, dir st
 	}
 
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	req.Header.Set("User-Agent", "SkillMD/1.0")
+	req.Header.Set("User-Agent", "Skillf/1.0")
 	if s.githubToken != "" {
 		req.Header.Set("Authorization", "token "+s.githubToken)
 	}
@@ -260,7 +260,7 @@ func (s *SkillsSHSource) getSkillInfo(ctx context.Context, repoPath, filePath, s
 	}
 
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	req.Header.Set("User-Agent", "SkillMD/1.0")
+	req.Header.Set("User-Agent", "Skillf/1.0")
 	if s.githubToken != "" {
 		req.Header.Set("Authorization", "token "+s.githubToken)
 	}
@@ -399,7 +399,7 @@ func (s *SkillsSHSource) GetContent(ctx context.Context, skill *ExternalSkill) (
 	}
 
 	req.Header.Set("Accept", "text/plain")
-	req.Header.Set("User-Agent", "SkillMD/1.0")
+	req.Header.Set("User-Agent", "Skillf/1.0")
 
 	resp, err := s.client.Do(req)
 	if err != nil {

@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # Build binary
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o skillmd ./cmd/skillmd
+RUN CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -ldflags="-s -w" -o skillf ./cmd/skillf
 
 # Runtime stage
 FROM alpine:3.19
@@ -25,28 +25,28 @@ WORKDIR /app
 RUN apk add --no-cache ca-certificates
 
 # Copy binary from builder
-COPY --from=builder /app/skillmd /usr/local/bin/skillmd
+COPY --from=builder /app/skillf /usr/local/bin/skillf
 
 # Create non-root user and data directory
-RUN addgroup -g 1000 skillmd && \
-    adduser -u 1000 -G skillmd -s /sbin/nologin -D skillmd && \
+RUN addgroup -g 1000 skillf && \
+    adduser -u 1000 -G skillf -s /sbin/nologin -D skillf && \
     mkdir -p /data && \
-    chown -R skillmd:skillmd /data
+    chown -R skillf:skillf /data
 
 # Expose port
 EXPOSE 8080
 
 # Set environment variables
-ENV SKILLMD_DB=/data/skill-md.db
-ENV SKILLMD_PORT=8080
+ENV SKILLF_DB=/data/skillf.db
+ENV SKILLF_PORT=8080
 
 # Switch to non-root user
-USER skillmd:skillmd
+USER skillf:skillf
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1
 
 # Run server
-ENTRYPOINT ["skillmd"]
-CMD ["serve", "--port", "8080", "--db", "/data/skill-md.db"]
+ENTRYPOINT ["skillf"]
+CMD ["serve", "--port", "8080", "--db", "/data/skillf.db"]

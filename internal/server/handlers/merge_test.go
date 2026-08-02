@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sanixdarker/skill-md/internal/app"
+	"github.com/sanixdarker/skillf/internal/app"
 )
 
 func setupTestApp(t *testing.T) *app.App {

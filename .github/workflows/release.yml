@@ -31,19 +31,19 @@ jobs:
           mkdir -p dist
 
           # Linux AMD64
-          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o dist/skillmd-linux-amd64 ./cmd/skillmd
+          GOOS=linux GOARCH=amd64 go build -buildvcs=false -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o dist/skillf-linux-amd64 ./cmd/skillf
 
           # Linux ARM64
-          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o dist/skillmd-linux-arm64 ./cmd/skillmd
+          GOOS=linux GOARCH=arm64 go build -buildvcs=false -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o dist/skillf-linux-arm64 ./cmd/skillf
 
           # macOS AMD64
-          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o dist/skillmd-darwin-amd64 ./cmd/skillmd
+          GOOS=darwin GOARCH=amd64 go build -buildvcs=false -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o dist/skillf-darwin-amd64 ./cmd/skillf
 
           # macOS ARM64 (Apple Silicon)
-          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o dist/skillmd-darwin-arm64 ./cmd/skillmd
+          GOOS=darwin GOARCH=arm64 go build -buildvcs=false -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o dist/skillf-darwin-arm64 ./cmd/skillf
 
           # Windows AMD64
-          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o dist/skillmd-windows-amd64.exe ./cmd/skillmd
+          GOOS=windows GOARCH=amd64 go build -buildvcs=false -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o dist/skillf-windows-amd64.exe ./cmd/skillf
 
       - name: Generate checksums
         run: |
@@ -71,11 +71,11 @@ jobs:
         with:
           body_path: changelog.md
           files: |
-            dist/skillmd-linux-amd64
-            dist/skillmd-linux-arm64
-            dist/skillmd-darwin-amd64
-            dist/skillmd-darwin-arm64
-            dist/skillmd-windows-amd64.exe
+            dist/skillf-linux-amd64
+            dist/skillf-linux-arm64
+            dist/skillf-darwin-amd64
+            dist/skillf-darwin-arm64
+            dist/skillf-windows-amd64.exe
             dist/checksums.txt
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
