@@ -22,7 +22,7 @@ var (
 // TestMain sets up the test environment
 func TestMain(m *testing.M) {
 	// Create a temporary database for testing
-	tmpDir, err := os.MkdirTemp("", "skillmd-e2e-*")
+	tmpDir, err := os.MkdirTemp("", "skillf-e2e-*")
 	if err != nil {
 		fmt.Printf("failed to create temp dir: %v\n", err)
 		os.Exit(1)

@@ -1,12 +1,13 @@
 #!/bin/bash
-# Skill MD Installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/sanixdarker/skill-md/main/scripts/install.sh | bash
+# Skillf Installer
+# Usage: curl -fsSL https://raw.githubusercontent.com/Sanix-Darker/skill-md.dev/master/scripts/install.sh | bash
 
 set -e
 
 # Configuration
-REPO="sanixdarker/skill-md"
-BINARY_NAME="skillmd"
+REPO="Sanix-Darker/skill-md.dev"
+MODULE_PATH="github.com/sanixdarker/skillf"
+BINARY_NAME="skillf"
 INSTALL_DIR="/usr/local/bin"
 
 # Colors
@@ -57,7 +58,7 @@ install() {
         VERSION="latest"
     fi
 
-    echo -e "${GREEN}Installing Skill MD ${VERSION} for ${PLATFORM}...${NC}"
+    echo -e "${GREEN}Installing Skillf ${VERSION} for ${PLATFORM}...${NC}"
 
     # Construct download URL
     if [ "$OS" = "windows" ]; then
@@ -119,10 +120,10 @@ install() {
         sudo mv "$TMP_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
     fi
 
-    echo -e "${GREEN}Skill MD installed successfully!${NC}"
+    echo -e "${GREEN}Skillf installed successfully!${NC}"
     echo ""
-    echo "Run 'skillmd --help' to get started."
-    echo "Start the server with 'skillmd serve'"
+    echo "Run 'skillf --help' to get started."
+    echo "Start the server with 'skillf serve'"
 }
 
 # Install from source
@@ -134,9 +135,9 @@ install_from_source() {
         exit 1
     fi
 
-    go install github.com/${REPO}/cmd/skillmd@latest
+    go install ${MODULE_PATH}/cmd/skillf@latest
 
-    echo -e "${GREEN}Skill MD installed from source!${NC}"
+    echo -e "${GREEN}Skillf installed from source!${NC}"
 }
 
 # Main
