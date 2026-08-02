@@ -3,8 +3,8 @@ package sources
 import (
 	"context"
 
-	"github.com/sanixdarker/skill-md/internal/registry"
-	"github.com/sanixdarker/skill-md/pkg/skill"
+	"github.com/sanixdarker/skillf/internal/registry"
+	"github.com/sanixdarker/skillf/pkg/skill"
 )
 
 // LocalSource adapts the local registry to the Source interface.

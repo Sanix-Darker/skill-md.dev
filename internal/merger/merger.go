@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sanixdarker/skill-md/pkg/skill"
+	"github.com/sanixdarker/skillf/pkg/skill"
 )
 
 // Options holds merge options.
@@ -13,6 +13,8 @@ type Options struct {
 	Name        string
 	Description string
 	Deduplicate bool
+	// ConflictStrategy controls how collisions in duplicate sections are resolved.
+	ConflictStrategy ConflictStrategy
 }
 
 // Merger merges multiple skills into one.
@@ -97,6 +99,12 @@ func (m *Merger) Merge(skills []*skill.Skill, opts *Options) (*skill.Skill, erro
 		allSections = m.dedup.DeduplicateSections(allSections)
 	}
 
+	strategy := KeepFirst
+	if opts != nil && opts.ConflictStrategy != 0 {
+		strategy = opts.ConflictStrategy
+	}
+	resolver := NewConflictResolver(strategy)
+
 	// Group sections by title
 	sectionGroups := make(map[string][]skill.Section)
 	sectionOrder := make([]string, 0)
@@ -112,7 +120,7 @@ func (m *Merger) Merge(skills []*skill.Skill, opts *Options) (*skill.Skill, erro
 	// Merge grouped sections
 	for _, key := range sectionOrder {
 		sections := sectionGroups[key]
-		merged := m.mergeSections(sections)
+		merged := m.mergeSections(sections, resolver)
 		result.Sections = append(result.Sections, merged)
 	}
 
@@ -120,7 +128,7 @@ func (m *Merger) Merge(skills []*skill.Skill, opts *Options) (*skill.Skill, erro
 }
 
 // mergeSections merges sections with the same title.
-func (m *Merger) mergeSections(sections []skill.Section) skill.Section {
+func (m *Merger) mergeSections(sections []skill.Section, resolver *ConflictResolver) skill.Section {
 	if len(sections) == 1 {
 		return sections[0]
 	}
@@ -131,23 +139,39 @@ func (m *Merger) mergeSections(sections []skill.Section) skill.Section {
 		Level: sections[0].Level,
 	}
 
-	// Combine content
+	// Collect section contents
 	var contents []string
-	seen := make(map[string]bool)
-
 	for _, sec := range sections {
 		content := strings.TrimSpace(sec.Content)
 		if content == "" {
 			continue
 		}
-
-		// Simple dedup by exact match
-		if !seen[content] {
-			contents = append(contents, content)
-			seen[content] = true
-		}
+		contents = append(contents, content)
 	}
 
-	result.Content = strings.Join(contents, "\n\n")
+	if resolver == nil {
+		resolver = NewConflictResolver(KeepFirst)
+	}
+
+	// Keep duplicates from the full section list, then resolve based on strategy.
+	result.Content = resolver.ResolveSections(sections).Content
+
+	if result.Content == "" && len(contents) > 0 {
+		// Fallback for malformed data; still render all non-empty content.
+		seen := make(map[string]bool)
+		ordered := make([]string, 0, len(contents))
+		for _, c := range contents {
+			if seen[c] {
+				continue
+			}
+			seen[c] = true
+			ordered = append(ordered, c)
+		}
+		if len(ordered) == 1 {
+			result.Content = ordered[0]
+		} else {
+			result.Content = strings.Join(ordered, "\n\n")
+		}
+	}
 	return result
 }

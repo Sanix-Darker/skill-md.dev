@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/sanixdarker/skill-md/internal/converter"
-	"github.com/sanixdarker/skill-md/pkg/skill"
+	"github.com/sanixdarker/skillf/internal/converter"
+	"github.com/sanixdarker/skillf/pkg/skill"
 	"github.com/spf13/cobra"
 )
 
@@ -36,15 +36,15 @@ Supported formats:
   - text:         Plain text descriptions
 
 Examples:
-  skillmd convert api.yaml
-  skillmd convert schema.graphql -f graphql
-  skillmd convert api.yaml -o skill.md -n "My API"
-  skillmd convert events.yaml -f asyncapi
-  skillmd convert service.proto -f proto
-  skillmd convert api.raml -f raml
-  skillmd convert service.wsdl -f wsdl
-  skillmd convert api.apib -f apiblueprint
-  skillmd convert --url https://docs.example.com/api`,
+  skillf convert api.yaml
+  skillf convert schema.graphql -f graphql
+  skillf convert api.yaml -o skill.md -n "My API"
+  skillf convert events.yaml -f asyncapi
+  skillf convert service.proto -f proto
+  skillf convert api.raml -f raml
+  skillf convert service.wsdl -f wsdl
+  skillf convert api.apib -f apiblueprint
+  skillf convert --url https://docs.example.com/api`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var content []byte

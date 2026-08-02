@@ -4,8 +4,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/sanixdarker/skill-md/internal/app"
-	"github.com/sanixdarker/skill-md/web"
+	"github.com/sanixdarker/skillf/internal/app"
+	"github.com/sanixdarker/skillf/web"
 )
 
 // HomeHandler handles home page requests.
@@ -25,7 +25,7 @@ func (h *HomeHandler) Index(w http.ResponseWriter, r *http.Request) {
 	formatCount := len(formats)
 
 	data := map[string]interface{}{
-		"Title":       "Skill MD",
+		"Title":       "Skillf",
 		"Description": "Convert technical specs to SKILL.md format for AI agents",
 		"Formats":     formats,
 		"FormatCount": formatCount,
@@ -33,6 +33,18 @@ func (h *HomeHandler) Index(w http.ResponseWriter, r *http.Request) {
 
 	if err := web.RenderPage(w, "home.html", data); err != nil {
 		h.app.Logger.Error("failed to render home page", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+// SSH renders the SSH workflow page.
+func (h *HomeHandler) SSH(w http.ResponseWriter, r *http.Request) {
+	data := map[string]interface{}{
+		"Title": "SSH TUI - Skillf",
+	}
+
+	if err := web.RenderPage(w, "ssh.html", data); err != nil {
+		h.app.Logger.Error("failed to render ssh page", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
