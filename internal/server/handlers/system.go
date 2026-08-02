@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
-	"net/url"
 
 	"github.com/sanixdarker/skillf/internal/app"
 	sshserver "github.com/sanixdarker/skillf/internal/ssh"
@@ -122,13 +122,13 @@ func (h *SystemHandler) System(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	payload := map[string]interface{}{
-		"service":           "skillf",
-		"version":           h.app.Config.Version,
-		"status":            "ok",
-		"timestamp":         time.Now().UTC().Format(time.RFC3339),
-		"public_host":       publicHost,
+		"service":          "skillf",
+		"version":          h.app.Config.Version,
+		"status":           "ok",
+		"timestamp":        time.Now().UTC().Format(time.RFC3339),
+		"public_host":      publicHost,
 		"public_host_only": publicHostOnly,
-		"public_url":        webBaseURL,
+		"public_url":       webBaseURL,
 		"web": map[string]interface{}{
 			"port":         h.app.Config.Port,
 			"host":         publicHost,

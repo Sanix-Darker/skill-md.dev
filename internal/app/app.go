@@ -33,7 +33,7 @@ type Config struct {
 	SSHStartupError   string
 	SSHKeyPath        string
 	SSHHost           string
-	SSHPort          int
+	SSHPort           int
 }
 
 // DefaultConfig returns the default configuration.
@@ -47,13 +47,13 @@ func DefaultConfig() *Config {
 		PublicHost: "127.0.0.1",
 		Version:    "dev",
 		// SSH defaults (when disabled by flag, `SSHEnabled` remains false).
-		SSHEnabled:    false,
-		SSHKeyPath:   "",
-		SSHHost:      "127.0.0.1",
-		SSHUser:      "",
+		SSHEnabled: false,
+		SSHKeyPath: "",
+		SSHHost:    "127.0.0.1",
+		SSHUser:    "",
 		// SSHStartupError is populated when the SSH server cannot be started.
 		SSHStartupError: "",
-		SSHPort:        2222,
+		SSHPort:         2222,
 	}
 }
 

@@ -786,20 +786,20 @@ func (m SearchModel) View() string {
 
 // MergeModel is the merge view model.
 type MergeModel struct {
-	keys     KeyMap
-	styles   Styles
-	width    int
-	height   int
-	registry *registry.Service
-	skills   []*skill.StoredSkill
-	selected []bool
-	cursor   int
-	err      error
-	result   string
+	keys      KeyMap
+	styles    Styles
+	width     int
+	height    int
+	registry  *registry.Service
+	skills    []*skill.StoredSkill
+	selected  []bool
+	cursor    int
+	err       error
+	result    string
 	conflicts []merger.Conflict
-	dedupe   bool
-	strategy merger.ConflictStrategy
-	merging  bool
+	dedupe    bool
+	strategy  merger.ConflictStrategy
+	merging   bool
 }
 
 // NewMergeModel creates a new merge model.
@@ -1058,7 +1058,7 @@ func nextConflictStrategy(strategy merger.ConflictStrategy) merger.ConflictStrat
 	case merger.Combine:
 		return merger.KeepFirst
 	default:
-	return merger.KeepFirst
+		return merger.KeepFirst
 	}
 }
 
