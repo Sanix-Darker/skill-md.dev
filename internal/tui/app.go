@@ -1,12 +1,12 @@
-// Package tui provides a terminal user interface for Skill MD.
+// Package tui provides a terminal user interface for Skillf.
 package tui
 
 import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/sanixdarker/skill-md/internal/registry"
-	"github.com/sanixdarker/skill-md/internal/sources"
+	"github.com/sanixdarker/skillf/internal/registry"
+	"github.com/sanixdarker/skillf/internal/sources"
 )
 
 // View represents different views in the TUI.
@@ -62,8 +62,8 @@ func DefaultKeyMap() KeyMap {
 			key.WithHelp("m", "merge"),
 		),
 		Help: key.NewBinding(
-			key.WithKeys("?"),
-			key.WithHelp("?", "help"),
+			key.WithKeys("?", "/"),
+			key.WithHelp("? /", "help"),
 		),
 		Quit: key.NewBinding(
 			key.WithKeys("q", "ctrl+c"),
@@ -196,11 +196,13 @@ type Model struct {
 	width           int
 	height          int
 	view            View
+	previousView    View
 	homeModel       HomeModel
 	convertModel    ConvertModel
 	browseModel     BrowseModel
 	searchModel     SearchModel
 	mergeModel      MergeModel
+	helpModel       HelpModel
 }
 
 // NewModel creates a new TUI model.
@@ -214,11 +216,13 @@ func NewModel(registryService *registry.Service, federatedSource *sources.Federa
 		keys:            keys,
 		styles:          styles,
 		view:            ViewHome,
+		previousView:    ViewHome,
 		homeModel:       NewHomeModel(keys, styles),
 		convertModel:    NewConvertModel(keys, styles),
 		browseModel:     NewBrowseModel(keys, styles, registryService),
 		searchModel:     NewSearchModel(keys, styles, registryService, federatedSource),
 		mergeModel:      NewMergeModel(keys, styles, registryService),
+		helpModel:       NewHelpModel(keys, styles),
 	}
 }
 
@@ -251,6 +255,29 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
+		// Toggle help from any view
+		if key.Matches(msg, m.keys.Help) {
+			if m.view == ViewHelp {
+				m.view = m.previousView
+			} else {
+				m.previousView = m.view
+				m.view = ViewHelp
+			}
+			return m, nil
+		}
+
+		// Quick number navigation from home
+		if m.view == ViewHome {
+			switch msg.String() {
+			case "1", "2", "3", "4", "5", "6":
+				idx := int(msg.String()[0] - '0' - 1)
+				if idx >= 0 && idx < len(m.homeModel.items) {
+					m.homeModel.selected = idx
+					msg = tea.KeyMsg{Type: tea.KeyEnter}
+				}
+			}
+		}
+
 		// Navigation from home view
 		if m.view == ViewHome {
 			switch {
@@ -267,6 +294,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.view = ViewBrowse
 					m.browseModel = m.browseModel.LoadSkills()
 				case 4:
+					m.previousView = ViewHome
+					m.view = ViewHelp
+				case 5:
 					return m, tea.Quit
 				}
 				return m, nil
@@ -275,6 +305,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Back to home from other views
 		if m.view != ViewHome && key.Matches(msg, m.keys.Back) {
+			if m.view == ViewHelp {
+				m.view = m.previousView
+				return m, nil
+			}
 			m.view = ViewHome
 			return m, nil
 		}
@@ -324,6 +358,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		var newMerge tea.Model
 		newMerge, cmd = m.mergeModel.Update(msg)
 		m.mergeModel = newMerge.(MergeModel)
+	case ViewHelp:
+		var newHelp tea.Model
+		newHelp, cmd = m.helpModel.Update(msg)
+		m.helpModel = newHelp.(HelpModel)
 	}
 
 	return m, cmd
@@ -344,6 +382,8 @@ func (m Model) View() string {
 		content = m.searchModel.View()
 	case ViewMerge:
 		content = m.mergeModel.View()
+	case ViewHelp:
+		content = m.helpModel.View()
 	default:
 		content = m.homeModel.View()
 	}

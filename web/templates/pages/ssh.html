@@ -1,0 +1,346 @@
+{{define "ssh.html"}}
+<div class="max-w-6xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-semibold mb-2">
+        <span class="text-terminal-accent">&gt;</span> SSH Access Console
+    </h1>
+    <p class="text-terminal-muted mb-6">
+        Operate the terminal workflow from one page: runtime state, connect command, host key health, and next actions.
+    </p>
+
+    <section id="ssh-summary" class="ssh-summary-card mb-6">
+        <div class="ssh-summary-head">
+            <div>
+                <p class="ssh-eyebrow">Runtime summary</p>
+                <h2 class="text-lg font-semibold">Loading SSH readiness...</h2>
+            </div>
+            <div class="ssh-summary-meta">
+                <span id="ssh-overall-status" class="ssh-status-badge ssh-status-neutral">Waiting</span>
+                <button type="button" id="ssh-refresh-button" class="tooltip px-3 py-2 text-xs bg-terminal-bg border border-terminal-border hover:border-terminal-accent hover:text-terminal-accent transition-colors" data-tooltip="Refresh command list and status">
+                    Refresh
+                </button>
+            </div>
+        </div>
+        <p id="ssh-summary-message" class="text-sm text-terminal-muted mt-2">
+            Connecting to runtime diagnostics.
+        </p>
+        <div class="ssh-summary-footer">
+            <span id="ssh-last-updated" class="text-xs text-terminal-muted">Last updated: waiting for first sync</span>
+            <span class="text-xs text-terminal-muted">Auto refresh every 30s</span>
+        </div>
+    </section>
+
+    <div class="grid md:grid-cols-3 gap-4 mb-6" id="ssh-status-grid">
+        <section class="ssh-panel">
+            <h2 class="text-sm text-terminal-muted mb-2 uppercase tracking-wide">Web Runtime</h2>
+            <div id="web-metrics" class="space-y-2 text-sm text-terminal-muted">
+                <p class="text-terminal-accent">Loading runtime status...</p>
+            </div>
+        </section>
+
+        <section class="ssh-panel">
+            <h2 class="text-sm text-terminal-muted mb-2 uppercase tracking-wide">SSH Runtime</h2>
+            <div id="ssh-status-metrics" class="space-y-2 text-sm text-terminal-muted">
+                <p class="text-terminal-accent">Loading SSH status...</p>
+            </div>
+        </section>
+
+        <section class="ssh-panel">
+            <h2 class="text-sm text-terminal-muted mb-2 uppercase tracking-wide">Host Key</h2>
+            <div id="ssh-key-metrics" class="space-y-2 text-sm text-terminal-muted">
+                <p class="text-terminal-accent">Checking key diagnostics...</p>
+            </div>
+        </section>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-6">
+        <section class="ssh-panel ssh-panel-flat">
+            <div class="px-4 py-3 border-b border-terminal-border flex items-center justify-between">
+                <span class="text-sm font-medium">Connection commands</span>
+                <span class="text-xs px-2 py-1 border border-terminal-border">Terminal</span>
+            </div>
+            <div id="ssh-command-list" class="p-4 space-y-2">
+                <p class="text-terminal-muted text-sm">Waiting for status diagnostics.</p>
+            </div>
+        </section>
+
+        <section class="ssh-panel ssh-panel-flat">
+            <div class="px-4 py-3 border-b border-terminal-border flex items-center justify-between">
+                <span class="text-sm font-medium">Operational checks</span>
+                <span class="text-xs px-2 py-1 border border-terminal-border">Live</span>
+            </div>
+            <div id="ssh-checks" class="p-4 text-sm text-terminal-muted space-y-2">
+                <p class="text-sm text-terminal-muted">Checks will appear when runtime data is available.</p>
+            </div>
+        </section>
+    </div>
+
+    <div class="mt-6 grid md:grid-cols-2 gap-4">
+        <section class="ssh-panel">
+            <h2 class="font-medium mb-2">Next actions</h2>
+            <div id="ssh-remediation" class="text-sm text-terminal-muted space-y-2">
+                <p>Recommended steps will appear when runtime data is available.</p>
+            </div>
+        </section>
+
+        <section class="ssh-panel">
+            <h2 class="font-medium mb-2">Workflow links</h2>
+            <ul class="text-sm text-terminal-muted space-y-2">
+                <li><a class="text-terminal-accent hover:underline" href="/convert">Open convert flow</a> for quick SKILL.md creation.</li>
+                <li><a class="text-terminal-accent hover:underline" href="/merge">Use merge flow</a> before terminal sessions when you need a single consolidated skill.</li>
+                <li><a class="text-terminal-accent hover:underline" href="/browse">Browse registry</a> and pull candidate skills into the TUI workflow.</li>
+                <li>Use <code class="text-terminal-accent">q</code> or <code class="text-terminal-accent">Ctrl+C</code> to exit the SSH TUI.</li>
+                <li>From SSH, run <code class="text-terminal-accent">/</code> or type <code class="text-terminal-accent">?</code> to list shortcuts.</li>
+                <li>For web-only usage, start with <code class="text-terminal-accent">skillf serve --no-ssh</code>.</li>
+            </ul>
+        </section>
+    </div>
+</div>
+
+<script>
+const statusGrid = document.getElementById('ssh-status-grid');
+const summaryElement = document.getElementById('ssh-summary');
+const summaryMessageElement = document.getElementById('ssh-summary-message');
+const overallStatusElement = document.getElementById('ssh-overall-status');
+const lastUpdatedElement = document.getElementById('ssh-last-updated');
+const webMetricsElement = document.getElementById('web-metrics');
+const statusMetricsElement = document.getElementById('ssh-status-metrics');
+const keyMetricsElement = document.getElementById('ssh-key-metrics');
+const commandList = document.getElementById('ssh-command-list');
+const healthChecks = document.getElementById('ssh-checks');
+const remediationElement = document.getElementById('ssh-remediation');
+const refreshButton = document.getElementById('ssh-refresh-button');
+let statusRefreshTimer = null;
+
+function escapeHtml(value) {
+    const div = document.createElement('div');
+    div.textContent = value;
+    return div.innerHTML;
+}
+
+function formatBoolean(value) {
+    return value ? 'yes' : 'no';
+}
+
+function normalizeStatus(value) {
+    return value ? 'enabled' : 'disabled';
+}
+
+function formatTimestamp(value) {
+    if (!value) {
+        return 'unknown';
+    }
+    const timestamp = new Date(value);
+    if (Number.isNaN(timestamp.getTime())) {
+        return String(value);
+    }
+    return timestamp.toLocaleString();
+}
+
+function statusTone(status) {
+    if (status === 'ready') {
+        return 'ssh-status-ready';
+    }
+    if (status === 'disabled') {
+        return 'ssh-status-disabled';
+    }
+    if (status === 'warning') {
+        return 'ssh-status-warning';
+    }
+    return 'ssh-status-neutral';
+}
+
+function renderBulletList(items, emptyMessage) {
+    if (!Array.isArray(items) || items.length === 0) {
+        return `<p class="text-sm text-terminal-muted">${escapeHtml(emptyMessage)}</p>`;
+    }
+
+    return '<ul class="space-y-2">' + items.map((item) => {
+        return `<li class="ssh-inline-list-item">${escapeHtml(item)}</li>`;
+    }).join('') + '</ul>';
+}
+
+function renderList(items) {
+    if (!Array.isArray(items) || items.length === 0) {
+        return '<p class="text-xs text-terminal-muted">No checks available.</p>';
+    }
+    return '<ul class="space-y-2">' + items.map((item) => `<li class="ssh-command-line"><span class="text-terminal-accent">$</span> ${escapeHtml(item)}</li>`).join('') + '</ul>';
+}
+
+function renderCommandRow(label, command, index) {
+    return `
+        <div class="ssh-command-card">
+            <div class="ssh-command-copy">
+                <p class="text-xs text-terminal-muted">${escapeHtml(label || 'SSH command')}</p>
+                <code class="block text-sm text-terminal-accent mt-1 break-all">${escapeHtml(command)}</code>
+            </div>
+            <div class="ssh-command-actions">
+                <button type="button" class="tooltip px-3 py-2 text-xs bg-terminal-bg border border-terminal-border text-terminal-text hover:border-terminal-accent hover:text-terminal-accent transition-colors" data-tooltip="Copy this command" data-copy-command="${escapeHtml(command)}" data-command-id="ssh-cmd-${index}">
+                    Copy
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function copyCommand(command) {
+    if (!command) {
+        window.showToast && window.showToast('No command available to copy', 'warn');
+        return;
+    }
+
+    navigator.clipboard.writeText(command)
+        .then(() => {
+            if (window.showToast) {
+                window.showToast('Command copied to clipboard.', 'success');
+            }
+        })
+        .catch(() => {
+            if (window.showToast) {
+                window.showToast('Unable to copy command.', 'error');
+            }
+        });
+}
+
+function renderSystemStatus(payload) {
+    if (!payload) {
+        return;
+    }
+
+    const web = payload.web || {};
+    const ssh = payload.ssh || {};
+    const key = ssh.key || {};
+    const status = ssh.status || 'warning';
+
+    if (webMetricsElement) {
+        webMetricsElement.innerHTML = `
+            <p><span class="text-terminal-accent">Service:</span> ${escapeHtml(payload.service || 'skillf')}</p>
+            <p><span class="text-terminal-accent">Version:</span> ${escapeHtml(payload.version || 'dev')}</p>
+            <p><span class="text-terminal-accent">Public URL:</span> ${escapeHtml(web.public_url || web.base_url || payload.public_url || 'n/a')}</p>
+            <p><span class="text-terminal-accent">Local URL:</span> ${escapeHtml(web.local_url || 'n/a')}</p>
+            <p><span class="text-terminal-accent">Health:</span> ${escapeHtml(web.health || 'n/a')}</p>
+            <p><span class="text-terminal-accent">Status:</span> ${escapeHtml(web.status || 'unknown')}</p>
+        `;
+    }
+
+    if (statusMetricsElement) {
+        const enabledState = normalizeStatus(ssh.enabled);
+        statusMetricsElement.innerHTML = `
+            <p><span class="text-terminal-accent">Status:</span> ${escapeHtml(status)}</p>
+            <p><span class="text-terminal-accent">State:</span> ${escapeHtml(enabledState)}</p>
+            <p><span class="text-terminal-accent">Host:</span> ${escapeHtml(ssh.host || 'n/a')}</p>
+            <p><span class="text-terminal-accent">Port:</span> ${escapeHtml(String(ssh.port || 'n/a'))}</p>
+            <p><span class="text-terminal-accent">User:</span> ${escapeHtml(ssh.user || 'n/a')}</p>
+            <p><span class="text-terminal-accent">Ready:</span> ${formatBoolean(Boolean(ssh.ready))}</p>
+            ${ssh.diagnostic_error ? `<p class="text-red-400">${escapeHtml(ssh.diagnostic_error)}</p>` : ''}
+        `;
+    }
+
+    if (keyMetricsElement) {
+        const readable = formatBoolean(Boolean(key.readable));
+        const regular = formatBoolean(Boolean(key.regular));
+        keyMetricsElement.innerHTML = `
+            <p><span class="text-terminal-accent">Path:</span> ${escapeHtml(key.path || 'n/a')}</p>
+            <p><span class="text-terminal-accent">File:</span> ${escapeHtml(key.filename || 'n/a')}</p>
+            <p><span class="text-terminal-accent">Status:</span> ${escapeHtml(key.status || 'unknown')}</p>
+            <p><span class="text-terminal-accent">Readable:</span> ${readable}</p>
+            <p><span class="text-terminal-accent">Regular:</span> ${regular}</p>
+            <p><span class="text-terminal-accent">Mode:</span> ${escapeHtml(key.mode || 'n/a')}</p>
+            <p><span class="text-terminal-accent">Size:</span> ${escapeHtml(String(key.size || 0))} B</p>
+            ${key.message ? `<p class="text-xs text-terminal-muted">${escapeHtml(key.message)}</p>` : ''}
+        `;
+    }
+
+    if (commandList) {
+        const commands = Array.isArray(ssh.connect_commands) ? ssh.connect_commands : [];
+        if (commands.length === 0) {
+            commandList.innerHTML = '<p class="text-terminal-muted text-sm">No commands available.</p>';
+        } else {
+            commandList.innerHTML = commands.map((item, index) => {
+                const label = typeof item.label === 'string' ? item.label : 'SSH command';
+                const command = typeof item.command === 'string' ? item.command : '';
+                return renderCommandRow(label, command, index);
+            }).join('');
+        }
+    }
+
+    if (healthChecks) {
+        healthChecks.innerHTML = renderList(Array.isArray(ssh.operator_checks) ? ssh.operator_checks : []);
+    }
+
+    if (summaryElement) {
+        summaryElement.classList.remove('ssh-summary-ready', 'ssh-summary-warning', 'ssh-summary-disabled');
+        summaryElement.classList.add(`ssh-summary-${status}`);
+    }
+    if (overallStatusElement) {
+        overallStatusElement.className = `ssh-status-badge ${statusTone(status)}`;
+        overallStatusElement.textContent = status;
+    }
+    if (summaryMessageElement) {
+        summaryMessageElement.textContent = ssh.recommended_action || 'Runtime information available.';
+    }
+    if (lastUpdatedElement) {
+        lastUpdatedElement.textContent = `Last updated: ${formatTimestamp(payload.timestamp)}`;
+    }
+    if (remediationElement) {
+        remediationElement.innerHTML = renderBulletList(ssh.remediation, 'No remediation required.');
+    }
+}
+
+function fetchSystemStatus(force = false) {
+    if (refreshButton) {
+        refreshButton.disabled = true;
+        refreshButton.textContent = force ? 'Refreshing...' : 'Syncing...';
+    }
+
+    const action = fetch('/api/system', { cache: 'no-store' })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('Unable to load system status');
+            }
+            return response.json();
+        })
+        .then(renderSystemStatus)
+        .catch((error) => {
+            if (webMetricsElement) {
+                webMetricsElement.innerHTML = '<p class="text-red-400">Unable to load status.</p>';
+            }
+            if (window.showToast) {
+                window.showToast(error.message || 'Unable to load system status.', 'error');
+            }
+        })
+        .finally(() => {
+            if (refreshButton) {
+                refreshButton.disabled = false;
+                refreshButton.textContent = 'Refresh';
+            }
+        });
+
+    return action;
+}
+
+if (commandList) {
+    commandList.addEventListener('click', (event) => {
+        const target = event.target.closest('[data-copy-command]');
+        if (!target) {
+            return;
+        }
+        copyCommand(target.getAttribute('data-copy-command') || '');
+    });
+}
+
+if (refreshButton) {
+    refreshButton.addEventListener('click', () => {
+        fetchSystemStatus(true);
+    });
+}
+
+fetchSystemStatus(true).then(() => {
+    if (statusRefreshTimer) {
+        clearInterval(statusRefreshTimer);
+    }
+    statusRefreshTimer = setInterval(() => {
+        fetchSystemStatus();
+    }, 30000);
+});
+</script>
+{{end}}

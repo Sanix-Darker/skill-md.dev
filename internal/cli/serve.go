@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/url"
 	"os"
+	"os/user"
 	"os/signal"
 	"sort"
+	"strings"
 	"syscall"
 	"time"
 
@@ -23,6 +26,9 @@ var (
 	serveDebug       bool
 	serveNoSSH       bool
 	serveGitHubToken string
+	servePublicHost  string
+	serveSSHKeyPath  string
+	serveSSHUser     string
 )
 
 var serveCmd = &cobra.Command{
@@ -46,10 +52,37 @@ Connect via SSH:
 			githubToken = os.Getenv("GITHUB_TOKEN")
 		}
 
+		publicHost := normalizePublicHost(servePublicHost)
+		if publicHost == "" {
+			publicHost = normalizePublicHost(os.Getenv("SKILLF_PUBLIC_HOST"))
+		}
+		if publicHost == "" {
+			publicHost = "127.0.0.1"
+		}
+		sshHost := normalizePublicHost(servePublicHost)
+		if sshHost == "" {
+			sshHost = publicHost
+		}
+		sshKeyPath := strings.TrimSpace(serveSSHKeyPath)
+		if sshKeyPath == "" {
+			sshKeyPath = strings.TrimSpace(os.Getenv("SKILLF_SSH_KEY_PATH"))
+		}
+		resolvedSSHKeyPath, err := sshserver.ResolveKeyPath(sshKeyPath)
+		if err != nil {
+			return err
+		}
+
 		cfg := &app.Config{
-			Port:        servePort,
-			DBPath:      serveDBPath,
-			Debug:       serveDebug,
+			Port:       servePort,
+			DBPath:     serveDBPath,
+			Debug:      serveDebug,
+			Version:    Version,
+			PublicHost: publicHost,
+			// SSH settings are finalized after SSH server initialization.
+			SSHHost:     sshHost,
+			SSHPort:     serveSSHPort,
+			SSHUser:     resolveSSHUser(serveSSHUser),
+			SSHKeyPath:  resolvedSSHKeyPath,
 			GitHubToken: githubToken,
 		}
 
@@ -72,6 +105,7 @@ Connect via SSH:
 		if !serveNoSSH {
 			sshSrv, err = sshserver.New(sshserver.Config{
 				Port:            serveSSHPort,
+				KeyPath:         application.Config.SSHKeyPath,
 				Registry:        application.RegistryService,
 				FederatedSource: application.FederatedSource,
 			})
@@ -85,7 +119,12 @@ Connect via SSH:
 					}
 				}()
 				sshEnabled = true
+				application.Config.SSHHost = sshHost
+				application.Config.SSHKeyPath = strings.TrimSpace(sshSrv.KeyPath())
+				application.Config.SSHEnabled = true
 			}
+		} else {
+			application.Config.SSHStartupError = "disabled via --no-ssh"
 		}
 
 		go func() {
@@ -102,6 +141,10 @@ Connect via SSH:
 			srv.Shutdown()
 		}()
 
+		application.Config.SSHEnabled = sshEnabled
+		if !sshEnabled && sshErr != nil {
+			application.Config.SSHStartupError = fmt.Sprintf("%v", sshErr)
+		}
 		printStartupSummary(application, servePort, sshEnabled, sshErr, sshSrv)
 
 		return srv.Start()
@@ -109,8 +152,12 @@ Connect via SSH:
 }
 
 func printStartupSummary(application *app.App, webPort int, sshEnabled bool, sshErr error, sshSrv *sshserver.Server) {
-	host := "127.0.0.1"
-	webBaseURL := fmt.Sprintf("http://%s:%d", host, webPort)
+	host := strings.TrimSpace(application.Config.PublicHost)
+	if host == "" {
+		host = "127.0.0.1"
+	}
+	webBaseURL := buildPublicURL(host, webPort)
+	localWebURL := fmt.Sprintf("http://127.0.0.1:%d", webPort)
 	formattedPort, err := localAddresses(webPort)
 	if err != nil {
 		application.Logger.Warn("unable to detect local addresses", "error", err)
@@ -123,10 +170,13 @@ func printStartupSummary(application *app.App, webPort int, sshEnabled bool, ssh
 		}
 	}
 
-	fmt.Printf("\n🚀 skillf started\n")
+	fmt.Printf("\nskillf started\n")
 	fmt.Printf("  Web UI:      %s\n", webBaseURL)
+	if webBaseURL != localWebURL {
+		fmt.Printf("  Local UI:    %s\n", localWebURL)
+	}
 	fmt.Printf("  Health:      %s/health\n", webBaseURL)
-	fmt.Printf("  Docs:        https://skillf.sanixdk.xyz\n\n")
+	fmt.Printf("  Docs:        %s\n\n", webBaseURL)
 
 	if !sshEnabled {
 		fmt.Println("  SSH TUI:     disabled")
@@ -134,18 +184,31 @@ func printStartupSummary(application *app.App, webPort int, sshEnabled bool, ssh
 			fmt.Println("  - Started in web-only mode with --no-ssh")
 		} else if sshErr != nil {
 			fmt.Printf("  - Failed to start: %v\n", sshErr)
-			fmt.Println("  - Fix suggestion: chmod 600 ~/.ssh/skillf_ed25519 && skillf serve")
+			if keyPath := strings.TrimSpace(application.Config.SSHKeyPath); keyPath != "" {
+				fmt.Printf("  - Fix suggestion: chmod 600 %s && skillf serve\n", keyPath)
+			}
 			fmt.Println("  - Or start web-only: skillf serve --no-ssh")
 		}
 		fmt.Println()
 	} else {
 		fmt.Printf("  SSH TUI:     %s\n", sshSrv.Addr())
-		fmt.Printf("  SSH Connect: ssh -p %d 127.0.0.1\n", sshSrv.Port())
-		fmt.Printf("  SSH key:     %s\n", sshSrv.KeyPath())
+		sshHost := application.Config.SSHHost
+		if sshHost == "" {
+			sshHost = host
+		}
+		sshCommand := formatSSHCommand(sshSrv.Port(), sshHost, application.Config.SSHUser)
+		fmt.Printf("  SSH Connect: %s\n", sshCommand)
+		keyPath := strings.TrimSpace(application.Config.SSHKeyPath)
+		if keyPath != "" {
+			fmt.Printf("  SSH key:     %s\n", keyPath)
+		}
 		fmt.Println()
 	}
 	fmt.Println("Diagnostics:")
 	fmt.Printf("  - To check web endpoints: curl -fsS %s/health\n", webBaseURL)
+	if webBaseURL != localWebURL {
+		fmt.Printf("  - Local health check:     curl -fsS %s/health\n", localWebURL)
+	}
 	fmt.Printf("  - To open UI in terminal: skillf serve --help\n")
 }
 
@@ -208,6 +271,101 @@ func init() {
 	serveCmd.Flags().BoolVar(&serveDebug, "debug", false, "Enable debug mode")
 	serveCmd.Flags().BoolVar(&serveNoSSH, "no-ssh", false, "Disable SSH server")
 	serveCmd.Flags().StringVar(&serveGitHubToken, "github-token", "", "GitHub API token (or set GITHUB_TOKEN env var)")
+	serveCmd.Flags().StringVar(&servePublicHost, "public-host", "", "Public host name for external SSH and share links (or set SKILLF_PUBLIC_HOST)")
+	serveCmd.Flags().StringVar(&serveSSHKeyPath, "ssh-key", "", "SSH host key path (or set SKILLF_SSH_KEY_PATH)")
+	serveCmd.Flags().StringVar(&serveSSHUser, "ssh-user", "", "SSH user shown in generated connect commands")
 
 	rootCmd.AddCommand(serveCmd)
+}
+
+func resolveSSHUser(requested string) string {
+	if strings.TrimSpace(requested) != "" {
+		return strings.TrimSpace(requested)
+	}
+
+	currentUser, err := user.Current()
+	if err != nil {
+		return ""
+	}
+	return currentUser.Username
+}
+
+func formatSSHCommand(port int, host, user string) string {
+	targetHost := strings.TrimSpace(host)
+	if targetHost == "" {
+		targetHost = "127.0.0.1"
+	}
+
+	targetUser := strings.TrimSpace(user)
+	target := targetHost
+	if targetUser != "" {
+		target = fmt.Sprintf("%s@%s", targetUser, targetHost)
+	}
+
+	if port <= 0 {
+		port = 2222
+	}
+
+	return fmt.Sprintf("ssh -p %d %s", port, target)
+}
+
+func normalizePublicHost(value string) string {
+	trimmedValue := strings.TrimSpace(value)
+	if trimmedValue == "" {
+		return ""
+	}
+
+	trimmedValue = strings.SplitN(trimmedValue, ",", 2)[0]
+	if strings.Contains(trimmedValue, "://") {
+		parsedURL, err := url.Parse(trimmedValue)
+		if err == nil && parsedURL.Host != "" {
+			return parsedURL.Host
+		}
+	}
+
+	if strings.ContainsAny(trimmedValue, "/?#") {
+		parsedURL, err := url.Parse("https://" + trimmedValue)
+		if err == nil && parsedURL.Host != "" {
+			return parsedURL.Host
+		}
+	}
+
+	return strings.TrimSuffix(trimmedValue, "/")
+}
+
+func isLocalHost(host string) bool {
+	hostOnly := host
+	if parsedHost, _, err := net.SplitHostPort(host); err == nil {
+		hostOnly = parsedHost
+	}
+	hostOnly = strings.Trim(hostOnly, "[]")
+	if hostOnly == "" {
+		return true
+	}
+	if hostOnly == "localhost" {
+		return true
+	}
+	return net.ParseIP(hostOnly) != nil
+}
+
+func buildPublicURL(host string, port int) string {
+	normalizedHost := normalizePublicHost(host)
+	if normalizedHost == "" {
+		normalizedHost = "127.0.0.1"
+	}
+
+	scheme := "https"
+	if isLocalHost(normalizedHost) {
+		scheme = "http"
+	}
+
+	if _, _, err := net.SplitHostPort(normalizedHost); err == nil {
+		return fmt.Sprintf("%s://%s", scheme, normalizedHost)
+	}
+
+	if isLocalHost(normalizedHost) {
+		return fmt.Sprintf("%s://%s:%d", scheme, normalizedHost, port)
+	}
+
+	return fmt.Sprintf("%s://%s", scheme, normalizedHost)
 }
