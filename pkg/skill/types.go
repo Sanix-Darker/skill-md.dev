@@ -35,6 +35,19 @@ type RateLimitInfo struct {
 	RetryAfterHeader  string `yaml:"retry_after_header,omitempty" json:"retry_after_header,omitempty"`
 }
 
+// Dependency represents a skill dependency with version constraint.
+type Dependency struct {
+	Name    string `yaml:"name" json:"name"`
+	Version string `yaml:"version" json:"version"`
+}
+
+// ChangelogEntry represents a version changelog entry.
+type ChangelogEntry struct {
+	Version string   `yaml:"version" json:"version"`
+	Date    string   `yaml:"date" json:"date"`
+	Changes []string `yaml:"changes" json:"changes"`
+}
+
 // Frontmatter contains SKILL.md metadata.
 type Frontmatter struct {
 	Name        string   `yaml:"name" json:"name"`
@@ -46,6 +59,11 @@ type Frontmatter struct {
 	SourceType  string   `yaml:"source_type,omitempty" json:"source_type,omitempty"`
 	CreatedAt   string   `yaml:"created_at,omitempty" json:"created_at,omitempty"`
 	UpdatedAt   string   `yaml:"updated_at,omitempty" json:"updated_at,omitempty"`
+
+	// Dependencies and versioning
+	Dependencies []Dependency     `yaml:"dependencies,omitempty" json:"dependencies,omitempty"`
+	Changelog    []ChangelogEntry `yaml:"changelog,omitempty" json:"changelog,omitempty"`
+
 	// Enhanced metadata fields
 	Difficulty    string   `yaml:"difficulty,omitempty" json:"difficulty,omitempty"` // novice/intermediate/advanced
 	EndpointCount int      `yaml:"endpoint_count,omitempty" json:"endpoint_count,omitempty"`
