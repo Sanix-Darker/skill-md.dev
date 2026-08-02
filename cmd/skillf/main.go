@@ -1,7 +1,7 @@
-// Package main is the entry point for the skillforge CLI.
+// Package main is the entry point for the skillf CLI.
 package main
 
-import "github.com/sanixdarker/skill-md/internal/cli"
+import "github.com/sanixdarker/skillf/internal/cli"
 
 func main() {
 	cli.Execute()

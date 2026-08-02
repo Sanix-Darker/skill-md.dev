@@ -7,11 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sanixdarker/skill-md/internal/app"
-	"github.com/sanixdarker/skill-md/internal/converter"
-	"github.com/sanixdarker/skill-md/internal/server/middleware"
-	"github.com/sanixdarker/skill-md/pkg/skill"
-	"github.com/sanixdarker/skill-md/web"
+	"github.com/sanixdarker/skillf/internal/app"
+	"github.com/sanixdarker/skillf/internal/converter"
+	"github.com/sanixdarker/skillf/internal/server/middleware"
+	"github.com/sanixdarker/skillf/pkg/skill"
+	"github.com/sanixdarker/skillf/web"
 )
 
 // Upload limits for convert handler
@@ -33,7 +33,7 @@ func NewConvertHandler(application *app.App) *ConvertHandler {
 // Index renders the convert page.
 func (h *ConvertHandler) Index(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{
-		"Title":   "Convert - Skill MD",
+		"Title":   "Convert - Skillf",
 		"Formats": h.app.ConverterManager.SupportedFormats(),
 	}
 

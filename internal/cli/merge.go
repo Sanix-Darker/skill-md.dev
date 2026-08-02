@@ -4,15 +4,17 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/sanixdarker/skill-md/internal/merger"
-	"github.com/sanixdarker/skill-md/pkg/skill"
+	"github.com/sanixdarker/skillf/internal/merger"
+	"github.com/sanixdarker/skillf/pkg/skill"
 	"github.com/spf13/cobra"
 )
 
 var (
-	mergeOutput string
-	mergeName   string
-	mergeDedupe bool
+	mergeOutput   string
+	mergeName     string
+	mergeDesc     string
+	mergeDedupe   bool
+	mergeStrategy string
 )
 
 var mergeCmd = &cobra.Command{
@@ -27,8 +29,8 @@ The merge process:
   4. Resolves any conflicts
 
 Examples:
-  skillmd merge api1.md api2.md -o combined.md
-  skillmd merge *.md -n "Combined API Skills" --dedupe`,
+  skillf merge api1.md api2.md -o combined.md
+  skillf merge *.md -n "Combined API Skills" --dedupe`,
 	Args: cobra.MinimumNArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var skills []*skill.Skill
@@ -50,9 +52,15 @@ Examples:
 
 		// Merge skills
 		m := merger.New()
+		strategy, err := merger.ParseConflictStrategy(mergeStrategy)
+		if err != nil {
+			return err
+		}
 		result, err := m.Merge(skills, &merger.Options{
-			Name:        mergeName,
-			Deduplicate: mergeDedupe,
+			Name:             mergeName,
+			Description:      mergeDesc,
+			Deduplicate:      mergeDedupe,
+			ConflictStrategy: strategy,
 		})
 		if err != nil {
 			return fmt.Errorf("merge failed: %w", err)
@@ -78,7 +86,9 @@ Examples:
 func init() {
 	mergeCmd.Flags().StringVarP(&mergeOutput, "output", "o", "", "Output file path")
 	mergeCmd.Flags().StringVarP(&mergeName, "name", "n", "", "Name for the merged skill")
+	mergeCmd.Flags().StringVarP(&mergeDesc, "description", "d", "", "Description for the merged skill")
 	mergeCmd.Flags().BoolVar(&mergeDedupe, "dedupe", false, "Deduplicate similar content")
+	mergeCmd.Flags().StringVar(&mergeStrategy, "strategy", merger.KeepFirst.String(), "Conflict strategy: keep_first, keep_last, keep_longer, combine")
 
 	rootCmd.AddCommand(mergeCmd)
 }

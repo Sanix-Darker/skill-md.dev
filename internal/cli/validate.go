@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/sanixdarker/skill-md/pkg/skill"
-	"github.com/sanixdarker/skill-md/pkg/validation"
+	"github.com/sanixdarker/skillf/pkg/skill"
+	"github.com/sanixdarker/skillf/pkg/validation"
 	"github.com/spf13/cobra"
 )
 
@@ -117,10 +117,10 @@ Severity levels:
   - critical: Makes the skill unusable
 
 Examples:
-  skillmd validate skill.md
-  skillmd validate skill.md --severity warning
-  skillmd validate skill.md --json
-  skillmd validate skill.md --mcp --strict`,
+  skillf validate skill.md
+  skillf validate skill.md --severity warning
+  skillf validate skill.md --json
+  skillf validate skill.md --mcp --strict`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runValidateCommand(args[0], validationCommandOptions{

@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sanixdarker/skill-md/pkg/skill"
+	"github.com/sanixdarker/skillf/pkg/skill"
 )
 
 // WSDLConverter converts WSDL specifications to skills.

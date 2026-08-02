@@ -9,10 +9,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/sanixdarker/skill-md/internal/app"
-	"github.com/sanixdarker/skill-md/internal/server/handlers"
-	servermw "github.com/sanixdarker/skill-md/internal/server/middleware"
-	"github.com/sanixdarker/skill-md/web"
+	"github.com/sanixdarker/skillf/internal/app"
+	"github.com/sanixdarker/skillf/internal/server/handlers"
+	servermw "github.com/sanixdarker/skillf/internal/server/middleware"
+	"github.com/sanixdarker/skillf/web"
 )
 
 // Server represents the HTTP server.
@@ -65,21 +65,27 @@ func (s *Server) setupRoutes() {
 	convertHandler := handlers.NewConvertHandler(s.app)
 	mergeHandler := handlers.NewMergeHandler(s.app)
 	skillsHandler := handlers.NewSkillsHandler(s.app)
+	systemHandler := handlers.NewSystemHandler(s.app)
 
 	// Pages
 	s.router.Get("/", homeHandler.Index)
 	s.router.Get("/convert", convertHandler.Index)
 	s.router.Get("/merge", mergeHandler.Index)
+	s.router.Get("/browse", skillsHandler.Browse)
+	s.router.Get("/ssh", homeHandler.SSH)
 	s.router.Get("/skill/{slug}", skillsHandler.View)
 
 	// External skill routes
 	s.router.Get("/external/{source}/*", skillsHandler.ViewExternal)
 
 	// API endpoints (HTMX)
+	s.router.Get("/health", systemHandler.Health)
+	s.router.Get("/api/system", systemHandler.System)
 	s.router.Post("/api/convert", convertHandler.Convert)
 	s.router.Post("/api/convert/url", convertHandler.ConvertURL)
 	s.router.Post("/api/convert/detect", convertHandler.DetectFormat)
 	s.router.Post("/api/merge", mergeHandler.Merge)
+	s.router.Get("/api/merge/strategies", mergeHandler.Strategies)
 	s.router.Post("/api/skills", skillsHandler.Create)
 	s.router.Get("/api/skills", skillsHandler.List)
 	s.router.Get("/api/skills/search", skillsHandler.Search)
