@@ -18,9 +18,9 @@ import (
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/bubbletea"
 	"github.com/charmbracelet/wish/logging"
-	"github.com/sanixdarker/skill-md/internal/registry"
-	"github.com/sanixdarker/skill-md/internal/sources"
-	"github.com/sanixdarker/skill-md/internal/tui"
+	"github.com/sanixdarker/skillf/internal/registry"
+	"github.com/sanixdarker/skillf/internal/sources"
+	"github.com/sanixdarker/skillf/internal/tui"
 )
 
 // validateKeyPermissions checks that the SSH key file has secure permissions (0600).
@@ -33,9 +33,13 @@ func validateKeyPermissions(keyPath string) error {
 		return fmt.Errorf("failed to stat key file: %w", err)
 	}
 
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("SSH host key is not a regular file: %s", keyPath)
+	}
+
 	perms := info.Mode().Perm()
 	if perms != 0600 {
-		return fmt.Errorf("SSH key has insecure permissions %o, expected 0600", perms)
+		return fmt.Errorf("SSH host key %s has permissions %04o; expected 0600 (owner read/write only). Fix with: chmod 600 %s", keyPath, perms, keyPath)
 	}
 	return nil
 }
@@ -68,7 +72,7 @@ func New(cfg Config) (*Server, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to get home dir: %w", err)
 		}
-		cfg.KeyPath = filepath.Join(home, ".ssh", "skill-md_ed25519")
+		cfg.KeyPath = filepath.Join(home, ".ssh", "skillf_ed25519")
 	}
 
 	// Ensure key directory exists
@@ -165,4 +169,9 @@ func (s *Server) Addr() string {
 // Port returns the configured port.
 func (s *Server) Port() int {
 	return s.port
+}
+
+// KeyPath returns the SSH host key path.
+func (s *Server) KeyPath() string {
+	return s.keyPath
 }
