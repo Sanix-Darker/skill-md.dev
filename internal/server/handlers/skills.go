@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/sanixdarker/skill-md/internal/app"
-	"github.com/sanixdarker/skill-md/internal/server/middleware"
-	"github.com/sanixdarker/skill-md/internal/sources"
-	"github.com/sanixdarker/skill-md/web"
+	"github.com/sanixdarker/skillf/internal/app"
+	"github.com/sanixdarker/skillf/internal/server/middleware"
+	"github.com/sanixdarker/skillf/internal/sources"
+	"github.com/sanixdarker/skillf/web"
 )
 
 // Input validation constants
@@ -100,6 +100,7 @@ func (h *SkillsHandler) Browse(w http.ResponseWriter, r *http.Request) {
 	// If no specific query, source, or tag, fetch from all configured sources
 	if query == "" && len(sourcesToSearch) == 0 && tag == "" {
 		sourcesToSearch = []sources.SourceType{
+			sources.SourceTypeLocal,
 			sources.SourceTypeGitHub,
 			sources.SourceTypeSkillsSH,
 		}
@@ -133,7 +134,7 @@ func (h *SkillsHandler) Browse(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data = map[string]interface{}{
-		"Title":        "Browse - Skill MD",
+		"Title":        "Browse - Skillf",
 		"Skills":       skills,
 		"Total":        total,
 		"Page":         page,
@@ -181,7 +182,7 @@ func (h *SkillsHandler) View(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]interface{}{
-		"Title": skill.Name + " - Skill MD",
+		"Title": skill.Name + " - Skillf",
 		"Skill": skill,
 	}
 
@@ -490,7 +491,7 @@ func (h *SkillsHandler) ViewExternal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]interface{}{
-		"Title": skill.Name + " - Skill MD",
+		"Title": skill.Name + " - Skillf",
 		"Skill": skill,
 	}
 
