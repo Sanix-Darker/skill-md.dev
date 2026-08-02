@@ -18,7 +18,90 @@
             <span class="text-xs">Download</span>
         </button>
     </div>
+
+    {{if gt .MergeInputCount 0}}
+    <div class="mt-3 border border-terminal-border">
+        <div class="px-3 py-2 bg-terminal-surface text-sm text-terminal-muted">
+            <span class="text-terminal-accent">$</span> Merge Session
+        </div>
+        <div class="p-3 text-xs space-y-2 bg-terminal-bg border-t border-terminal-border">
+            <p class="text-terminal-muted">
+                {{.MergeInputCount}} input(s) merged · strategy: {{if .MergeStrategyLabel}}{{.MergeStrategyLabel}}{{else}}{{.ConflictStrategy}}{{end}} · dedupe: {{if .MergeDedupe}}on{{else}}off{{end}} · conflicts: {{.ConflictCount}}
+            </p>
+            {{if .MergeSourceSummary}}
+            <p class="text-terminal-muted">Sources: {{join .MergeSourceSummary ", "}}</p>
+            {{end}}
+            <div class="flex flex-wrap gap-2">
+                {{range .MergeInputs}}
+                <span class="px-2 py-1 border border-terminal-border text-terminal-muted text-[11px]">
+                    {{.Source}} · {{.Name}}{{if .Version}} · v{{.Version}}{{end}} ({{.Type}})
+                </span>
+                {{end}}
+            </div>
+        </div>
+    </div>
+    {{end}}
     <pre class="text-sm whitespace-pre-wrap overflow-auto max-h-[600px] bg-terminal-bg p-3 border border-terminal-border"><code class="language-yaml">{{.Content}}</code></pre>
+
+    {{if .MergeConflicts}}
+    <details class="mt-4 border border-terminal-border">
+        <summary class="px-3 py-2 bg-terminal-surface text-sm text-terminal-muted cursor-pointer hover:text-terminal-accent transition-colors">
+            <span class="text-terminal-accent">$</span> Merge Conflict Report ({{.ConflictCount}})
+            {{if .ConflictStrategy}} · strategy: {{.ConflictStrategy}}{{end}}
+        </summary>
+        <div class="p-3 bg-terminal-bg text-xs space-y-3">
+            {{range .MergeConflicts}}
+            <div class="border border-terminal-border">
+                <div class="px-2 py-1 bg-terminal-surface text-terminal-muted">
+                    <span class="text-terminal-accent">#</span> {{.Field}} · {{len .Values}} source(s)
+                </div>
+                <div class="px-2 py-2 space-y-2">
+                    <p class="text-terminal-muted">Resolved value:</p>
+                    <pre class="text-terminal-accent whitespace-pre-wrap bg-terminal-surface p-2 border border-terminal-border">{{.Resolved}}</pre>
+                    <p class="text-terminal-muted">Candidate values:</p>
+                    {{range .Values}}
+                    <div class="px-2 py-1 border border-terminal-border bg-terminal-surface">
+                        <p class="text-terminal-muted text-[11px]">{{.Source}}
+                            {{if .SourceType}}<span class="ml-1 px-1 py-0.5 border border-terminal-border">{{.SourceType}}</span>{{end}}
+                            {{if .Name}}· {{.Name}}{{end}}
+                            {{if .Version}}· v{{.Version}}{{end}}
+                        </p>
+                        <pre class="text-terminal-accent whitespace-pre-wrap text-xs">{{.Value}}</pre>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </details>
+    {{else if .Conflicts}}
+    <details class="mt-4 border border-terminal-border">
+        <summary class="px-3 py-2 bg-terminal-surface text-sm text-terminal-muted cursor-pointer hover:text-terminal-accent transition-colors">
+            <span class="text-terminal-accent">$</span> Merge Conflict Report ({{.ConflictCount}})
+            {{if .ConflictStrategy}} · strategy: {{.ConflictStrategy}}{{end}}
+        </summary>
+        <div class="p-3 bg-terminal-bg text-xs space-y-3">
+            {{range .Conflicts}}
+            <div class="border border-terminal-border">
+                <div class="px-2 py-1 bg-terminal-surface text-terminal-muted">
+                    <span class="text-terminal-accent">#</span> {{.Field}} · {{len .Values}} source(s)
+                </div>
+                <div class="px-2 py-2 space-y-2">
+                    <p class="text-terminal-muted">Resolved value:</p>
+                    <pre class="text-terminal-accent whitespace-pre-wrap bg-terminal-surface p-2 border border-terminal-border">{{.Resolved}}</pre>
+                    <p class="text-terminal-muted">Candidate values:</p>
+                    {{range .Values}}
+                    <div class="px-2 py-1 border border-terminal-border bg-terminal-surface">
+                        <p class="text-terminal-muted text-[11px]">{{.Source}}</p>
+                        <pre class="text-terminal-accent whitespace-pre-wrap text-xs">{{.Value}}</pre>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </details>
+    {{end}}
 
     <!-- AI Enhancement Controls -->
     {{template "enhance-button.html" .}}
@@ -31,19 +114,19 @@
         <div class="p-3 bg-terminal-bg text-xs font-mono space-y-3">
             <div>
                 <p class="text-terminal-muted mb-1"># Convert from URL and save:</p>
-                <pre class="text-terminal-accent"><code class="language-bash">skillmd convert https://api.example.com/openapi.json -o skill.md</code></pre>
+                <pre class="text-terminal-accent"><code class="language-bash">skillf convert https://api.example.com/openapi.json -o skill.md</code></pre>
             </div>
             <div>
                 <p class="text-terminal-muted mb-1"># Pipe directly to Claude:</p>
-                <pre class="text-terminal-accent"><code class="language-bash">skillmd convert api.yaml | claude</code></pre>
+                <pre class="text-terminal-accent"><code class="language-bash">skillf convert api.yaml | claude</code></pre>
             </div>
             <div>
                 <p class="text-terminal-muted mb-1"># Fetch from URL and pipe to agent:</p>
-                <pre class="text-terminal-accent"><code class="language-bash">skillmd convert --url https://docs.example.com/api | claude "Use this skill"</code></pre>
+                <pre class="text-terminal-accent"><code class="language-bash">skillf convert --url https://docs.example.com/api | claude "Use this skill"</code></pre>
             </div>
             <div>
                 <p class="text-terminal-muted mb-1"># Merge multiple skills:</p>
-                <pre class="text-terminal-accent"><code class="language-bash">skillmd merge skill1.md skill2.md --dedupe | claude</code></pre>
+                <pre class="text-terminal-accent"><code class="language-bash">skillf merge skill1.md skill2.md --dedupe | claude</code></pre>
             </div>
         </div>
     </details>

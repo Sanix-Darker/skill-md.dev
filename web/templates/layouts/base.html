@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Title}}</title>
-    <meta name="description" content="{{if .Description}}{{.Description}}{{else}}Convert technical specs to SKILL.md format for AI agents{{end}}">
+    <meta name="description" content="{{if .Description}}{{.Description}}{{else}}Convert technical specs and source material into reusable skills for AI agents{{end}}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,6 +28,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 </head>
 <body hx-boost="true" class="bg-terminal-bg text-terminal-text font-mono min-h-screen flex flex-col">
+    <div id="toast-root" class="toast-root"></div>
+
     <!-- Loading bar -->
     <div id="loading-bar" class="fixed top-0 left-0 right-0 h-0.5 bg-terminal-accent scale-x-0 origin-left transition-transform duration-300 z-50"></div>
 
@@ -40,16 +42,20 @@
             {{template "convert.html" .}}
         {{else if eq .Page "merge.html"}}
             {{template "merge.html" .}}
+        {{else if eq .Page "browse.html"}}
+            {{template "browse.html" .}}
         {{else if eq .Page "skill.html"}}
             {{template "skill.html" .}}
         {{else if eq .Page "skill-external.html"}}
             {{template "skill-external.html" .}}
+        {{else if eq .Page "ssh.html"}}
+            {{template "ssh.html" .}}
         {{end}}
     </main>
 
     <footer class="border-t border-terminal-border py-6 mt-auto">
         <div class="max-w-6xl mx-auto px-4 text-center text-terminal-muted text-sm">
-            &copy; 2026 <a href="https://github.com/Sanix-Darker/skill-md.dev" target="_blank">sanixdk</a>.
+            &copy; 2026 <a href="https://github.com/sanixdarker/skillf" target="_blank">sanixdk</a>.
         </div>
     </footer>
 
@@ -81,6 +87,42 @@
             });
         }
     });
+
+    window.showToast = function(message, type, timeoutMs) {
+        const typeClass = {
+            success: 'toast-success',
+            error: 'toast-error',
+            info: 'toast-info',
+            warn: 'toast-warn'
+        }[type] || 'toast-info';
+        const toast = document.createElement('div');
+        toast.className = `toast ${typeClass}`;
+        toast.textContent = message;
+
+        const root = document.getElementById('toast-root');
+        if (!root) {
+            return;
+        }
+        root.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            toast.classList.add('toast-visible');
+        });
+
+        setTimeout(() => {
+            toast.classList.remove('toast-visible');
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 300);
+        }, Math.max(2000, timeoutMs || 4500));
+    };
+
+    document.body.addEventListener('htmx:responseError', function() {
+        window.showToast('Request failed. Please retry.', 'error');
+    });
+
     </script>
 </body>
 </html>

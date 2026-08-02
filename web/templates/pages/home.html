@@ -1,276 +1,61 @@
 {{define "home.html"}}
-<div class="max-w-6xl mx-auto px-4 py-16">
-    <!-- Hero -->
-    <div class="mb-16 fade-in">
-        <div class="border border-terminal-border bg-terminal-surface p-8 text-center">
-            <p class="text-xs text-terminal-muted mb-3">SKILL.md workbench</p>
-            <h1 class="text-4xl font-bold mb-4">
-                <span class="text-terminal-accent">&gt;_</span> skillf
-            </h1>
-            <p class="text-xl text-terminal-muted max-w-2xl mx-auto">
-                Convert <span class="text-terminal-accent font-semibold">{{.FormatCount}} input formats</span> into clean SKILL.md, then merge, browse, and operate the workflow from web or SSH.
+<div class="page-shell page-shell--wide stack-xl">
+    <section class="hero-split">
+        <div class="stack-lg">
+            <p class="eyebrow">Import-first workflow</p>
+            <h1 class="display">Bring your own skill source.</h1>
+            <p class="lede">
+                Import from a link, pasted content, or a local file. Convert it into a reusable skill, then merge only when you need one consolidated artifact.
             </p>
-            <p class="mt-4 text-sm text-terminal-muted">
-                Use the web UI for interactive work and the SSH TUI when you want a keyboard-only pipeline for convert, search, and merge.
-            </p>
-        </div>
-
-        <div class="grid md:grid-cols-2 gap-6 mt-6">
-            <div class="border border-terminal-border bg-terminal-surface p-6">
-                <h2 class="text-lg font-semibold mb-3">Workflow lanes</h2>
-                <p class="text-sm text-terminal-muted mb-2">1. Convert raw specs, URLs, docs, or text into a normalized SKILL.md shape.</p>
-                <p class="text-sm text-terminal-muted mb-2">2. Search registry and connected sources to assemble the right skill set.</p>
-                <p class="text-sm text-terminal-muted">3. Merge with conflict strategies and dedupe before you publish or reuse.</p>
-            </div>
-            <div class="border border-terminal-border bg-terminal-surface p-6">
-                <h2 class="text-lg font-semibold mb-3">Operator modes</h2>
-                <p class="text-sm text-terminal-muted mb-2">Web UI: direct uploads, merge queue building, and registry browsing.</p>
-                <p class="text-sm text-terminal-muted mb-2">SSH TUI: terminal-first workflow with keyboard navigation and fast mode switching.</p>
-                <p class="text-sm text-terminal-muted">Runtime API: `/health` and `/api/system` for deployment diagnostics and readiness checks.</p>
+            <div class="actions">
+                <a href="/convert" class="btn btn--primary">Import a skill</a>
+                <a href="/merge" class="btn btn--secondary">Merge existing skills</a>
+                <a href="/ssh" class="btn btn--secondary">Open terminal access</a>
             </div>
         </div>
 
-        <div class="mt-8 flex flex-wrap justify-center gap-3">
-            <a href="/convert" class="inline-flex items-center px-4 py-2 bg-terminal-bg border border-terminal-border text-terminal-text hover:border-terminal-accent hover:text-terminal-accent transition-colors">
-                Convert a spec
-            </a>
-            <a href="/merge" class="inline-flex items-center px-4 py-2 bg-terminal-bg border border-terminal-border text-terminal-text hover:border-terminal-accent hover:text-terminal-accent transition-colors">
-                Merge skills
-            </a>
-            <a href="/browse" class="inline-flex items-center px-4 py-2 bg-terminal-bg border border-terminal-border text-terminal-text hover:border-terminal-accent hover:text-terminal-accent transition-colors">
-                Browse registry
-            </a>
-            <a href="/ssh" class="inline-flex items-center px-4 py-2 bg-terminal-bg border border-terminal-border text-terminal-text hover:border-terminal-accent hover:text-terminal-accent transition-colors">
-                Open SSH console
-            </a>
+        <aside class="panel panel--soft stack-md">
+            <p class="eyebrow">Protocol</p>
+            <ul class="protocol-list">
+                <li>
+                    <strong>Use the exact source you trust.</strong>
+                    No registry-first workflow, no required catalog search, no noisy discovery surface.
+                </li>
+                <li>
+                    <strong>Normalize before you merge.</strong>
+                    Convert each source into a clean skill first, then merge only the files you actually want to combine.
+                </li>
+                <li>
+                    <strong>Keep terminal access explicit.</strong>
+                    The terminal route exists to open skillf in a shell session without turning the web UI into a pseudo-dashboard.
+                </li>
+            </ul>
+        </aside>
+    </section>
+
+    <section>
+        <div class="section-heading">
+            <p class="eyebrow">Workflow</p>
+            <h2 class="section-title">One source in. One clean skill out.</h2>
+            <p class="section-copy">The product stays small on purpose: import, normalize, merge, then move on.</p>
         </div>
-    </div>
-
-    <!-- Feature Grid -->
-    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-        <!-- Convert -->
-        <div class="border border-terminal-border bg-terminal-surface p-6 hover:border-terminal-accent transition-colors">
-            <div class="text-terminal-accent mb-4">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-            </div>
-            <h3 class="text-lg font-semibold mb-2">Convert</h3>
-            <p class="text-terminal-muted text-sm mb-4">
-                Transform OpenAPI, GraphQL, Postman, and other specs into consistent SKILL.md output.
-            </p>
-            <a href="/convert" class="inline-flex items-center text-terminal-accent hover:underline">
-                Start converting
-                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-            </a>
+        <div class="feature-grid">
+            <article class="feature-card">
+                <p class="eyebrow">01</p>
+                <h3>Import the source</h3>
+                <p class="helper">Paste a link, drop raw content, or upload a local file without committing to any external registry or browse flow.</p>
+            </article>
+            <article class="feature-card feature-card--soft">
+                <p class="eyebrow">02</p>
+                <h3>Convert to a skill</h3>
+                <p class="helper">Turn messy source material into one reusable skill artifact with a predictable structure for agents.</p>
+            </article>
+            <article class="feature-card">
+                <p class="eyebrow">03</p>
+                <h3>Merge only when needed</h3>
+                <p class="helper">Upload multiple skill files, choose the merge policy, and produce one combined artifact when the workflow calls for it.</p>
+            </article>
         </div>
-
-        <!-- Merge -->
-        <div class="border border-terminal-border bg-terminal-surface p-6 hover:border-terminal-accent transition-colors">
-            <div class="text-terminal-accent mb-4">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                </svg>
-            </div>
-            <h3 class="text-lg font-semibold mb-2">Merge</h3>
-            <p class="text-terminal-muted text-sm mb-4">
-                Combine multiple SKILL.md files with dedupe and conflict strategy controls.
-            </p>
-            <a href="/merge" class="inline-flex items-center text-terminal-accent hover:underline">
-                Start merging
-                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-            </a>
-        </div>
-
-        <!-- Search & Merge -->
-        <div class="border border-terminal-border bg-terminal-surface p-6 hover:border-terminal-accent transition-colors">
-            <div class="text-terminal-accent mb-4">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-            </div>
-            <h3 class="text-lg font-semibold mb-2">Browse + Search</h3>
-            <p class="text-terminal-muted text-sm mb-4">
-                Search local and connected sources, then bring the right skills into your merge workflow.
-            </p>
-            <a href="/browse" class="inline-flex items-center text-terminal-accent hover:underline">
-                Open browser
-                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-            </a>
-        </div>
-
-        <!-- SSH TUI -->
-        <a href="/ssh" class="border border-terminal-border bg-terminal-surface p-6 hover:border-terminal-accent transition-colors block">
-            <div class="text-terminal-accent mb-4">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3-3m0 0l-3-3m3 3H5m6 6v12"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21h7a2 2 0 002-2V9.5a2 2 0 00-2-2h-7m0 0l-3-3m3 3l-3 3"/>
-                </svg>
-            </div>
-            <h3 class="text-lg font-semibold mb-2">SSH TUI</h3>
-            <p class="text-terminal-muted text-sm mb-4">
-                Run the same convert, search, browse, and merge workflow from a terminal-first interface.
-            </p>
-            <span class="inline-flex text-xs text-terminal-accent">
-                Open SSH console →
-            </span>
-        </a>
-    </div>
-
-    <div class="border border-terminal-border bg-terminal-surface p-6 mb-16">
-        <div class="flex items-center justify-between mb-4">
-            <div>
-                <h2 class="text-xl font-semibold">Live operator access</h2>
-                <p class="text-sm text-terminal-muted mt-1">Check runtime readiness before you jump into the SSH TUI.</p>
-            </div>
-            <a href="/ssh" class="text-terminal-accent hover:underline text-sm">Open SSH console</a>
-        </div>
-
-        <div class="grid md:grid-cols-3 gap-4">
-            <div class="border border-terminal-border bg-terminal-bg p-4">
-                <p class="text-xs text-terminal-muted mb-2">Runtime</p>
-                <p id="home-runtime-status" class="text-terminal-accent">Loading...</p>
-                <p id="home-runtime-message" class="text-xs text-terminal-muted mt-2">Fetching `/api/system`.</p>
-            </div>
-            <div class="border border-terminal-border bg-terminal-bg p-4">
-                <p class="text-xs text-terminal-muted mb-2">Public health</p>
-                <p id="home-runtime-health" class="text-sm text-terminal-text">Loading...</p>
-                <p id="home-runtime-host" class="text-xs text-terminal-muted mt-2">Resolving public host.</p>
-            </div>
-            <div class="border border-terminal-border bg-terminal-bg p-4">
-                <p class="text-xs text-terminal-muted mb-2">SSH connect</p>
-                <code id="home-runtime-ssh" class="block text-sm text-terminal-accent break-all">Waiting for runtime data...</code>
-                <button type="button" id="home-copy-ssh" class="mt-3 px-3 py-2 text-xs bg-terminal-bg border border-terminal-border text-terminal-text hover:border-terminal-accent hover:text-terminal-accent transition-colors">
-                    Copy
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- How it works -->
-    <div class="border border-terminal-border bg-terminal-surface p-8">
-        <h2 class="text-2xl font-semibold mb-6 text-center">How it works</h2>
-        <div class="grid md:grid-cols-3 gap-8">
-            <div class="text-center">
-                <div class="w-12 h-12 rounded-full border-2 border-terminal-accent flex items-center justify-center mx-auto mb-4 text-terminal-accent font-bold">1</div>
-                <h4 class="font-semibold mb-2">Ingest the source</h4>
-                <p class="text-sm text-terminal-muted">Upload a spec, paste raw text, or start from a remote source.</p>
-            </div>
-            <div class="text-center">
-                <div class="w-12 h-12 rounded-full border-2 border-terminal-accent flex items-center justify-center mx-auto mb-4 text-terminal-accent font-bold">2</div>
-                <h4 class="font-semibold mb-2">Normalize and align</h4>
-                <p class="text-sm text-terminal-muted">Convert and merge into a cleaner SKILL.md shape with conflict handling.</p>
-            </div>
-            <div class="text-center">
-                <div class="w-12 h-12 rounded-full border-2 border-terminal-accent flex items-center justify-center mx-auto mb-4 text-terminal-accent font-bold">3</div>
-                <h4 class="font-semibold mb-2">Run it where you work</h4>
-                <p class="text-sm text-terminal-muted">Use the result from the browser, terminal, or downstream AI agent runtime.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Supported formats -->
-    <div class="mt-12 text-center slide-in-right">
-        <p class="text-terminal-muted mb-4">Supported formats ({{.FormatCount}} converters)</p>
-        <div class="flex flex-wrap justify-center gap-3">
-            {{range .Formats}}
-            <span class="format-badge px-3 py-1 border border-terminal-border text-sm hover:border-terminal-accent hover:text-terminal-accent transition-colors">{{.}}</span>
-            {{end}}
-        </div>
-    </div>
-
-    <!-- MCP Compatible -->
-    <div class="mt-8 text-center">
-        <p class="text-sm text-terminal-muted">
-            <span class="text-terminal-accent">MCP compatible</span> - Generated skills include tool definitions for AI agents
-        </p>
-    </div>
+    </section>
 </div>
-
-<script>
-const homeRuntimeStatus = document.getElementById('home-runtime-status');
-const homeRuntimeMessage = document.getElementById('home-runtime-message');
-const homeRuntimeHealth = document.getElementById('home-runtime-health');
-const homeRuntimeHost = document.getElementById('home-runtime-host');
-const homeRuntimeSSH = document.getElementById('home-runtime-ssh');
-const homeCopySSH = document.getElementById('home-copy-ssh');
-
-function setHomeRuntime(payload) {
-    const web = payload.web || {};
-    const ssh = payload.ssh || {};
-
-    if (homeRuntimeStatus) {
-        homeRuntimeStatus.textContent = ssh.ready ? 'SSH ready' : (ssh.status || 'unknown');
-    }
-    if (homeRuntimeMessage) {
-        homeRuntimeMessage.textContent = ssh.recommended_action || 'Runtime information available.';
-    }
-    if (homeRuntimeHealth) {
-        homeRuntimeHealth.textContent = web.health || 'n/a';
-    }
-    if (homeRuntimeHost) {
-        homeRuntimeHost.textContent = payload.public_host_only ? `Public host: ${payload.public_host_only}` : 'Public host unavailable';
-    }
-    if (homeRuntimeSSH) {
-        homeRuntimeSSH.textContent = ssh.connect_cmd || 'SSH command unavailable';
-    }
-}
-
-function loadHomeRuntime() {
-    fetch('/api/system', { cache: 'no-store' })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error('Unable to load runtime status');
-            }
-            return response.json();
-        })
-        .then(setHomeRuntime)
-        .catch((error) => {
-            if (homeRuntimeStatus) {
-                homeRuntimeStatus.textContent = 'Unavailable';
-            }
-            if (homeRuntimeMessage) {
-                homeRuntimeMessage.textContent = error.message || 'Unable to load runtime status.';
-            }
-            if (homeRuntimeHealth) {
-                homeRuntimeHealth.textContent = 'n/a';
-            }
-            if (homeRuntimeSSH) {
-                homeRuntimeSSH.textContent = 'SSH command unavailable';
-            }
-        });
-}
-
-if (homeCopySSH) {
-    homeCopySSH.addEventListener('click', () => {
-        const command = homeRuntimeSSH ? homeRuntimeSSH.textContent : '';
-        if (!command || command === 'SSH command unavailable' || command === 'Waiting for runtime data...') {
-            if (window.showToast) {
-                window.showToast('No SSH command available to copy.', 'warn');
-            }
-            return;
-        }
-        navigator.clipboard.writeText(command)
-            .then(() => {
-                if (window.showToast) {
-                    window.showToast('SSH command copied.', 'success');
-                }
-            })
-            .catch(() => {
-                if (window.showToast) {
-                    window.showToast('Unable to copy SSH command.', 'error');
-                }
-            });
-    });
-}
-
-loadHomeRuntime();
-setInterval(loadHomeRuntime, 30000);
-</script>
 {{end}}

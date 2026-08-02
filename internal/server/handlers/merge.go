@@ -344,6 +344,14 @@ func pickMergeInputName(s *skill.Skill, fallback string) string {
 	return name
 }
 
+func skillSourceLabel(s *skill.Skill, index int) string {
+	source := strings.TrimSpace(s.Frontmatter.Source)
+	if source == "" {
+		source = "uploaded"
+	}
+	return fmt.Sprintf("%s #%d", source, index+1)
+}
+
 func humanizeMergeSource(source string) string {
 	switch source {
 	case "local":

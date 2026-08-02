@@ -6,9 +6,10 @@ import (
 	"net"
 	"net/url"
 	"os"
-	"os/user"
 	"os/signal"
+	"os/user"
 	"sort"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -27,6 +28,8 @@ var (
 	serveNoSSH       bool
 	serveGitHubToken string
 	servePublicHost  string
+	serveListenHost  string
+	serveSSHHost     string
 	serveSSHKeyPath  string
 	serveSSHUser     string
 )
@@ -38,10 +41,11 @@ var serveCmd = &cobra.Command{
 
 Optionally starts an SSH server for terminal UI access.
 
-Examples:
-  skillf serve
-  skillf serve --port 8080 --ssh-port 2222
-  skillf serve --no-ssh
+	Examples:
+	  skillf serve
+	  skillf serve --port 8080 --ssh-port 2222
+	  skillf serve --public-host skillf.sanixdk.xyz --ssh-host 178.105.18.9
+	  skillf serve --no-ssh
 
 Connect via SSH:
   ssh localhost -p 2222`,
@@ -59,7 +63,17 @@ Connect via SSH:
 		if publicHost == "" {
 			publicHost = "127.0.0.1"
 		}
-		sshHost := normalizePublicHost(servePublicHost)
+		listenHost := normalizeListenHost(serveListenHost)
+		if listenHost == "" {
+			listenHost = normalizeListenHost(os.Getenv("SKILLF_LISTEN_HOST"))
+		}
+		if listenHost == "" {
+			listenHost = "0.0.0.0"
+		}
+		sshHost := normalizePublicHost(serveSSHHost)
+		if sshHost == "" {
+			sshHost = normalizePublicHost(os.Getenv("SKILLF_SSH_HOST"))
+		}
 		if sshHost == "" {
 			sshHost = publicHost
 		}
@@ -78,6 +92,7 @@ Connect via SSH:
 			Debug:      serveDebug,
 			Version:    Version,
 			PublicHost: publicHost,
+			ListenHost: listenHost,
 			// SSH settings are finalized after SSH server initialization.
 			SSHHost:     sshHost,
 			SSHPort:     serveSSHPort,
@@ -156,9 +171,13 @@ func printStartupSummary(application *app.App, webPort int, sshEnabled bool, ssh
 	if host == "" {
 		host = "127.0.0.1"
 	}
+	listenHost := normalizeListenHost(application.Config.ListenHost)
+	if listenHost == "" {
+		listenHost = "0.0.0.0"
+	}
 	webBaseURL := buildPublicURL(host, webPort)
-	localWebURL := fmt.Sprintf("http://127.0.0.1:%d", webPort)
-	formattedPort, err := localAddresses(webPort)
+	localWebURL := primaryListenURL(listenHost, webPort)
+	formattedPort, err := localAddresses(listenHost, webPort)
 	if err != nil {
 		application.Logger.Warn("unable to detect local addresses", "error", err)
 	} else {
@@ -198,6 +217,10 @@ func printStartupSummary(application *app.App, webPort int, sshEnabled bool, ssh
 		}
 		sshCommand := formatSSHCommand(sshSrv.Port(), sshHost, application.Config.SSHUser)
 		fmt.Printf("  SSH Connect: %s\n", sshCommand)
+		if !sameHost(sshHost, host) {
+			fmt.Printf("  SSH Host:    %s\n", sshHost)
+			fmt.Printf("  Web Host:    %s\n", host)
+		}
 		keyPath := strings.TrimSpace(application.Config.SSHKeyPath)
 		if keyPath != "" {
 			fmt.Printf("  SSH key:     %s\n", keyPath)
@@ -212,7 +235,11 @@ func printStartupSummary(application *app.App, webPort int, sshEnabled bool, ssh
 	fmt.Printf("  - To open UI in terminal: skillf serve --help\n")
 }
 
-func localAddresses(webPort int) ([]string, error) {
+func localAddresses(listenHost string, webPort int) ([]string, error) {
+	if !isAllInterfacesHost(listenHost) {
+		return []string{primaryListenURL(listenHost, webPort)}, nil
+	}
+
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		return nil, err
@@ -271,7 +298,9 @@ func init() {
 	serveCmd.Flags().BoolVar(&serveDebug, "debug", false, "Enable debug mode")
 	serveCmd.Flags().BoolVar(&serveNoSSH, "no-ssh", false, "Disable SSH server")
 	serveCmd.Flags().StringVar(&serveGitHubToken, "github-token", "", "GitHub API token (or set GITHUB_TOKEN env var)")
-	serveCmd.Flags().StringVar(&servePublicHost, "public-host", "", "Public host name for external SSH and share links (or set SKILLF_PUBLIC_HOST)")
+	serveCmd.Flags().StringVar(&servePublicHost, "public-host", "", "Public web host name for share links and browser URLs (or set SKILLF_PUBLIC_HOST)")
+	serveCmd.Flags().StringVar(&serveListenHost, "listen-host", "", "Listen host/interface for HTTP server (or set SKILLF_LISTEN_HOST)")
+	serveCmd.Flags().StringVar(&serveSSHHost, "ssh-host", "", "Public SSH host or direct origin IP used in generated terminal commands (or set SKILLF_SSH_HOST)")
 	serveCmd.Flags().StringVar(&serveSSHKeyPath, "ssh-key", "", "SSH host key path (or set SKILLF_SSH_KEY_PATH)")
 	serveCmd.Flags().StringVar(&serveSSHUser, "ssh-user", "", "SSH user shown in generated connect commands")
 
@@ -333,6 +362,23 @@ func normalizePublicHost(value string) string {
 	return strings.TrimSuffix(trimmedValue, "/")
 }
 
+func normalizeListenHost(value string) string {
+	trimmedValue := strings.TrimSpace(value)
+	if trimmedValue == "" {
+		return ""
+	}
+	if strings.Contains(trimmedValue, "://") {
+		parsedURL, err := url.Parse(trimmedValue)
+		if err == nil && parsedURL.Host != "" {
+			if parsedHost, _, splitErr := net.SplitHostPort(parsedURL.Host); splitErr == nil {
+				return parsedHost
+			}
+			return parsedURL.Host
+		}
+	}
+	return strings.Trim(trimmedValue, "[]")
+}
+
 func isLocalHost(host string) bool {
 	hostOnly := host
 	if parsedHost, _, err := net.SplitHostPort(host); err == nil {
@@ -345,7 +391,31 @@ func isLocalHost(host string) bool {
 	if hostOnly == "localhost" {
 		return true
 	}
-	return net.ParseIP(hostOnly) != nil
+	parsedIP := net.ParseIP(hostOnly)
+	if parsedIP == nil {
+		return false
+	}
+	return parsedIP.IsLoopback() || parsedIP.IsPrivate() || parsedIP.IsLinkLocalUnicast() || parsedIP.IsLinkLocalMulticast() || parsedIP.IsUnspecified()
+}
+
+func sameHost(left, right string) bool {
+	return strings.EqualFold(normalizePublicHost(left), normalizePublicHost(right))
+}
+
+func isAllInterfacesHost(host string) bool {
+	switch strings.TrimSpace(strings.Trim(host, "[]")) {
+	case "", "0.0.0.0", "::":
+		return true
+	default:
+		return false
+	}
+}
+
+func primaryListenURL(listenHost string, port int) string {
+	if isAllInterfacesHost(listenHost) {
+		return fmt.Sprintf("http://127.0.0.1:%d", port)
+	}
+	return fmt.Sprintf("http://%s", net.JoinHostPort(strings.Trim(listenHost, "[]"), strconv.Itoa(port)))
 }
 
 func buildPublicURL(host string, port int) string {

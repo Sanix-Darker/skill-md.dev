@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
-	"net/url"
 
 	"github.com/sanixdarker/skillf/internal/app"
 	sshserver "github.com/sanixdarker/skillf/internal/ssh"
@@ -73,29 +73,22 @@ func (h *SystemHandler) System(w http.ResponseWriter, r *http.Request) {
 	if sshPort <= 0 {
 		sshPort = 0
 	}
-	connectionTarget := sshTargetHost
-	if sshUser != "" {
-		connectionTarget = fmt.Sprintf("%s@%s", sshUser, sshTargetHost)
-	}
+	connectCommands := buildSSHConnectCommands(sshEnabled, sshPort, sshUser, sshTargetHost, publicHostOnly)
 	connectCmd := ""
 	sshStatus := "warning"
 	sshError := strings.TrimSpace(h.app.Config.SSHStartupError)
 	if !sshEnabled {
 		sshStatus = "disabled"
 	}
-	if sshEnabled && sshPort > 0 {
-		connectCmd = fmt.Sprintf("ssh -p %d %s", sshPort, connectionTarget)
+	if len(connectCommands) > 0 {
+		connectCmd = strings.TrimSpace(connectCommands[0]["command"])
 	}
 	if connectCmd == "" {
 		connectCmd = "ssh -p <port> <host>"
 	}
-	connectCommands := []map[string]string{
-		{
-			"label":   "Connect",
-			"command": connectCmd,
-		},
-	}
-	sshCheckCommands := buildSSHChecks(webBaseURL, localWebURL, connectCmd, sshEnabled)
+	sshRoutingMode := buildSSHRoutingMode(sshEnabled, sshTargetHost, publicHostOnly)
+	connectionNote := buildSSHConnectionNote(sshEnabled, publicHostOnly, sshTargetHost)
+	sshCheckCommands := buildSSHChecks(webBaseURL, localWebURL, connectCommands, sshEnabled, sshTargetHost, sshPort)
 	sshDiagnostics := checkSSHKeyDiagnostics(sshKeyPath)
 	if status, ok := sshDiagnostics["status"].(string); ok && status != "ok" && strings.TrimSpace(sshError) == "" {
 		sshError = fmt.Sprintf("%v", sshDiagnostics["message"])
@@ -117,22 +110,23 @@ func (h *SystemHandler) System(w http.ResponseWriter, r *http.Request) {
 	if sshReady {
 		sshStatus = "ready"
 	}
-	remediation := buildSSHRemediation(sshEnabled, sshError, sshDiagnostics)
-	recommendedAction := buildSSHAction(sshReady, sshEnabled, sshError, sshDiagnostics)
+	remediation := buildSSHRemediation(sshEnabled, sshError, sshDiagnostics, publicHostOnly, sshTargetHost)
+	recommendedAction := buildSSHAction(sshReady, sshEnabled, sshError, sshDiagnostics, publicHostOnly, sshTargetHost)
 
 	w.Header().Set("Content-Type", "application/json")
 	payload := map[string]interface{}{
-		"service":           "skillf",
-		"version":           h.app.Config.Version,
-		"status":            "ok",
-		"timestamp":         time.Now().UTC().Format(time.RFC3339),
-		"public_host":       publicHost,
+		"service":          "skillf",
+		"version":          h.app.Config.Version,
+		"status":           "ok",
+		"timestamp":        time.Now().UTC().Format(time.RFC3339),
+		"public_host":      publicHost,
 		"public_host_only": publicHostOnly,
-		"public_url":        webBaseURL,
+		"public_url":       webBaseURL,
 		"web": map[string]interface{}{
 			"port":         h.app.Config.Port,
 			"host":         publicHost,
 			"hostOnly":     publicHostOnly,
+			"listen_host":  strings.TrimSpace(h.app.Config.ListenHost),
 			"scheme":       scheme,
 			"base_url":     webBaseURL,
 			"public_url":   webBaseURL,
@@ -145,10 +139,15 @@ func (h *SystemHandler) System(w http.ResponseWriter, r *http.Request) {
 			"enabled":            sshEnabled,
 			"status":             sshStatus,
 			"host":               sshTargetHost,
+			"public_host":        publicHostOnly,
 			"user":               sshUser,
 			"port":               sshPort,
+			"connect_target":     sshTargetHost,
 			"connect_cmd":        connectCmd,
 			"connect_commands":   connectCommands,
+			"routing_mode":       sshRoutingMode,
+			"host_override":      !sameHost(sshTargetHost, publicHostOnly),
+			"connection_note":    connectionNote,
 			"host_check":         sshCheckCommands,
 			"operator_checks":    sshCheckCommands,
 			"ready":              sshReady,
@@ -281,23 +280,113 @@ func checkSSHKeyDiagnostics(path string) map[string]interface{} {
 	return diagnostics
 }
 
-func buildSSHChecks(publicURL, localURL, connectCmd string, sshEnabled bool) []string {
+func buildSSHConnectCommand(port int, host, user string) string {
+	targetHost := strings.TrimSpace(stripHostPort(host))
+	if targetHost == "" {
+		return ""
+	}
+
+	target := targetHost
+	if strings.TrimSpace(user) != "" {
+		target = fmt.Sprintf("%s@%s", strings.TrimSpace(user), targetHost)
+	}
+
+	if port <= 0 {
+		port = 2222
+	}
+
+	return fmt.Sprintf("ssh -p %d %s", port, target)
+}
+
+func buildSSHConnectCommands(sshEnabled bool, port int, user, sshHost, publicHost string) []map[string]string {
+	if !sshEnabled || port <= 0 {
+		return nil
+	}
+
+	commands := make([]map[string]string, 0, 2)
+	primary := buildSSHConnectCommand(port, sshHost, user)
+	if primary != "" {
+		label := "Connect"
+		if !sameHost(sshHost, publicHost) {
+			label = "Primary SSH target"
+		}
+		commands = append(commands, map[string]string{
+			"label":   label,
+			"command": primary,
+		})
+	}
+
+	if publicHost != "" && !sameHost(sshHost, publicHost) {
+		publicCommand := buildSSHConnectCommand(port, publicHost, user)
+		if publicCommand != "" {
+			commands = append(commands, map[string]string{
+				"label":   "Web hostname",
+				"command": publicCommand,
+			})
+		}
+	}
+
+	return commands
+}
+
+func buildSSHRoutingMode(sshEnabled bool, sshHost, publicHost string) string {
+	if !sshEnabled {
+		return "disabled"
+	}
+	if isLocalHost(sshHost) {
+		return "local_only"
+	}
+	if sameHost(sshHost, publicHost) {
+		return "shared_public_host"
+	}
+	return "ssh_host_override"
+}
+
+func buildSSHConnectionNote(sshEnabled bool, publicHost, sshHost string) string {
+	if !sshEnabled {
+		return ""
+	}
+	if sshHost == "" {
+		return "SSH is enabled, but no advertised host is configured yet."
+	}
+	if isLocalHost(sshHost) {
+		return "SSH is currently advertised on a local or private host. Use the same machine or a private network path to connect."
+	}
+	if sameHost(sshHost, publicHost) {
+		return "SSH and the web UI currently share the same public host."
+	}
+	if publicHost == "" {
+		return fmt.Sprintf("SSH commands use %s as the primary terminal target.", sshHost)
+	}
+	return fmt.Sprintf("Web UI stays on %s, while SSH commands use %s. Keep the SSH target separate when the web hostname only fronts HTTP(S).", publicHost, sshHost)
+}
+
+func buildSSHChecks(publicURL, localURL string, connectCommands []map[string]string, sshEnabled bool, sshHost string, sshPort int) []string {
 	checks := []string{
 		"curl -fsS " + publicURL + "/health",
 	}
 	if localURL != "" && localURL != publicURL {
 		checks = append(checks, "curl -fsS "+localURL+"/health")
 	}
-	if sshEnabled {
-		checks = append(checks, connectCmd)
+	if sshEnabled && strings.TrimSpace(sshHost) != "" && sshPort > 0 {
+		checks = append(checks, fmt.Sprintf("nc -vz %s %d", stripHostPort(sshHost), sshPort))
 	}
+	for _, item := range connectCommands {
+		if command := strings.TrimSpace(item["command"]); command != "" {
+			checks = append(checks, command)
+		}
+	}
+	checks = append(checks, "skillf convert --url https://example.com/skill.md -o imported-skill.md")
 	checks = append(checks, "skillf merge skill-a.md skill-b.md -o merged-skill.md")
 	return checks
 }
 
-func buildSSHAction(ready, enabled bool, startupError string, diagnostics map[string]interface{}) string {
+func buildSSHAction(ready, enabled bool, startupError string, diagnostics map[string]interface{}, publicHost, sshHost string) string {
 	if ready {
-		return "SSH TUI is ready. Connect from your terminal and use merge, browse, and convert from one session."
+		if !sameHost(publicHost, sshHost) && strings.TrimSpace(publicHost) != "" && strings.TrimSpace(sshHost) != "" {
+			return fmt.Sprintf("SSH TUI is ready. Use %s for terminal access while the web UI stays on %s.", sshHost, publicHost)
+		}
+		return "SSH TUI is ready. Connect from your terminal to import, merge, and inspect skills from one session."
 	}
 	if !enabled {
 		if strings.Contains(strings.ToLower(startupError), "--no-ssh") {
@@ -317,7 +406,7 @@ func buildSSHAction(ready, enabled bool, startupError string, diagnostics map[st
 	return "SSH is partially configured. Review the host key diagnostics and service startup logs."
 }
 
-func buildSSHRemediation(enabled bool, startupError string, diagnostics map[string]interface{}) []string {
+func buildSSHRemediation(enabled bool, startupError string, diagnostics map[string]interface{}, publicHost, sshHost string) []string {
 	steps := []string{}
 	if !enabled {
 		steps = append(steps, "Restart skillf without --no-ssh if you want terminal access enabled.")
@@ -333,6 +422,9 @@ func buildSSHRemediation(enabled bool, startupError string, diagnostics map[stri
 	}
 	if strings.TrimSpace(startupError) != "" {
 		steps = append(steps, "Inspect the skillf service logs after the next restart to confirm the SSH listener starts.")
+	}
+	if enabled && !sameHost(publicHost, sshHost) && strings.TrimSpace(sshHost) != "" {
+		steps = append(steps, fmt.Sprintf("Use %s for SSH sessions; keep %s reserved for the browser UI unless you add a dedicated TCP route.", sshHost, publicHost))
 	}
 	if len(steps) == 0 {
 		steps = append(steps, "No remediation required.")
@@ -368,7 +460,11 @@ func isLocalHost(host string) bool {
 	if hostOnly == "" || hostOnly == "localhost" {
 		return true
 	}
-	return net.ParseIP(hostOnly) != nil
+	parsedIP := net.ParseIP(hostOnly)
+	if parsedIP == nil {
+		return false
+	}
+	return parsedIP.IsLoopback() || parsedIP.IsPrivate() || parsedIP.IsLinkLocalUnicast() || parsedIP.IsLinkLocalMulticast() || parsedIP.IsUnspecified()
 }
 
 func maskKeyPath(path string) string {
@@ -393,4 +489,8 @@ func maskKeyPath(path string) string {
 		return "hidden"
 	}
 	return filepath.ToSlash(filepath.Join("...", fileName))
+}
+
+func sameHost(left, right string) bool {
+	return strings.EqualFold(stripHostPort(left), stripHostPort(right))
 }

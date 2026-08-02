@@ -3,8 +3,10 @@ package server
 
 import (
 	"context"
-	"fmt"
+	"net"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -35,7 +37,7 @@ func New(application *app.App) *Server {
 	s.setupRoutes()
 
 	s.server = &http.Server{
-		Addr:         fmt.Sprintf(":%d", application.Config.Port),
+		Addr:         net.JoinHostPort(resolveListenHost(application.Config.ListenHost), strconv.Itoa(application.Config.Port)),
 		Handler:      s.router,
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 90 * time.Second,
@@ -71,12 +73,10 @@ func (s *Server) setupRoutes() {
 	s.router.Get("/", homeHandler.Index)
 	s.router.Get("/convert", convertHandler.Index)
 	s.router.Get("/merge", mergeHandler.Index)
-	s.router.Get("/browse", skillsHandler.Browse)
 	s.router.Get("/ssh", homeHandler.SSH)
 	s.router.Get("/skill/{slug}", skillsHandler.View)
 
 	// External skill routes
-	s.router.Get("/external/{source}/*", skillsHandler.ViewExternal)
 
 	// API endpoints (HTMX)
 	s.router.Get("/health", systemHandler.Health)
@@ -88,12 +88,9 @@ func (s *Server) setupRoutes() {
 	s.router.Get("/api/merge/strategies", mergeHandler.Strategies)
 	s.router.Post("/api/skills", skillsHandler.Create)
 	s.router.Get("/api/skills", skillsHandler.List)
-	s.router.Get("/api/skills/search", skillsHandler.Search)
 	s.router.Get("/api/skill/{slug}", skillsHandler.Get)
 	s.router.Delete("/api/skill/{id}", skillsHandler.Delete)
 	s.router.Get("/api/skill/{slug}/download", skillsHandler.Download)
-	s.router.Post("/api/skills/import-external", skillsHandler.ImportExternal)
-	s.router.Get("/api/external/{source}/content/*", skillsHandler.GetExternalContent)
 }
 
 // Start starts the HTTP server.
@@ -106,4 +103,12 @@ func (s *Server) Shutdown() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	return s.server.Shutdown(ctx)
+}
+
+func resolveListenHost(host string) string {
+	trimmedHost := strings.TrimSpace(strings.Trim(host, "[]"))
+	if trimmedHost == "" {
+		return "0.0.0.0"
+	}
+	return trimmedHost
 }

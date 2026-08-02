@@ -1,189 +1,112 @@
 {{define "convert.html"}}
-<div class="max-w-6xl mx-auto px-4 py-8">
-    <h1 class="text-2xl font-semibold mb-6">
-        <span class="text-terminal-accent">&gt;</span> Convert to SKILL.md
-    </h1>
-    <p class="text-terminal-muted mb-6">
-        Upload a source file or paste raw content, then convert it into a reusable skill. For repeatable keyboard-only work, switch to the <a href="/ssh" class="text-terminal-accent hover:underline">SSH console</a>.
-    </p>
+<div class="page-shell stack-xl">
+    <section class="section-heading">
+        <p class="eyebrow">Import</p>
+        <h1 class="section-title">Convert one source into a skill.</h1>
+        <p class="section-copy">Pick the source type first, then bring the material you already have: OpenAPI, Postman, AsyncAPI, GraphQL, plain text, PDFs, and more.</p>
+    </section>
 
-    <div class="grid lg:grid-cols-2 gap-6">
-        <!-- Input Panel -->
-        <div class="border border-terminal-border bg-terminal-surface">
-            <div class="border-b border-terminal-border px-4 py-3 flex items-center justify-between">
-                <span class="text-sm font-medium">Input</span>
-                <select id="format-select" name="format" class="tooltip tooltip-left bg-terminal-bg text-terminal-text border border-terminal-border px-4 py-2 text-sm focus:border-terminal-accent focus:outline-none" data-tooltip="Select input format" aria-label="Format selection">
-                    {{range .Formats}}
-                    <option value="{{.}}">{{.}}</option>
-                    {{end}}
-                </select>
-            </div>
-
-            <form id="convert-form"
-                  hx-post="/api/convert"
-                  hx-target="#output-content"
-                  hx-swap="innerHTML"
-                  hx-encoding="multipart/form-data"
-                  class="p-4">
-
-                <!-- File Upload -->
-                <div id="file-upload" class="border-2 border-dashed border-terminal-border hover:border-terminal-accent transition-colors p-8 text-center mb-4 cursor-pointer"
-                     onclick="document.getElementById('file-input').click()">
-                    <svg class="w-10 h-10 mx-auto mb-3 text-terminal-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                    </svg>
-                    <p class="text-terminal-muted text-sm">Click to upload or drag and drop</p>
-                    <p class="text-terminal-muted text-xs mt-1">OpenAPI, GraphQL, Postman, or text files</p>
-                    <input type="file" id="file-input" name="file" class="hidden" accept=".yaml,.yml,.json,.graphql,.gql,.txt,.md">
-                </div>
-                <div id="file-name" class="hidden mb-4 p-2 bg-terminal-bg border border-terminal-border text-sm flex items-center justify-between">
-                    <span id="file-name-text"></span>
-                    <button type="button" onclick="clearFile()" class="text-terminal-muted hover:text-terminal-text">&times;</button>
-                </div>
-
-                <div class="text-center text-terminal-muted text-sm mb-4">or paste content</div>
-
-                <!-- Text Input -->
-                <textarea name="content" id="content-input"
-                          placeholder="Paste your OpenAPI, GraphQL, or other specification here..."
-                          class="w-full h-64 bg-terminal-bg border border-terminal-border p-3 text-sm font-mono resize-none focus:border-terminal-accent focus:outline-none"></textarea>
-
-                <!-- Input AI Assistant -->
-                <div class="mt-2">
-                    <div class="flex items-center gap-2">
-                        <button type="button" id="input-assist-btn"
-                                class="tooltip px-4 py-2 text-sm bg-terminal-bg text-terminal-text border border-terminal-border hover:border-terminal-accent hover:text-terminal-accent transition-colors"
-                                data-tooltip="AI suggests improvements to your input"
-                                aria-label="AI Assist for input">
-                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                            </svg>
-                            Assist
-                        </button>
-                        <select id="input-assist-mode" class="tooltip tooltip-bottom bg-terminal-bg text-terminal-text border border-terminal-border px-4 py-2 text-sm focus:border-terminal-accent focus:outline-none" data-tooltip="Choose assistance type">
-                            <option value="format">Format & Clean</option>
-                            <option value="expand">Expand Spec</option>
-                            <option value="validate">Suggest Fixes</option>
+    <div class="workspace">
+        <section class="panel">
+            <form hx-post="/api/convert" hx-encoding="multipart/form-data" hx-target="#convert-result" hx-swap="innerHTML" class="form-stack">
+                <div class="form-grid-2">
+                    <div class="field">
+                        <label for="convert-format">Source type</label>
+                        <select id="convert-format" name="format">
+                            <option value="auto">Auto detect</option>
+                            <option value="openapi">OpenAPI / Swagger</option>
+                            <option value="postman">Postman collection</option>
+                            <option value="asyncapi">AsyncAPI</option>
+                            <option value="graphql">GraphQL schema</option>
+                            <option value="protobuf">Protobuf / gRPC</option>
+                            <option value="raml">RAML</option>
+                            <option value="wsdl">WSDL / SOAP</option>
+                            <option value="apiblueprint">API Blueprint</option>
+                            <option value="pdf">PDF</option>
+                            <option value="plaintext">Plain text / notes</option>
+                            <option value="url">Remote URL</option>
                         </select>
+                        <p class="helper">Use auto detect when the file is standard; force the type when you already know the source.</p>
                     </div>
-                    <div id="input-assist-status" class="mt-2 text-xs text-terminal-muted hidden"></div>
+                    <div class="field">
+                        <label for="convert-name">Skill name</label>
+                        <input id="convert-name" name="name" type="text" placeholder="Customer API skill">
+                        <p class="helper">Optional. Use this if you want to override the generated skill name.</p>
+                    </div>
                 </div>
 
-                <!-- Options -->
-                <div class="mt-4 flex flex-col sm:flex-row gap-4">
-                    <input type="text" name="name" placeholder="Skill name (optional)"
-                           class="flex-1 bg-terminal-bg border border-terminal-border px-3 py-2 text-sm focus:border-terminal-accent focus:outline-none">
-                    <input type="hidden" name="format" id="format-hidden" value="">
-                    <button type="submit" class="tooltip px-4 py-2 text-sm bg-terminal-bg text-terminal-text border border-terminal-border font-medium hover:border-terminal-accent hover:text-terminal-accent transition-colors" data-tooltip="Transform spec into SKILL.md format" aria-label="Convert to SKILL.md">
-                        Convert
-                    </button>
+                <div class="fieldset">
+                    <p class="fieldset-title">Choose one input</p>
+                    <div class="field">
+                        <label for="convert-url">Public link</label>
+                        <input id="convert-url" name="url" type="url" placeholder="https://example.com/skill.md">
+                        <p class="helper">Best for public docs, raw markdown, or an existing remote source file.</p>
+                    </div>
+                    <div class="field">
+                        <label for="convert-file">Local file</label>
+                        <input id="convert-file" name="file" type="file">
+                        <p class="helper">Use this for OpenAPI specs, Postman exports, PDFs, schemas, or source notes already on disk.</p>
+                    </div>
+                    <div class="field">
+                        <label for="convert-content">Raw content</label>
+                        <textarea id="convert-content" name="content" placeholder="# Skill title&#10;&#10;Paste source material here"></textarea>
+                        <p class="helper">Paste the raw source directly. If you paste a URL here, the backend treats it as a link import.</p>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="btn btn--primary">Convert to a skill</button>
+                    <span class="inline-note">Leave unused inputs empty. The first valid source wins, and the result remains downloadable as `SKILL.md`.</span>
                 </div>
             </form>
-        </div>
+        </section>
 
-        <!-- Output Panel -->
-        <div class="border border-terminal-border bg-terminal-surface">
-            <div class="border-b border-terminal-border px-4 py-3 flex items-center justify-between">
-                <span class="text-sm font-medium">Output</span>
-                <button id="copy-btn" onclick="copyOutput()" class="tooltip tooltip-left px-4 py-2 text-sm bg-terminal-bg text-terminal-text border border-terminal-border hover:border-terminal-accent hover:text-terminal-accent transition-colors hidden" data-tooltip="Copy output to clipboard" aria-label="Copy output to clipboard">
-                    Copy
-                </button>
-            </div>
-            <div id="output-content" class="p-4 min-h-[400px] overflow-auto">
-                <p class="text-terminal-muted text-sm">Convert a specification to see the output here.</p>
-            </div>
-        </div>
+        <aside class="panel panel--soft stack-md">
+            <p class="eyebrow">Rules</p>
+            <ul class="protocol-list">
+                <li>
+                    <strong>Keep the source explicit.</strong>
+                    Do not search a registry first when you already know the source you want.
+                </li>
+                <li>
+                    <strong>Normalize before editing.</strong>
+                    Generate the skill first, then decide whether it needs more work.
+                </li>
+                <li>
+                    <strong>Move to merge only after conversion.</strong>
+                    Use the merge page once you have multiple clean skill files.
+                </li>
+            </ul>
+        </aside>
     </div>
+
+    <section>
+        <div class="section-heading">
+            <p class="eyebrow">Result</p>
+            <h2 class="section-title">Generated skill</h2>
+        </div>
+        <div id="convert-result" class="result-shell preview-shell">
+            <p class="helper">The generated skill will appear here.</p>
+        </div>
+    </section>
 </div>
 
 <script>
-// Initialize hidden field with first option value on load
-(function() {
-    const formatSelect = document.getElementById('format-select');
-    const formatHidden = document.getElementById('format-hidden');
-    if (formatSelect && formatHidden && formatSelect.options.length > 0) {
-        formatHidden.value = formatSelect.value;
-    }
-})();
-
-document.getElementById('format-select').addEventListener('change', function() {
-    document.getElementById('format-hidden').value = this.value;
-});
-
-document.getElementById('file-input').addEventListener('change', function(e) {
-    if (e.target.files.length > 0) {
-        document.getElementById('file-name').classList.remove('hidden');
-        document.getElementById('file-name-text').textContent = e.target.files[0].name;
-        document.getElementById('file-upload').classList.add('hidden');
-    }
-});
-
-function clearFile() {
-    document.getElementById('file-input').value = '';
-    document.getElementById('file-name').classList.add('hidden');
-    document.getElementById('file-upload').classList.remove('hidden');
-}
-
-function copyOutput() {
-    const content = document.getElementById('output-content').querySelector('pre')?.textContent;
-    if (content) {
-        navigator.clipboard.writeText(content);
-        const btn = document.getElementById('copy-btn');
-        btn.textContent = 'Copied!';
-        setTimeout(() => btn.textContent = 'Copy', 2000);
-    }
-}
-
-document.body.addEventListener('htmx:afterSwap', function(e) {
-    if (e.detail.target.id === 'output-content') {
-        document.getElementById('copy-btn').classList.remove('hidden');
-        // Apply syntax highlighting
-        const codeBlock = e.detail.target.querySelector('code');
-        if (codeBlock && typeof Prism !== 'undefined') {
-            Prism.highlightElement(codeBlock);
-        }
-    }
-});
-
 function downloadOutput() {
-    const content = document.getElementById('output-content').querySelector('pre')?.textContent;
-    if (content) {
-        const blob = new Blob([content], { type: 'text/markdown' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'SKILL.md';
-        a.click();
-        URL.revokeObjectURL(a.href);
+    const code = document.querySelector('#convert-result pre code');
+    if (!code) {
+        return;
     }
+
+    const blob = new Blob([code.textContent || ''], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'SKILL.md';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
 }
-
-// Drag and drop
-var dropZone = document.getElementById('file-upload');
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, preventDefaults, false);
-});
-
-function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
-}
-
-['dragenter', 'dragover'].forEach(eventName => {
-    dropZone.addEventListener(eventName, () => dropZone.classList.add('border-terminal-accent'), false);
-});
-
-['dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, () => dropZone.classList.remove('border-terminal-accent'), false);
-});
-
-dropZone.addEventListener('drop', function(e) {
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        document.getElementById('file-input').files = files;
-        document.getElementById('file-name').classList.remove('hidden');
-        document.getElementById('file-name-text').textContent = files[0].name;
-        dropZone.classList.add('hidden');
-    }
-});
 </script>
 {{end}}
