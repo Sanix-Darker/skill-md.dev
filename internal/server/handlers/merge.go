@@ -230,18 +230,18 @@ func (h *MergeHandler) Merge(w http.ResponseWriter, r *http.Request) {
 	// Return result
 	if middleware.IsHTMXRequest(r) {
 		data := map[string]interface{}{
-			"Content":           output,
-			"Name":              result.Frontmatter.Name,
-			"SkillCount":        len(skills),
-			"Conflicts":         conflicts,
-			"MergeConflicts":    metadataConflicts,
-			"ConflictCount":     len(conflicts),
-			"ConflictStrategy":  strategy.String(),
-			"MergeInputCount":   len(mergeInputs),
-			"MergeInputs":       mergeInputs,
+			"Content":            output,
+			"Name":               result.Frontmatter.Name,
+			"SkillCount":         len(skills),
+			"Conflicts":          conflicts,
+			"MergeConflicts":     metadataConflicts,
+			"ConflictCount":      len(conflicts),
+			"ConflictStrategy":   strategy.String(),
+			"MergeInputCount":    len(mergeInputs),
+			"MergeInputs":        mergeInputs,
 			"MergeSourceSummary": sourcesSummary,
 			"MergeStrategyLabel": mergeStrategyDisplayName(strategy),
-			"MergeDedupe":       dedupe,
+			"MergeDedupe":        dedupe,
 		}
 		if err := web.RenderPartial(w, "code-preview.html", data); err != nil {
 			h.app.Logger.Error("failed to render preview", "error", err)

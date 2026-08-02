@@ -35,6 +35,13 @@ type RateLimitInfo struct {
 	RetryAfterHeader  string `yaml:"retry_after_header,omitempty" json:"retry_after_header,omitempty"`
 }
 
+// Dependency references another skill and the accepted version constraint.
+type Dependency struct {
+	Name        string `yaml:"name" json:"name"`
+	Version     string `yaml:"version,omitempty" json:"version,omitempty"`
+	Description string `yaml:"description,omitempty" json:"description,omitempty"`
+}
+
 // Frontmatter contains SKILL.md metadata.
 type Frontmatter struct {
 	Name        string   `yaml:"name" json:"name"`
@@ -59,6 +66,7 @@ type Frontmatter struct {
 	MaxTokensPerCall int              `yaml:"max_tokens_per_call,omitempty" json:"max_tokens_per_call,omitempty"`
 	RetryStrategy    *RetryStrategy   `yaml:"retry_strategy,omitempty" json:"retry_strategy,omitempty"`
 	RateLimits       *RateLimitInfo   `yaml:"rate_limits,omitempty" json:"rate_limits,omitempty"`
+	Dependencies     []Dependency     `yaml:"dependencies,omitempty" json:"dependencies,omitempty"`
 
 	// Protocol-specific fields (for AsyncAPI, gRPC, etc.)
 	Protocol     string   `yaml:"protocol,omitempty" json:"protocol,omitempty"` // http, grpc, websocket, kafka, mqtt, amqp
