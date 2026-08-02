@@ -11,10 +11,11 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/sanixdarker/skill-md/internal/converter"
-	"github.com/sanixdarker/skill-md/internal/registry"
-	"github.com/sanixdarker/skill-md/internal/sources"
-	"github.com/sanixdarker/skill-md/pkg/skill"
+	"github.com/sanixdarker/skillf/internal/converter"
+	"github.com/sanixdarker/skillf/internal/merger"
+	"github.com/sanixdarker/skillf/internal/registry"
+	"github.com/sanixdarker/skillf/internal/sources"
+	"github.com/sanixdarker/skillf/pkg/skill"
 )
 
 // HomeModel is the home view model.
@@ -38,6 +39,7 @@ func NewHomeModel(keys KeyMap, styles Styles) HomeModel {
 			"Search skills (local + external)",
 			"Merge multiple skills",
 			"Browse local registry",
+			"Show help / shortcuts",
 			"Quit",
 		},
 	}
@@ -71,13 +73,21 @@ func (m HomeModel) View() string {
 	var b strings.Builder
 
 	// Header
-	title := m.styles.Title.Render("SKILL MD")
-	subtitle := m.styles.Subtitle.Render("Convert specs to SKILL.md for AI agents")
+	title := m.styles.Title.Render("skillf")
+	subtitle := m.styles.Subtitle.Render("Convert, search, and merge SKILL.md workflows from one SSH session")
 
 	b.WriteString("\n")
 	b.WriteString(title)
 	b.WriteString("\n")
 	b.WriteString(subtitle)
+	b.WriteString("\n\n")
+	b.WriteString(m.styles.Normal.Render("Workflow lanes"))
+	b.WriteString("\n")
+	b.WriteString(m.styles.Muted.Render("  1 Convert specs and raw text into SKILL.md"))
+	b.WriteString("\n")
+	b.WriteString(m.styles.Muted.Render("  2 Search local and connected sources before you merge"))
+	b.WriteString("\n")
+	b.WriteString(m.styles.Muted.Render("  3 Merge selected skills with dedupe and conflict strategy controls"))
 	b.WriteString("\n\n")
 
 	// Menu items
@@ -85,15 +95,19 @@ func (m HomeModel) View() string {
 		cursor := "  "
 		style := m.styles.MenuItem
 		if i == m.selected {
-			cursor = m.styles.Accent.Render("> ")
+			cursor = m.styles.Accent.Render(fmt.Sprintf("[%d]", i+1))
 			style = m.styles.MenuItemSel
 		}
-		b.WriteString(cursor + style.Render(fmt.Sprintf("[%c] %s", 'C'+rune(i*('B'-'C')), item)) + "\n")
+		if i == m.selected {
+			b.WriteString(cursor + " " + style.Render(item) + "\n")
+		} else {
+			b.WriteString(" [" + fmt.Sprintf("%d", i+1) + "] " + style.Render(item) + "\n")
+		}
 	}
 
 	// Help
 	b.WriteString("\n")
-	b.WriteString(m.styles.Help.Render("Use arrow keys or j/k to navigate, enter to select, q to quit"))
+	b.WriteString(m.styles.Help.Render("Use arrow keys or j/k, 1-6 quick select, Enter to open, ? or / for help, q to quit"))
 
 	return lipgloss.Place(
 		m.width,
@@ -102,6 +116,74 @@ func (m HomeModel) View() string {
 		lipgloss.Center,
 		lipgloss.NewStyle().Padding(2).Render(b.String()),
 	)
+}
+
+// HelpModel is a static help view.
+type HelpModel struct {
+	keys   KeyMap
+	styles Styles
+}
+
+// NewHelpModel creates a help model.
+func NewHelpModel(keys KeyMap, styles Styles) HelpModel {
+	return HelpModel{
+		keys:   keys,
+		styles: styles,
+	}
+}
+
+// Init implements tea.Model.
+func (m HelpModel) Init() tea.Cmd {
+	return nil
+}
+
+// Update implements tea.Model.
+func (m HelpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	return m, nil
+}
+
+// View renders the global shortcut and workflow help.
+func (m HelpModel) View() string {
+	var b strings.Builder
+
+	b.WriteString("\n")
+	b.WriteString(m.styles.Title.Render("skillf SSH TUI"))
+	b.WriteString("\n")
+	b.WriteString(m.styles.Subtitle.Render("Terminal-first interface for convert/search/merge workflows"))
+	b.WriteString("\n\n")
+
+	b.WriteString(m.styles.Normal.Render("Global shortcuts"))
+	b.WriteString("\n")
+	b.WriteString(m.styles.MenuItem.Render(" h/Home     "))
+	b.WriteString("Go back to main menu\n")
+	b.WriteString(m.styles.MenuItem.Render(" ?         "))
+	b.WriteString("Toggle this help\n")
+	b.WriteString(m.styles.MenuItem.Render(" Esc       "))
+	b.WriteString("Go back from current screen\n")
+	b.WriteString(m.styles.MenuItem.Render(" q         "))
+	b.WriteString("Quit application\n")
+
+	b.WriteString("\n")
+	b.WriteString(m.styles.Normal.Render("Menu shortcuts"))
+	b.WriteString("\n")
+	b.WriteString(m.styles.MenuItem.Render(" 1-6       "))
+	b.WriteString("Open items from home menu\n")
+	b.WriteString(m.styles.MenuItem.Render(" c/s/b/m   "))
+	b.WriteString("Directly open Convert / Search / Browse / Merge\n")
+	b.WriteString(m.styles.MenuItem.Render(" enter     "))
+	b.WriteString("Open selected item\n")
+
+	b.WriteString("\n")
+	b.WriteString(m.styles.Normal.Render("Workflow notes"))
+	b.WriteString("\n")
+	b.WriteString("• Convert: paste spec text or text file content in the Convert view and press Ctrl+S.\n")
+	b.WriteString("• Search: switch source with Tab, press Enter to run a query, press Enter again on a result to preview it.\n")
+	b.WriteString("• Merge: toggle skill selection with Space, then press Enter to merge.\n")
+	b.WriteString("• Merge strategy is adjustable with r in the merge menu and dedupe with d.\n")
+	b.WriteString("\n")
+	b.WriteString(m.styles.Help.Render("Esc: home · ?/: toggle this help · q: quit"))
+
+	return lipgloss.NewStyle().Padding(2).Render(b.String())
 }
 
 // ConvertModel is the convert view model.
@@ -164,7 +246,11 @@ func (m ConvertModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case "ctrl+s":
 			// Trigger conversion
+			m.converting = true
 			return m, m.convert()
+		case "ctrl+l":
+			m.result = ""
+			m.err = nil
 		}
 	case convertResultMsg:
 		m.converting = false
@@ -255,7 +341,7 @@ func (m ConvertModel) View() string {
 
 	// Help
 	b.WriteString("\n\n")
-	b.WriteString(m.styles.Help.Render("Tab: switch focus | Ctrl+S: convert | Esc: back"))
+	b.WriteString(m.styles.Help.Render("Tab: switch focus | Ctrl+S: convert | Ctrl+L: clear output | Esc: back"))
 
 	return lipgloss.NewStyle().Padding(2).Render(b.String())
 }
@@ -340,7 +426,7 @@ func (m BrowseModel) View() string {
 	var b strings.Builder
 
 	// Header
-	b.WriteString(m.styles.Title.Render("Browse Skills"))
+	b.WriteString(m.styles.Title.Render("Browse Registry"))
 	b.WriteString("\n\n")
 
 	if m.err != nil {
@@ -379,11 +465,16 @@ func (m BrowseModel) View() string {
 
 	// Show list
 	if len(m.skills) == 0 {
-		b.WriteString(m.styles.Muted.Render("No skills found in registry."))
+		b.WriteString(m.styles.Muted.Render("No skills found in the local registry."))
+		b.WriteString("\n\n")
+		b.WriteString(m.styles.Muted.Render("Use Convert to create one or Search to inspect external sources."))
 		b.WriteString("\n\n")
 		b.WriteString(m.styles.Help.Render("Esc: back to home"))
 		return lipgloss.NewStyle().Padding(2).Render(b.String())
 	}
+
+	b.WriteString(m.styles.Muted.Render(fmt.Sprintf("Loaded %d local skills. Enter opens a compact detail view.", len(m.skills))))
+	b.WriteString("\n\n")
 
 	for i, sk := range m.skills {
 		cursor := "  "
@@ -434,6 +525,7 @@ type SearchModel struct {
 	sourceTypes     []sources.SourceType
 	results         []searchResult
 	selected        int
+	lastQuery       string
 	err             error
 	searching       bool
 	detail          *searchResult
@@ -480,6 +572,7 @@ func (m SearchModel) Init() tea.Cmd {
 type searchResultsMsg struct {
 	results []searchResult
 	err     error
+	query   string
 }
 
 // Update implements tea.Model.
@@ -497,7 +590,8 @@ func (m SearchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.source = (m.source + 1) % len(m.sources)
 			return m, nil
 		case "enter":
-			if len(m.results) > 0 && !m.searching {
+			currentQuery := strings.TrimSpace(m.input.Value())
+			if len(m.results) > 0 && !m.searching && currentQuery == strings.TrimSpace(m.lastQuery) {
 				if m.selected < len(m.results) {
 					m.detail = &m.results[m.selected]
 				}
@@ -519,6 +613,7 @@ func (m SearchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case searchResultsMsg:
 		m.searching = false
 		m.results = msg.results
+		m.lastQuery = msg.query
 		m.err = msg.err
 		m.selected = 0
 		return m, nil
@@ -533,7 +628,7 @@ func (m SearchModel) doSearch() tea.Cmd {
 	return func() tea.Msg {
 		query := m.input.Value()
 		if query == "" {
-			return searchResultsMsg{err: fmt.Errorf("enter a search query")}
+			return searchResultsMsg{err: fmt.Errorf("enter a search query"), query: query}
 		}
 
 		var results []searchResult
@@ -593,10 +688,10 @@ func (m SearchModel) doSearch() tea.Cmd {
 		}
 
 		if len(results) == 0 {
-			return searchResultsMsg{err: fmt.Errorf("no results found")}
+			return searchResultsMsg{err: fmt.Errorf("no results found"), query: query}
 		}
 
-		return searchResultsMsg{results: results}
+		return searchResultsMsg{results: results, query: query}
 	}
 }
 
@@ -622,6 +717,8 @@ func (m SearchModel) View() string {
 	b.WriteString(m.styles.Normal.Render("Query: "))
 	b.WriteString(m.input.View())
 	b.WriteString("\n\n")
+	b.WriteString(m.styles.Muted.Render("Enter runs a new search when the query changes. Enter on an unchanged result list opens the selected preview."))
+	b.WriteString("\n\n")
 
 	// Detail view
 	if m.detail != nil {
@@ -638,6 +735,8 @@ func (m SearchModel) View() string {
 			if len(preview) > 500 {
 				preview = preview[:500] + "..."
 			}
+			b.WriteString(m.styles.Normal.Render("Preview"))
+			b.WriteString("\n")
 			b.WriteString(m.styles.Muted.Render(preview))
 		}
 		b.WriteString("\n\n")
@@ -651,7 +750,10 @@ func (m SearchModel) View() string {
 	} else if m.err != nil {
 		b.WriteString(m.styles.Error.Render("Error: " + m.err.Error()))
 	} else if len(m.results) > 0 {
-		b.WriteString(m.styles.Success.Render(fmt.Sprintf("Found %d results:", len(m.results))))
+		if m.selected >= len(m.results) {
+			m.selected = 0
+		}
+		b.WriteString(m.styles.Success.Render(fmt.Sprintf("Found %d results (selected %d of %d)", len(m.results), m.selected+1, len(m.results))))
 		b.WriteString("\n\n")
 
 		for i, r := range m.results {
@@ -669,10 +771,15 @@ func (m SearchModel) View() string {
 			srcBadge := m.styles.Muted.Render(" [" + r.Source + "]")
 			b.WriteString(cursor + style.Render(name) + srcBadge + "\n")
 		}
+
+		if m.selected < len(m.results) && m.results[m.selected].Description != "" {
+			b.WriteString("\n")
+			b.WriteString(m.styles.Muted.Render(truncate(m.results[m.selected].Description, 120)))
+		}
 	}
 
 	b.WriteString("\n")
-	b.WriteString(m.styles.Help.Render("Tab: change source | Enter: search/view | j/k: navigate | Esc: back"))
+	b.WriteString(m.styles.Help.Render("Tab: change source | Enter: search/view | j/k: navigate | Esc: back | ? or / for help"))
 
 	return lipgloss.NewStyle().Padding(2).Render(b.String())
 }
@@ -689,6 +796,9 @@ type MergeModel struct {
 	cursor   int
 	err      error
 	result   string
+	conflicts []merger.Conflict
+	dedupe   bool
+	strategy merger.ConflictStrategy
 	merging  bool
 }
 
@@ -698,6 +808,8 @@ func NewMergeModel(keys KeyMap, styles Styles, registryService *registry.Service
 		keys:     keys,
 		styles:   styles,
 		registry: registryService,
+		dedupe:   true,
+		strategy: merger.KeepFirst,
 	}
 }
 
@@ -726,8 +838,9 @@ func (m MergeModel) Init() tea.Cmd {
 }
 
 type mergeResultMsg struct {
-	result string
-	err    error
+	result    string
+	conflicts []merger.Conflict
+	err       error
 }
 
 // Update implements tea.Model.
@@ -737,6 +850,7 @@ func (m MergeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.result != "" {
 			// Clear result on any key
 			m.result = ""
+			m.conflicts = nil
 			return m, nil
 		}
 
@@ -755,6 +869,7 @@ func (m MergeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "enter":
 			// Trigger merge
+			m.merging = true
 			return m, m.doMerge()
 		case "a": // Select all
 			for i := range m.selected {
@@ -764,12 +879,17 @@ func (m MergeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			for i := range m.selected {
 				m.selected[i] = false
 			}
+		case "d":
+			m.dedupe = !m.dedupe
+		case "r":
+			m.strategy = nextConflictStrategy(m.strategy)
 		}
 
 	case mergeResultMsg:
 		m.merging = false
 		m.result = msg.result
 		m.err = msg.err
+		m.conflicts = msg.conflicts
 		return m, nil
 	}
 
@@ -789,34 +909,27 @@ func (m MergeModel) doMerge() tea.Cmd {
 			return mergeResultMsg{err: fmt.Errorf("select at least 2 skills to merge")}
 		}
 
-		// Merge skills
-		var merged strings.Builder
-		merged.WriteString("---\n")
-		merged.WriteString("name: Merged Skills\n")
-		merged.WriteString("description: Combined from multiple skills\n")
-		merged.WriteString("version: 1.0.0\n")
-		merged.WriteString("---\n\n")
-		merged.WriteString("# Merged Skills\n\n")
-
-		for i, sk := range selectedSkills {
-			merged.WriteString(fmt.Sprintf("## %d. %s\n\n", i+1, sk.Name))
-			if sk.Description != "" {
-				merged.WriteString(sk.Description + "\n\n")
+		parsed := make([]*skill.Skill, 0, len(selectedSkills))
+		for _, sk := range selectedSkills {
+			parsedSkill, err := skill.Parse(sk.Content)
+			if err != nil {
+				return mergeResultMsg{err: fmt.Errorf("failed to parse %s: %w", sk.Name, err)}
 			}
-			// Extract body content (skip frontmatter)
-			content := sk.Content
-			if idx := strings.Index(content, "---"); idx != -1 {
-				if endIdx := strings.Index(content[idx+3:], "---"); endIdx != -1 {
-					content = strings.TrimSpace(content[idx+3+endIdx+3:])
-				}
-			}
-			if content != "" {
-				merged.WriteString(content)
-				merged.WriteString("\n\n")
-			}
+			parsed = append(parsed, parsedSkill)
 		}
 
-		return mergeResultMsg{result: merged.String()}
+		merged, err := merger.New().Merge(parsed, &merger.Options{
+			Name:             "Merged Skills",
+			Deduplicate:      m.dedupe,
+			ConflictStrategy: m.strategy,
+		})
+		if err != nil {
+			return mergeResultMsg{err: err}
+		}
+
+		mergeConflicts := merger.DetectConflicts(parsed, m.strategy)
+
+		return mergeResultMsg{result: skill.Render(merged), conflicts: mergeConflicts}
 	}
 }
 
@@ -842,6 +955,23 @@ func (m MergeModel) View() string {
 		if len(preview) > 800 {
 			preview = preview[:800] + "..."
 		}
+		b.WriteString(m.styles.Normal.Render(fmt.Sprintf("Input summary: %d selected • strategy: %s • dedupe: %s", countSelectedSkills(m.selected), mergerStrategyLabel(m.strategy), boolToStatus(m.dedupe))))
+		if len(m.conflicts) > 0 {
+			b.WriteString("\n")
+			b.WriteString(m.styles.Normal.Render(fmt.Sprintf("Conflicts resolved: %d", len(m.conflicts))))
+		}
+		if len(m.conflicts) > 0 {
+			b.WriteString("\n")
+			b.WriteString(m.styles.Normal.Render("Conflict highlights:"))
+			for i, conflict := range m.conflicts {
+				if i >= 2 {
+					break
+				}
+				b.WriteString("\n")
+				b.WriteString(m.styles.Muted.Render(fmt.Sprintf("• %s", conflict.Field)))
+			}
+		}
+		b.WriteString("\n\n")
 		b.WriteString(m.styles.Muted.Render(preview))
 		b.WriteString("\n\n")
 		b.WriteString(m.styles.Help.Render("Any key: back to selection"))
@@ -853,14 +983,24 @@ func (m MergeModel) View() string {
 		return lipgloss.NewStyle().Padding(2).Render(b.String())
 	}
 
-	// Count selected
-	count := 0
-	for _, sel := range m.selected {
-		if sel {
-			count++
-		}
+	// Options
+	currentStrategy := mergerStrategyLabel(m.strategy)
+	b.WriteString(m.styles.Normal.Render(fmt.Sprintf("Dedupe: %s | Strategy: %s | Selected sources: %s", boolToStatus(m.dedupe), currentStrategy, mergeSourceSummary(m.skills, m.selected))))
+	b.WriteString("\n\n")
+	if len(m.skills) > 0 {
+		b.WriteString(m.styles.Muted.Render(fmt.Sprintf("Registry inventory: %s", mergeSourceSummaryBySelection(m.skills))))
+		b.WriteString("\n")
 	}
-	b.WriteString(m.styles.Normal.Render(fmt.Sprintf("Select skills to merge (%d selected):", count)))
+
+	// Count selected
+	count := countSelectedSkills(m.selected)
+	b.WriteString(m.styles.Normal.Render(fmt.Sprintf("Select skills to merge (%d of %d selected):", count, len(m.selected))))
+	b.WriteString("\n")
+	if count < 2 {
+		b.WriteString(m.styles.Muted.Render("Need at least 2 selections to run merge."))
+	} else {
+		b.WriteString(m.styles.Muted.Render(selectedSkillPreview(m.skills, m.selected, 3)))
+	}
 	b.WriteString("\n\n")
 
 	if len(m.skills) == 0 {
@@ -888,11 +1028,140 @@ func (m MergeModel) View() string {
 			name = "(unnamed)"
 		}
 
-		b.WriteString(cursor + checkbox + " " + style.Render(name) + "\n")
+		version := strings.TrimSpace(sk.Version)
+		source := mergeSourceTag(sk)
+		line := style.Render(name)
+		if version != "" {
+			line = fmt.Sprintf("%s %s", line, m.styles.Muted.Render(fmt.Sprintf("[v%s]", version)))
+		}
+		line = fmt.Sprintf("%s %s", line, m.styles.Muted.Render(fmt.Sprintf("(%s)", source)))
+
+		b.WriteString(cursor + checkbox + " " + line + "\n")
 	}
 
 	b.WriteString("\n")
 	b.WriteString(m.styles.Help.Render("Space: toggle | a: all | n: none | Enter: merge | Esc: back"))
+	b.WriteString("\n")
+	b.WriteString(m.styles.Help.Render("d: dedupe on/off | r: cycle strategy"))
 
 	return lipgloss.NewStyle().Padding(2).Render(b.String())
+}
+
+func nextConflictStrategy(strategy merger.ConflictStrategy) merger.ConflictStrategy {
+	switch strategy {
+	case merger.KeepFirst:
+		return merger.KeepLast
+	case merger.KeepLast:
+		return merger.KeepLonger
+	case merger.KeepLonger:
+		return merger.Combine
+	case merger.Combine:
+		return merger.KeepFirst
+	default:
+	return merger.KeepFirst
+	}
+}
+
+func countSelectedSkills(selected []bool) int {
+	count := 0
+	for _, sel := range selected {
+		if sel {
+			count++
+		}
+	}
+	return count
+}
+
+func boolToStatus(v bool) string {
+	if v {
+		return "on"
+	}
+	return "off"
+}
+
+func mergeSourceTag(sk *skill.StoredSkill) string {
+	source := strings.TrimSpace(sk.SourceFormat)
+	if source == "" {
+		return "local"
+	}
+	return source
+}
+
+func mergeSourceSummary(skills []*skill.StoredSkill, selected []bool) string {
+	counts := map[string]int{}
+	for i, sk := range skills {
+		if i >= len(selected) || !selected[i] {
+			continue
+		}
+		source := mergeSourceTag(sk)
+		counts[source]++
+	}
+	if len(counts) == 0 {
+		return "none"
+	}
+	parts := make([]string, 0, len(counts))
+	for source, count := range counts {
+		parts = append(parts, fmt.Sprintf("%s %d", source, count))
+	}
+	return strings.Join(parts, ", ")
+}
+
+func mergeSourceSummaryBySelection(skills []*skill.StoredSkill) string {
+	counts := map[string]int{}
+	for _, sk := range skills {
+		source := mergeSourceTag(sk)
+		counts[source]++
+	}
+	if len(counts) == 0 {
+		return "no skills"
+	}
+	parts := make([]string, 0, len(counts))
+	for source, count := range counts {
+		parts = append(parts, fmt.Sprintf("%s %d", source, count))
+	}
+	return strings.Join(parts, ", ")
+}
+
+func selectedSkillPreview(skills []*skill.StoredSkill, selected []bool, limit int) string {
+	if limit <= 0 {
+		limit = 3
+	}
+
+	names := make([]string, 0, limit+1)
+	total := 0
+	for i, sk := range skills {
+		if i >= len(selected) || !selected[i] {
+			continue
+		}
+		total++
+		if len(names) < limit {
+			name := strings.TrimSpace(sk.Name)
+			if name == "" {
+				name = "(unnamed)"
+			}
+			names = append(names, name)
+		}
+	}
+	if total == 0 {
+		return "No skills selected yet."
+	}
+	if total > len(names) {
+		return fmt.Sprintf("Selected: %s, +%d more", strings.Join(names, ", "), total-len(names))
+	}
+	return "Selected: " + strings.Join(names, ", ")
+}
+
+func mergerStrategyLabel(strategy merger.ConflictStrategy) string {
+	switch strategy {
+	case merger.KeepFirst:
+		return "Keep first"
+	case merger.KeepLast:
+		return "Keep last"
+	case merger.KeepLonger:
+		return "Keep longer"
+	case merger.Combine:
+		return "Combine"
+	default:
+		return strategy.String()
+	}
 }

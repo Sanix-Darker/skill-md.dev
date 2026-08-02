@@ -1,0 +1,27 @@
+[Unit]
+Description=Skillf web service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=skillf
+Group=skillf
+WorkingDirectory=/opt/skillf
+Environment=SKILLF_PUBLIC_HOST=example.com
+Environment=GIT_TERMINAL_PROMPT=0
+EnvironmentFile=-/etc/skillf/skillf.env
+ExecStart=/usr/local/bin/skillf serve \
+  --port 8080 \
+  --ssh-port 2222 \
+  --db /var/lib/skillf/skillf.db \
+  --public-host example.com
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
