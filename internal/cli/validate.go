@@ -1,12 +1,102 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/sanixdarker/skill-md/pkg/skill"
+	"github.com/sanixdarker/skill-md/pkg/validation"
 	"github.com/spf13/cobra"
 )
+
+var (
+	validateSeverity string
+	validateJSON     bool
+	validateMCP      bool
+	validateStrict   bool
+)
+
+type validationCommandOptions struct {
+	severity      string
+	outputJSON    bool
+	mcpCompatible bool
+	strictMode    bool
+	failOnWarning bool
+	format        string
+}
+
+func runValidateCommand(inputPath string, opts validationCommandOptions) error {
+	format := opts.format
+	if opts.outputJSON {
+		format = "json"
+	}
+	if format == "" {
+		format = "text"
+	}
+	if format != "text" && format != "json" {
+		return fmt.Errorf("invalid validation format: %s", format)
+	}
+
+	content, err := os.ReadFile(inputPath)
+	if err != nil {
+		return fmt.Errorf("failed to read input file: %w", err)
+	}
+
+	s, err := skill.Parse(string(content))
+	if err != nil {
+		if format == "json" {
+			result := validation.ValidationResult{
+				Valid: false,
+				Issues: []validation.ValidationIssue{
+					{
+						Code:       "PARSE_ERROR",
+						Message:    err.Error(),
+						Severity:   validation.SeverityCritical,
+						Suggestion: "Ensure the file has valid YAML frontmatter and markdown content",
+					},
+				},
+			}
+			return outputValidationResult(result)
+		}
+		return fmt.Errorf("parse error: %w", err)
+	}
+
+	validationOpts := validation.DefaultOptions()
+	validationOpts.MCPCompat = opts.mcpCompatible
+	validationOpts.StrictMode = opts.strictMode
+
+	if opts.severity != "" {
+		sev, err := validation.ParseSeverity(opts.severity)
+		if err != nil {
+			return fmt.Errorf("invalid severity: %w", err)
+		}
+		validationOpts.MinSeverity = sev
+	}
+
+	validator := validation.NewValidator(validationOpts)
+	result := validator.Validate(s)
+
+	if format == "json" {
+		if err := outputValidationResult(result); err != nil {
+			return err
+		}
+		if !result.Valid || (opts.failOnWarning && result.HasWarnings()) {
+			return fmt.Errorf("validation failed")
+		}
+		return nil
+	}
+
+	if err := outputValidationHuman(result, inputPath); err != nil {
+		return err
+	}
+
+	if !result.Valid || (opts.failOnWarning && result.HasWarnings()) {
+		return fmt.Errorf("validation failed")
+	}
+
+	return nil
+}
 
 var validateCmd = &cobra.Command{
 	Use:   "validate [file]",
@@ -15,82 +105,131 @@ var validateCmd = &cobra.Command{
 
 Checks performed:
   - Valid YAML frontmatter
-  - Required fields (name, version)
+  - Required fields (name, version with semver format)
   - Valid markdown structure
   - Section hierarchy
+  - MCP compatibility (optional)
+
+Severity levels:
+  - info: Informational notes
+  - warning: Should be fixed but not critical
+  - error: May cause problems for AI agents
+  - critical: Makes the skill unusable
 
 Examples:
-  skillmd validate skill.md`,
+  skillmd validate skill.md
+  skillmd validate skill.md --severity warning
+  skillmd validate skill.md --json
+  skillmd validate skill.md --mcp --strict`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		inputPath := args[0]
-
-		// Read input file
-		content, err := os.ReadFile(inputPath)
-		if err != nil {
-			return fmt.Errorf("failed to read input file: %w", err)
-		}
-
-		// Parse the skill
-		s, err := skill.Parse(string(content))
-		if err != nil {
-			return fmt.Errorf("parse error: %w", err)
-		}
-
-		// Validate
-		errors := validate(s)
-		if len(errors) > 0 {
-			fmt.Println("Validation errors:")
-			for _, e := range errors {
-				fmt.Printf("  - %s\n", e)
-			}
-			return fmt.Errorf("validation failed with %d errors", len(errors))
-		}
-
-		fmt.Printf("Valid SKILL.md: %s\n", s.Frontmatter.Name)
-		fmt.Printf("  Version: %s\n", s.Frontmatter.Version)
-		fmt.Printf("  Sections: %d\n", len(s.Sections))
-		if len(s.Frontmatter.Tags) > 0 {
-			fmt.Printf("  Tags: %v\n", s.Frontmatter.Tags)
-		}
-
-		return nil
+		return runValidateCommand(args[0], validationCommandOptions{
+			severity:      validateSeverity,
+			outputJSON:    validateJSON,
+			mcpCompatible: validateMCP,
+			strictMode:    validateStrict,
+			failOnWarning: false,
+			format:        "",
+		})
 	},
 }
 
-func validate(s *skill.Skill) []string {
-	var errors []string
+func outputValidationResult(result validation.ValidationResult) error {
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	return enc.Encode(result)
+}
 
-	// Check required fields
-	if s.Frontmatter.Name == "" {
-		errors = append(errors, "missing required field: name")
-	}
-	if s.Frontmatter.Version == "" {
-		errors = append(errors, "missing required field: version")
-	}
+func outputValidationHuman(result validation.ValidationResult, path string) error {
+	if result.Valid {
+		fmt.Printf("✓ Valid SKILL.md: %s\n", result.SkillName)
+		fmt.Printf("  Version: %s\n", result.Version)
+		fmt.Printf("  Sections: %d\n", result.Statistics.TotalSections)
+		fmt.Printf("  Words: %d\n", result.Statistics.TotalWords)
+		fmt.Printf("  Code blocks: %d\n", result.Statistics.TotalCodeBlocks)
 
-	// Check for content
-	if len(s.Sections) == 0 && s.Content == "" {
-		errors = append(errors, "skill has no content or sections")
-	}
-
-	// Check section hierarchy
-	var prevLevel int
-	for i, section := range s.Sections {
-		if i == 0 {
-			prevLevel = section.Level
-			continue
+		if len(result.Issues) > 0 {
+			fmt.Printf("\nSuggestions (%d):\n", len(result.Issues))
+			for _, issue := range result.Issues {
+				fmt.Printf("  [%s] %s\n", issue.Severity, issue.Message)
+				if issue.Suggestion != "" {
+					fmt.Printf("          → %s\n", issue.Suggestion)
+				}
+			}
 		}
-		// Sections should not skip levels (e.g., h1 -> h3)
-		if section.Level > prevLevel+1 {
-			errors = append(errors, fmt.Sprintf("section '%s' skips heading level (h%d after h%d)", section.Title, section.Level, prevLevel))
-		}
-		prevLevel = section.Level
+		return nil
 	}
 
-	return errors
+	fmt.Printf("✗ Invalid SKILL.md: %s\n\n", path)
+
+	// Group issues by severity
+	critical := result.IssuesBySeverity(validation.SeverityCritical)
+	errors := filterBySeverity(result.Issues, validation.SeverityError)
+	warnings := filterBySeverity(result.Issues, validation.SeverityWarning)
+	info := filterBySeverity(result.Issues, validation.SeverityInfo)
+
+	if len(critical) > 0 {
+		fmt.Println("Critical:")
+		for _, issue := range critical {
+			printIssue(issue)
+		}
+	}
+
+	if len(errors) > 0 {
+		fmt.Println("\nErrors:")
+		for _, issue := range errors {
+			printIssue(issue)
+		}
+	}
+
+	if len(warnings) > 0 {
+		fmt.Println("\nWarnings:")
+		for _, issue := range warnings {
+			printIssue(issue)
+		}
+	}
+
+	if len(info) > 0 {
+		fmt.Println("\nInfo:")
+		for _, issue := range info {
+			printIssue(issue)
+		}
+	}
+
+	fmt.Printf("\nSummary: %d critical, %d errors, %d warnings, %d info\n",
+		result.Statistics.CriticalCount,
+		result.Statistics.ErrorCount,
+		result.Statistics.WarningCount,
+		result.Statistics.InfoCount)
+
+	return fmt.Errorf("validation failed")
+}
+
+func filterBySeverity(issues []validation.ValidationIssue, severity validation.Severity) []validation.ValidationIssue {
+	var filtered []validation.ValidationIssue
+	for _, issue := range issues {
+		if issue.Severity == severity {
+			filtered = append(filtered, issue)
+		}
+	}
+	return filtered
+}
+
+func printIssue(issue validation.ValidationIssue) {
+	field := ""
+	if issue.Field != "" {
+		field = fmt.Sprintf(" [%s]", issue.Field)
+	}
+	fmt.Printf("  • %s%s: %s\n", issue.Code, field, issue.Message)
+	if issue.Suggestion != "" {
+		fmt.Printf("    → %s\n", issue.Suggestion)
+	}
 }
 
 func init() {
+	validateCmd.Flags().StringVarP(&validateSeverity, "severity", "s", "", "Minimum severity level (info, warning, error, critical)")
+	validateCmd.Flags().BoolVar(&validateJSON, "json", false, "Output validation result as JSON")
+	validateCmd.Flags().BoolVar(&validateMCP, "mcp", false, "Enable MCP compatibility validation")
+	validateCmd.Flags().BoolVar(&validateStrict, "strict", false, "Enable strict mode with additional quality checks")
 	rootCmd.AddCommand(validateCmd)
 }
