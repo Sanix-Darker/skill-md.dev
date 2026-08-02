@@ -26,8 +26,8 @@ func TestHomePageLoads(t *testing.T) {
 	}
 
 	// Check for key content
-	if !strings.Contains(string(body), "Skill MD") {
-		t.Error("home page does not contain 'Skill MD'")
+	if !strings.Contains(strings.ToLower(string(body)), "skillf") {
+		t.Error("home page does not contain 'skillf'")
 	}
 }
 

@@ -260,8 +260,22 @@ func (h *SkillsHandler) List(w http.ResponseWriter, r *http.Request) {
 		h.app.Logger.Error("failed to list skills", "error", err)
 	}
 
+	items := make([]*sources.ExternalSkill, 0, len(skills))
+	for _, skill := range skills {
+		items = append(items, &sources.ExternalSkill{
+			ID:          skill.ID,
+			Slug:        skill.Slug,
+			Name:        skill.Name,
+			Description: skill.Description,
+			Tags:        append([]string(nil), skill.Tags...),
+			Source:      sources.SourceTypeLocal,
+			Version:     skill.Version,
+			UpdatedAt:   skill.UpdatedAt,
+		})
+	}
+
 	data := map[string]interface{}{
-		"Skills":   skills,
+		"Skills":   items,
 		"Total":    total,
 		"Page":     page,
 		"HasNext":  total > page*10,

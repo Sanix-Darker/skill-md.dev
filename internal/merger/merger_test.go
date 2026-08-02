@@ -255,7 +255,7 @@ func TestMerger_mergeSections_EmptyContent(t *testing.T) {
 		{Title: "Test", Level: 2, Content: "Actual content"},
 	}
 
-	result := m.mergeSections(sections)
+	result := m.mergeSections(sections, nil)
 
 	// Empty/whitespace content should be skipped
 	if result.Content != "Actual content" {
@@ -272,7 +272,7 @@ func TestMerger_mergeSections_ExactDuplicates(t *testing.T) {
 		{Title: "Test", Level: 2, Content: "Different content"},
 	}
 
-	result := m.mergeSections(sections)
+	result := m.mergeSections(sections, nil)
 
 	// Exact duplicates should be removed
 	expected := "Same content\n\nDifferent content"
@@ -285,7 +285,7 @@ func TestMerger_mergeSections_SingleSection(t *testing.T) {
 	m := New()
 
 	section := skill.Section{Title: "Test", Level: 2, Content: "Content"}
-	result := m.mergeSections([]skill.Section{section})
+	result := m.mergeSections([]skill.Section{section}, nil)
 
 	if result.Title != section.Title || result.Content != section.Content {
 		t.Error("single section should be returned unchanged")
