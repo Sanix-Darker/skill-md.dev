@@ -1,7 +1,7 @@
 {{define "enhance-button.html"}}
-<div class="enhance-controls flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-terminal-bg border border-terminal-border mt-3">
+<div class="enhance-controls flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2 bg-terminal-bg border border-terminal-border">
     <div class="flex items-center gap-2">
-        <label for="enhance-mode" class="text-xs text-terminal-muted">Mode:</label>
+        <label for="enhance-mode" class="text-xs text-terminal-muted">Mode</label>
         <select id="enhance-mode" class="tooltip tooltip-bottom bg-terminal-bg text-terminal-text border border-terminal-border px-4 py-2 text-sm focus:border-terminal-accent focus:outline-none" data-tooltip="Choose how to enhance the content" aria-label="Enhancement mode selection">
             <option value="elaborate">Elaborate</option>
             <option value="examples">Add Examples</option>
@@ -34,8 +34,6 @@
 </div>
 
 <div class="enhance-info mt-2 p-2 bg-terminal-bg/50 border border-terminal-border/50 text-xs text-terminal-muted hidden" id="enhance-info">
-    <p><strong class="text-terminal-text">Browser AI Enhancement</strong></p>
-    <p class="mt-1">Uses Transformers.js to run a local LLM in your browser. First use downloads ~400MB model (cached after).</p>
-    <p class="mt-1">Your content stays private - no data sent to servers.</p>
+    <p>Runs in your browser. First use downloads about 400MB. Content stays local.</p>
 </div>
 {{end}}
