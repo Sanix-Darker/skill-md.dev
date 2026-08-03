@@ -1,4 +1,4 @@
--- Initial schema for Skill MD
+-- Initial schema for skillf
 
 -- Skills table
 CREATE TABLE IF NOT EXISTS skills (

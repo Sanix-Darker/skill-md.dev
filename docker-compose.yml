@@ -1,16 +1,16 @@
 version: '3.8'
 
 services:
-  skillmd:
+  skillf:
     build: .
-    container_name: skillmd
+    container_name: skillf
     ports:
       - "8080:8080"
     volumes:
-      - skillmd_data:/data
+      - skillf_data:/data
     environment:
-      - SKILLMD_PORT=8080
-      - SKILLMD_DB=/data/skill-md.db
+      - SKILLF_PORT=8080
+      - SKILLF_DB=/data/skillf.db
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
@@ -20,5 +20,5 @@ services:
       start_period: 5s
 
 volumes:
-  skillmd_data:
+  skillf_data:
     driver: local
