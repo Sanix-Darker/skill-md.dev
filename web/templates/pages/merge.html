@@ -5,7 +5,7 @@
         <h1 class="section-title">Combine clean skills.</h1>
     </section>
 
-    <div class="workspace workspace--single">
+    <div class="workspace workspace--paired">
         <section class="panel">
             <form hx-post="/api/merge" hx-encoding="multipart/form-data" hx-target="#merge-result" hx-swap="innerHTML" class="form-stack">
                 <div class="field">
@@ -56,17 +56,17 @@
                 </div>
             </form>
         </section>
-    </div>
 
-    <section>
-        <div class="section-heading">
-            <p class="eyebrow">Result</p>
-            <h2 class="section-title">Output</h2>
-        </div>
-        <div id="merge-result" class="result-shell preview-shell">
-            <p class="helper">Waiting.</p>
-        </div>
-    </section>
+        <section class="panel result-panel">
+            <div class="section-heading">
+                <p class="eyebrow">Result</p>
+                <h2 class="section-title">Output</h2>
+            </div>
+            <div id="merge-result" class="result-shell preview-shell">
+                <p class="helper">Waiting.</p>
+            </div>
+        </section>
+    </div>
 </div>
 
 <script>

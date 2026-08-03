@@ -1324,7 +1324,7 @@ footer a:hover {
 .page-shell {
   max-width: 72rem;
   margin: 0 auto;
-  padding: 2.75rem 1.25rem 3.25rem;
+  padding: 2.75rem 1.5rem 3.25rem;
 }
 
 .page-shell--wide {
@@ -1332,7 +1332,7 @@ footer a:hover {
 }
 
 .page-shell--dense {
-  max-width: 68rem;
+  max-width: 72rem;
 }
 
 .page-shell--narrow {
@@ -1354,13 +1354,21 @@ footer a:hover {
   align-items: start;
 }
 
-.hero-split--single,
-.workspace--single {
+.workspace {
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.78fr);
+}
+
+.hero-split.hero-split--single {
   grid-template-columns: minmax(0, 1fr);
 }
 
-.workspace {
-  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.78fr);
+.workspace.workspace--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.workspace.workspace--paired {
+  grid-template-columns: minmax(0, 1.02fr) minmax(22rem, 0.98fr);
+  align-items: start;
 }
 
 .feature-grid,
@@ -1697,6 +1705,20 @@ footer a:hover {
   padding: 1rem;
 }
 
+.result-panel {
+  display: grid;
+  gap: 0.85rem;
+  align-content: start;
+}
+
+.result-panel .section-heading {
+  margin-bottom: 0;
+}
+
+.result-panel .result-shell {
+  min-height: 20rem;
+}
+
 .preview-shell {
   display: grid;
   gap: 1rem;
@@ -1829,7 +1851,7 @@ footer a:hover {
 
 @media (max-width: 768px) {
   .page-shell {
-    padding: 2rem 0.9rem 2.4rem;
+    padding: 2rem 1rem 2.4rem;
   }
 
   .display {
