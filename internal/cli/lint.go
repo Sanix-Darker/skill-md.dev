@@ -24,9 +24,9 @@ the command. Add --fail-on-warning when warnings should be treated as hard
 failures.
 
 Examples:
-  skillmd lint SKILL.md
-  skillmd lint SKILL.md --fail-on-warning
-  skillmd lint SKILL.md --mcp --strict --format json`,
+  skillf lint SKILL.md
+  skillf lint SKILL.md --fail-on-warning
+  skillf lint SKILL.md --mcp --strict --format json`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runValidateCommand(args[0], validationCommandOptions{
