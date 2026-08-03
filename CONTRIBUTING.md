@@ -1,15 +1,15 @@
-# Contributing to Skill MD
+# Contributing to skillf
 
-Thank you for your interest in contributing to Skill MD!
+Thank you for your interest in contributing to skillf!
 
 ## Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/skill-md.git`
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/skill-md.dev.git`
 3. Create a feature branch: `git checkout -b feat/your-feature`
 4. Make your changes
 5. Run tests: `go test ./...`
-6. Build: `go build ./cmd/skillmd`
+6. Build: `go build ./cmd/skillf`
 7. Commit with conventional format
 8. Push and open a Pull Request
 
@@ -23,13 +23,13 @@ Thank you for your interest in contributing to Skill MD!
 ### Build
 
 ```bash
-go build ./cmd/skillmd
+go build ./cmd/skillf
 ```
 
 ### Run
 
 ```bash
-./skillmd serve
+./skillf serve
 ```
 
 ### Test
@@ -40,7 +40,7 @@ go test ./...
 
 ## Adding a New Converter
 
-Skill MD supports adding new input formats. Here's how to add a new converter:
+skillf supports adding new input formats. Here's how to add a new converter:
 
 ### 1. Create the Converter File
 
@@ -50,7 +50,7 @@ Create `internal/converter/yourformat.go`:
 package converter
 
 import (
-    "github.com/sanixdarker/skill-md/pkg/skill"
+    "github.com/sanixdarker/skillf/pkg/skill"
 )
 
 type YourFormatConverter struct{}
@@ -114,8 +114,8 @@ Add sample files to `testdata/`:
 ### 4. Test
 
 ```bash
-go build ./cmd/skillmd
-./skillmd convert testdata/sample.yourext -f yourformat
+go build ./cmd/skillf
+./skillf convert testdata/sample.yourext -f yourformat
 ```
 
 ## Code Style
@@ -154,8 +154,8 @@ docs: add converter development guide
 ## Project Structure
 
 ```
-skillmd/
-├── cmd/skillmd/        # CLI entry point
+skillf/
+├── cmd/skillf/         # CLI entry point
 ├── internal/
 │   ├── app/               # Application container
 │   ├── cli/               # CLI commands
