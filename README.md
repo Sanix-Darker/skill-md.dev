@@ -1,6 +1,8 @@
-# Skill MD
+# Skillf
 
-Convert any technical specifications into SKILL.md format for AI agents.
+SKILL.md workbench for AI agent skills.
+
+Convert, merge, browse, and operate SKILL.md workflows from the web UI, CLI, or SSH TUI.
 
 ![Go Version](https://img.shields.io/badge/go-1.23+-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -13,30 +15,31 @@ Convert any technical specifications into SKILL.md format for AI agents.
 
 - **11 Input Formats** - OpenAPI, GraphQL, Postman, AsyncAPI, Protobuf/gRPC, RAML, WSDL, API Blueprint, URL, PDF, Plain Text
 - **MCP Compatible** - Generated skills include tool definitions for AI agents
-- **Merge** - Combine multiple SKILL.md files with intelligent deduplication
-- **Browse** - Search and explore the skill registry
-- **Web UI** - Dark terminal-themed interface with HTMX
-- **CLI** - Full-featured command line interface
-- **SSH TUI** - Terminal UI accessible via SSH
+- **Merge Workbench** - Combine multiple SKILL.md files with conflict strategies, source visibility, and deduplication
+- **Browse + Search** - Explore the local registry and connected sources from web or terminal
+- **Web UI** - Browser workbench for convert, merge, browse, and runtime checks
+- **CLI** - Full-featured command line interface for convert, merge, validate, and serve workflows
+- **SSH TUI** - Terminal-first UI accessible over SSH for convert/search/browse/merge workflows
+- **Runtime Status API** - `/health` and `/api/system` for deployment diagnostics and SSH readiness
 
 ## Installation
 
 ### Quick Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sanixdarker/skill-md/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/sanixdarker/skillf/main/scripts/install.sh | bash
 ```
 
 ### From Source
 
 ```bash
-go install github.com/sanixdarker/skill-md/cmd/skillmd@latest
+go install github.com/sanixdarker/skillf/cmd/skillf@latest
 ```
 
 ### Docker
 
 ```bash
-docker run -p 8080:8080 sanixdarker/skill-md
+docker run -p 8080:8080 sanixdarker/skillf
 ```
 
 ## Usage
@@ -46,13 +49,22 @@ docker run -p 8080:8080 sanixdarker/skill-md
 Start the web server:
 
 ```bash
-skillmd serve
+skillf serve
 # Server running at http://localhost:8080
+```
+
+SSH console and diagnostics:
+
+```bash
+skillf serve --public-host example.com --ssh-port 2222
+ssh example.com -p 2222
+curl -fsS https://example.com/health
+curl -fsS https://example.com/api/system
 ```
 
 Options:
 - `--port, -p` - Port to listen on (default: 8080)
-- `--db` - Path to SQLite database (default: ./skill-md.db)
+- `--db` - Path to SQLite database (default: ./skillf.db)
 - `--debug` - Enable debug mode
 
 ### Convert
@@ -61,16 +73,16 @@ Convert a specification file to SKILL.md:
 
 ```bash
 # Auto-detect format
-skillmd convert api.yaml
+skillf convert api.yaml
 
 # Specify format
-skillmd convert schema.graphql -f graphql
+skillf convert schema.graphql -f graphql
 
 # Save to file
-skillmd convert api.yaml -o skill.md
+skillf convert api.yaml -o skill.md
 
 # Custom name
-skillmd convert api.yaml -n "My API Skill"
+skillf convert api.yaml -n "My API Skill"
 ```
 
 Supported formats:
@@ -92,24 +104,29 @@ Merge multiple SKILL.md files:
 
 ```bash
 # Basic merge
-skillmd merge skill1.md skill2.md
+skillf merge skill1.md skill2.md
 
 # Save to file
-skillmd merge skill1.md skill2.md -o combined.md
+skillf merge skill1.md skill2.md -o combined.md
 
 # With deduplication
-skillmd merge skill1.md skill2.md --dedupe
+skillf merge skill1.md skill2.md --dedupe
 
 # Custom name
-skillmd merge skill1.md skill2.md -n "Combined Skills"
+skillf merge skill1.md skill2.md -n "Combined Skills"
 ```
+
+Web workflow:
+- Upload multiple files directly in the merge page.
+- Search local or connected sources and build a merge queue.
+- Choose a conflict strategy before generating the final SKILL.md.
 
 ### Validate
 
 Validate a SKILL.md file:
 
 ```bash
-skillmd validate skill.md
+skillf validate skill.md
 ```
 
 ## SKILL.md Format
@@ -188,8 +205,8 @@ make docker-compose
 ## Project Structure
 
 ```
-skillmd/
-├── cmd/skillmd/        # CLI entry point
+skillf/
+├── cmd/skillf/        # CLI entry point
 ├── internal/
 │   ├── app/               # Application container
 │   ├── cli/               # CLI commands
@@ -208,5 +225,7 @@ skillmd/
 MIT License - see [LICENSE](LICENSE) for details.
 
 ## Author
+
+sanix darker
 
 sanix darker

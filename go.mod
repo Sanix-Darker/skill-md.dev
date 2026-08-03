@@ -1,4 +1,4 @@
-module github.com/sanixdarker/skill-md
+module github.com/sanixdarker/skillf
 
 go 1.25
 

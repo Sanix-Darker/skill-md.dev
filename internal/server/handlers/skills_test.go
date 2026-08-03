@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sanixdarker/skill-md/internal/app"
+	"github.com/sanixdarker/skillf/internal/app"
 )
 
 func TestSkillsHandler_Search(t *testing.T) {

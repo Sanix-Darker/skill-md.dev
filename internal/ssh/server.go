@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -18,9 +19,9 @@ import (
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/bubbletea"
 	"github.com/charmbracelet/wish/logging"
-	"github.com/sanixdarker/skill-md/internal/registry"
-	"github.com/sanixdarker/skill-md/internal/sources"
-	"github.com/sanixdarker/skill-md/internal/tui"
+	"github.com/sanixdarker/skillf/internal/registry"
+	"github.com/sanixdarker/skillf/internal/sources"
+	"github.com/sanixdarker/skillf/internal/tui"
 )
 
 // validateKeyPermissions checks that the SSH key file has secure permissions (0600).
@@ -33,9 +34,13 @@ func validateKeyPermissions(keyPath string) error {
 		return fmt.Errorf("failed to stat key file: %w", err)
 	}
 
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("SSH host key is not a regular file: %s", keyPath)
+	}
+
 	perms := info.Mode().Perm()
 	if perms != 0600 {
-		return fmt.Errorf("SSH key has insecure permissions %o, expected 0600", perms)
+		return fmt.Errorf("SSH host key %s has permissions %04o; expected 0600 (owner read/write only). Fix with: chmod 600 %s", keyPath, perms, keyPath)
 	}
 	return nil
 }
@@ -57,19 +62,51 @@ type Config struct {
 	FederatedSource *sources.FederatedSource
 }
 
+// ResolveKeyPath normalizes the configured host key path.
+func ResolveKeyPath(keyPath string) (string, error) {
+	trimmedPath := strings.TrimSpace(os.ExpandEnv(keyPath))
+	if trimmedPath == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", fmt.Errorf("failed to get home dir: %w", err)
+		}
+		return filepath.Join(home, ".ssh", "skillf_ed25519"), nil
+	}
+
+	if trimmedPath == "~" || strings.HasPrefix(trimmedPath, "~/") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", fmt.Errorf("failed to get home dir: %w", err)
+		}
+		if trimmedPath == "~" {
+			trimmedPath = home
+		} else {
+			trimmedPath = filepath.Join(home, strings.TrimPrefix(trimmedPath, "~/"))
+		}
+	}
+
+	if !filepath.IsAbs(trimmedPath) {
+		absolutePath, err := filepath.Abs(trimmedPath)
+		if err != nil {
+			return "", fmt.Errorf("failed to resolve SSH key path: %w", err)
+		}
+		trimmedPath = absolutePath
+	}
+
+	return filepath.Clean(trimmedPath), nil
+}
+
 // New creates a new SSH server.
 func New(cfg Config) (*Server, error) {
 	if cfg.Port == 0 {
 		cfg.Port = 2222
 	}
 
-	if cfg.KeyPath == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get home dir: %w", err)
-		}
-		cfg.KeyPath = filepath.Join(home, ".ssh", "skill-md_ed25519")
+	resolvedKeyPath, err := ResolveKeyPath(cfg.KeyPath)
+	if err != nil {
+		return nil, err
 	}
+	cfg.KeyPath = resolvedKeyPath
 
 	// Ensure key directory exists
 	keyDir := filepath.Dir(cfg.KeyPath)
@@ -165,4 +202,9 @@ func (s *Server) Addr() string {
 // Port returns the configured port.
 func (s *Server) Port() int {
 	return s.port
+}
+
+// KeyPath returns the SSH host key path.
+func (s *Server) KeyPath() string {
+	return s.keyPath
 }

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -11,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sanixdarker/skill-md/internal/app"
+	"github.com/sanixdarker/skillf/internal/app"
 )
 
 func setupTestApp(t *testing.T) *app.App {
@@ -54,8 +55,53 @@ func TestMergeHandler_Index(t *testing.T) {
 	}
 
 	body, _ := io.ReadAll(resp.Body)
-	if !strings.Contains(string(body), "Merge Skills") {
-		t.Error("expected page to contain 'Merge Skills'")
+	if !strings.Contains(string(body), "Combine clean skills.") {
+		t.Error("expected page to contain 'Combine clean skills.'")
+	}
+}
+
+func TestMergeHandler_Strategies(t *testing.T) {
+	application := setupTestApp(t)
+	handler := NewMergeHandler(application)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/merge/strategies", nil)
+	w := httptest.NewRecorder()
+
+	handler.Strategies(w, req)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		t.Errorf("expected status 200, got %d: %s", resp.StatusCode, string(body))
+	}
+
+	var strategies []map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&strategies); err != nil {
+		t.Fatalf("expected valid json response: %v", err)
+	}
+
+	if len(strategies) < 4 {
+		t.Fatalf("expected at least 4 strategies, got %d", len(strategies))
+	}
+
+	values := map[string]bool{}
+	for _, strategy := range strategies {
+		valueRaw, ok := strategy["value"]
+		if !ok {
+			t.Fatal("strategy payload missing value field")
+		}
+		value, ok := valueRaw.(string)
+		if !ok || value == "" {
+			t.Fatalf("invalid strategy value: %v", valueRaw)
+		}
+		values[value] = true
+	}
+
+	required := []string{"keep_first", "keep_last", "keep_longer", "combine"}
+	for _, value := range required {
+		if !values[value] {
+			t.Fatalf("expected strategy %q in response", value)
+		}
 	}
 }
 

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	sshserver "github.com/sanixdarker/skill-md/internal/ssh"
+	sshserver "github.com/sanixdarker/skillf/internal/ssh"
 )
 
 func TestSSHServerCreation(t *testing.T) {

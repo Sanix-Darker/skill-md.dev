@@ -7,11 +7,11 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/sanixdarker/skill-md/internal/converter"
-	"github.com/sanixdarker/skill-md/internal/merger"
-	"github.com/sanixdarker/skill-md/internal/registry"
-	"github.com/sanixdarker/skill-md/internal/sources"
-	"github.com/sanixdarker/skill-md/internal/storage"
+	"github.com/sanixdarker/skillf/internal/converter"
+	"github.com/sanixdarker/skillf/internal/merger"
+	"github.com/sanixdarker/skillf/internal/registry"
+	"github.com/sanixdarker/skillf/internal/sources"
+	"github.com/sanixdarker/skillf/internal/storage"
 )
 
 // Config holds application configuration.
@@ -20,19 +20,40 @@ type Config struct {
 	DBPath            string
 	StaticPath        string
 	Debug             bool
+	Version           string
+	PublicHost        string
+	ListenHost        string
 	GitHubToken       string
 	GitLabToken       string
 	BitbucketUsername string
 	BitbucketPassword string
 	CodebergToken     string
+	SSHEnabled        bool
+	SSHUser           string
+	SSHStartupError   string
+	SSHKeyPath        string
+	SSHHost           string
+	SSHPort           int
 }
 
 // DefaultConfig returns the default configuration.
 func DefaultConfig() *Config {
 	return &Config{
 		Port:   8080,
-		DBPath: "./skill-md.db",
+		DBPath: "./skillf.db",
 		Debug:  false,
+		// Public runtime defaults.
+		PublicHost: "127.0.0.1",
+		ListenHost: "0.0.0.0",
+		Version:    "dev",
+		// SSH defaults (when disabled by flag, `SSHEnabled` remains false).
+		SSHEnabled: false,
+		SSHKeyPath: "",
+		SSHHost:    "127.0.0.1",
+		SSHUser:    "",
+		// SSHStartupError is populated when the SSH server cannot be started.
+		SSHStartupError: "",
+		SSHPort:         2222,
 	}
 }
 

@@ -3,7 +3,7 @@ package merger
 import (
 	"testing"
 
-	"github.com/sanixdarker/skill-md/pkg/skill"
+	"github.com/sanixdarker/skillf/pkg/skill"
 )
 
 func TestMerger_Merge_EmptySkillsArray(t *testing.T) {
@@ -255,7 +255,7 @@ func TestMerger_mergeSections_EmptyContent(t *testing.T) {
 		{Title: "Test", Level: 2, Content: "Actual content"},
 	}
 
-	result := m.mergeSections(sections)
+	result := m.mergeSections(sections, nil)
 
 	// Empty/whitespace content should be skipped
 	if result.Content != "Actual content" {
@@ -272,10 +272,10 @@ func TestMerger_mergeSections_ExactDuplicates(t *testing.T) {
 		{Title: "Test", Level: 2, Content: "Different content"},
 	}
 
-	result := m.mergeSections(sections)
+	result := m.mergeSections(sections, nil)
 
 	// Exact duplicates should be removed
-	expected := "Same content\n\nDifferent content"
+	expected := "Same content"
 	if result.Content != expected {
 		t.Errorf("expected %q, got %q", expected, result.Content)
 	}
@@ -285,7 +285,7 @@ func TestMerger_mergeSections_SingleSection(t *testing.T) {
 	m := New()
 
 	section := skill.Section{Title: "Test", Level: 2, Content: "Content"}
-	result := m.mergeSections([]skill.Section{section})
+	result := m.mergeSections([]skill.Section{section}, nil)
 
 	if result.Title != section.Title || result.Content != section.Content {
 		t.Error("single section should be returned unchanged")
@@ -380,5 +380,61 @@ func TestMerger_Merge_SectionOrderPreserved(t *testing.T) {
 		if section.Title != expected[i] {
 			t.Errorf("section %d: expected %q, got %q", i, expected[i], section.Title)
 		}
+	}
+}
+
+func TestMerger_Merge_ConflictStrategy(t *testing.T) {
+	m := New()
+
+	skill1 := skill.NewSkill("API 1", "")
+	skill1.Sections = []skill.Section{
+		{Title: "Overview", Level: 2, Content: "alpha"},
+	}
+
+	skill2 := skill.NewSkill("API 2", "")
+	skill2.Sections = []skill.Section{
+		{Title: "Overview", Level: 2, Content: "beta"},
+	}
+
+	tests := []struct {
+		name     string
+		strategy ConflictStrategy
+		wantText string
+	}{
+		{
+			name:     "keep_first",
+			strategy: KeepFirst,
+			wantText: "alpha",
+		},
+		{
+			name:     "keep_last",
+			strategy: KeepLast,
+			wantText: "beta",
+		},
+		{
+			name:     "keep_longer",
+			strategy: KeepLonger,
+			wantText: "alpha",
+		},
+		{
+			name:     "combine",
+			strategy: Combine,
+			wantText: "alpha\n\nbeta",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := m.Merge([]*skill.Skill{skill1, skill2}, &Options{
+				ConflictStrategy: tt.strategy,
+			})
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if len(result.Sections) == 0 || result.Sections[0].Content != tt.wantText {
+				t.Fatalf("expected %q, got %q", tt.wantText, result.Sections[0].Content)
+			}
+		})
 	}
 }

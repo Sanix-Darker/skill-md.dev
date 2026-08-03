@@ -78,10 +78,10 @@ jobs:
           mkdir -p dist
           ext=""
           if [ "$GOOS" = "windows" ]; then ext=".exe"; fi
-          go build -ldflags="-s -w" -o dist/skillmd-${{ matrix.goos }}-${{ matrix.goarch }}${ext} ./cmd/skillmd
+          go build -ldflags="-s -w" -o dist/skillf-${{ matrix.goos }}-${{ matrix.goarch }}${ext} ./cmd/skillf
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: skillmd-${{ matrix.goos }}-${{ matrix.goarch }}
+          name: skillf-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/

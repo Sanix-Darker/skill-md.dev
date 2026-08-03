@@ -1,0 +1,97 @@
+{{define "ssh.html"}}
+<div class="page-shell stack-xl">
+    <section class="section-heading">
+        <p class="eyebrow">Terminal access</p>
+        <h1 class="section-title">Run one command to open skillf in your terminal.</h1>
+        <p class="section-copy">This page only exists to show the command you need. Copy it, run it, and you are in.</p>
+    </section>
+
+    <section class="panel command-panel">
+        <div class="command-panel__header">
+            <div class="stack-sm">
+                <p class="eyebrow">Command</p>
+                <h2 id="ssh-command-label" class="command-title">Loading terminal target...</h2>
+            </div>
+            <span id="ssh-status-badge" class="status-chip">Waiting</span>
+        </div>
+
+        <pre><code id="ssh-command" class="language-bash">ssh -p &lt;port&gt; &lt;host&gt;</code></pre>
+
+        <div class="actions">
+            <button type="button" id="ssh-copy-primary" class="btn btn--primary">Copy command</button>
+        </div>
+
+        <p id="ssh-command-note" class="helper">Fetching runtime command.</p>
+    </section>
+</div>
+
+<script>
+const sshStatusBadge = document.getElementById('ssh-status-badge');
+const sshCommandLabel = document.getElementById('ssh-command-label');
+const sshCommand = document.getElementById('ssh-command');
+const sshCommandNote = document.getElementById('ssh-command-note');
+const sshCopyPrimary = document.getElementById('ssh-copy-primary');
+
+function setStatusBadge(status) {
+    sshStatusBadge.className = 'status-chip';
+    if (status === 'ready') {
+        sshStatusBadge.classList.add('status-chip--ready');
+    }
+    sshStatusBadge.textContent = status || 'unknown';
+}
+
+function copyText(value, message) {
+    if (!value) {
+        return;
+    }
+
+    navigator.clipboard.writeText(value)
+        .then(() => {
+            if (window.showToast) {
+                window.showToast(message || 'Command copied to clipboard.', 'success');
+            }
+        })
+        .catch(() => {
+            if (window.showToast) {
+                window.showToast('Unable to copy command.', 'error');
+            }
+        });
+}
+
+function renderSystemStatus(payload) {
+    const ssh = payload.ssh || {};
+    const commands = Array.isArray(ssh.connect_commands) ? ssh.connect_commands : [];
+    const primary = commands[0] || { label: 'Connect', command: ssh.connect_cmd || 'ssh -p <port> <host>' };
+
+    setStatusBadge(ssh.status || 'unknown');
+    sshCommandLabel.textContent = primary.label || 'Connect';
+    sshCommand.textContent = primary.command || 'ssh -p <port> <host>';
+    if (ssh.status === 'ready') {
+        sshCommandNote.textContent = 'Copy the command above and run it from your terminal.';
+    } else {
+        sshCommandNote.textContent = ssh.recommended_action || 'Unable to prepare a terminal command yet.';
+    }
+}
+
+function loadSystemStatus() {
+    fetch('/api/system', { cache: 'no-store' })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('Unable to load SSH runtime');
+            }
+            return response.json();
+        })
+        .then(renderSystemStatus)
+        .catch((error) => {
+            setStatusBadge('warning');
+            sshCommandNote.textContent = error.message || 'Unable to load runtime command.';
+        });
+}
+
+sshCopyPrimary.addEventListener('click', function() {
+    copyText(sshCommand.textContent || '', 'SSH command copied.');
+});
+
+loadSystemStatus();
+</script>
+{{end}}

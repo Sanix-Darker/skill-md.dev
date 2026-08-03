@@ -4,7 +4,7 @@ package registry
 import (
 	"fmt"
 
-	"github.com/sanixdarker/skill-md/pkg/skill"
+	"github.com/sanixdarker/skillf/pkg/skill"
 )
 
 // Service provides business logic for the skill registry.

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sanixdarker/skill-md/pkg/skill"
+	"github.com/sanixdarker/skillf/pkg/skill"
 )
 
 func TestDeduplicator_Empty(t *testing.T) {

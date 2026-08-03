@@ -26,8 +26,8 @@ func TestHomePageLoads(t *testing.T) {
 	}
 
 	// Check for key content
-	if !strings.Contains(string(body), "Skill MD") {
-		t.Error("home page does not contain 'Skill MD'")
+	if !strings.Contains(string(body), "Skillf") {
+		t.Error("home page does not contain 'Skillf'")
 	}
 }
 
@@ -85,55 +85,27 @@ func TestSkillListEndpoint(t *testing.T) {
 	}
 }
 
-func TestSearchAPIEndpoint(t *testing.T) {
-	// Test search API without query
-	resp, err := http.Get(getTestURL("/api/skills/search"))
-	if err != nil {
-		t.Fatalf("failed to get search endpoint: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("expected status 200, got %d", resp.StatusCode)
-	}
-}
-
-func TestSearchAPIWithQuery(t *testing.T) {
-	// Test search API with query
+func TestSearchAPIEndpointRemoved(t *testing.T) {
 	resp, err := http.Get(getTestURL("/api/skills/search?q=test"))
 	if err != nil {
-		t.Fatalf("failed to get search endpoint: %v", err)
+		t.Fatalf("failed to get removed search endpoint: %v", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("expected status 200, got %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf("expected status 404, got %d", resp.StatusCode)
 	}
 }
 
-func TestSearchAPIWithSource(t *testing.T) {
-	// Test search API with specific source
-	resp, err := http.Get(getTestURL("/api/skills/search?q=test&source=local"))
+func TestBrowsePageRemoved(t *testing.T) {
+	resp, err := http.Get(getTestURL("/browse"))
 	if err != nil {
-		t.Fatalf("failed to get search endpoint: %v", err)
+		t.Fatalf("failed to get removed browse page: %v", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("expected status 200, got %d", resp.StatusCode)
-	}
-}
-
-func TestInvalidSourceReturnsError(t *testing.T) {
-	// Test search API with invalid source
-	resp, err := http.Get(getTestURL("/api/skills/search?source=invalid"))
-	if err != nil {
-		t.Fatalf("failed to get search endpoint: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Errorf("expected status 400 for invalid source, got %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf("expected status 404, got %d", resp.StatusCode)
 	}
 }
 
