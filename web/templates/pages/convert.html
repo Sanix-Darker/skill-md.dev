@@ -1,9 +1,9 @@
 {{define "convert.html"}}
-<div class="page-shell stack-xl">
+<div class="page-shell page-shell--dense stack-xl">
     <section class="section-heading">
         <p class="eyebrow">Import</p>
-        <h1 class="section-title">Convert one source into a skill.</h1>
-        <p class="section-copy">Pick the source type first, then bring the material you already have: OpenAPI, Postman, AsyncAPI, GraphQL, plain text, PDFs, and more.</p>
+        <h1 class="section-title">Convert a source into a skill.</h1>
+        <p class="section-copy">Pick a type. Import one input.</p>
     </section>
 
     <div class="workspace">
@@ -11,7 +11,10 @@
             <form hx-post="/api/convert" hx-encoding="multipart/form-data" hx-target="#convert-result" hx-swap="innerHTML" class="form-stack">
                 <div class="form-grid-2">
                     <div class="field">
-                        <label for="convert-format">Source type</label>
+                        <div class="field-head">
+                            <label for="convert-format">Source type</label>
+                            <span class="tooltip hint-chip" tabindex="0" data-tooltip="Force the parser when auto detect is not enough." aria-label="Source type help">?</span>
+                        </div>
                         <select id="convert-format" name="format">
                             <option value="auto">Auto detect</option>
                             <option value="openapi">OpenAPI / Swagger</option>
@@ -26,55 +29,59 @@
                             <option value="plaintext">Plain text / notes</option>
                             <option value="url">Remote URL</option>
                         </select>
-                        <p class="helper">Use auto detect when the file is standard; force the type when you already know the source.</p>
                     </div>
                     <div class="field">
-                        <label for="convert-name">Skill name</label>
+                        <div class="field-head">
+                            <label for="convert-name">Skill name</label>
+                            <span class="tooltip hint-chip" tabindex="0" data-tooltip="Optional override for the generated name." aria-label="Skill name help">?</span>
+                        </div>
                         <input id="convert-name" name="name" type="text" placeholder="Customer API skill">
-                        <p class="helper">Optional. Use this if you want to override the generated skill name.</p>
                     </div>
                 </div>
 
                 <div class="fieldset">
-                    <p class="fieldset-title">Choose one input</p>
+                    <p class="fieldset-title">Input</p>
                     <div class="field">
-                        <label for="convert-url">Public link</label>
-                        <input id="convert-url" name="url" type="url" placeholder="https://example.com/skill.md">
-                        <p class="helper">Best for public docs, raw markdown, or an existing remote source file.</p>
+                        <div class="field-head">
+                            <label for="convert-url">Public link</label>
+                            <span class="tooltip hint-chip" tabindex="0" data-tooltip="Use this for public docs, exported files, or an existing remote skill source." aria-label="Public link help">?</span>
+                        </div>
+                        <input id="convert-url" name="url" type="url" placeholder="https://example.com/openapi.json">
                     </div>
                     <div class="field">
-                        <label for="convert-file">Local file</label>
+                        <div class="field-head">
+                            <label for="convert-file">Local file</label>
+                            <span class="tooltip hint-chip" tabindex="0" data-tooltip="Best for specs, collections, PDFs, schemas, or notes already on disk." aria-label="Local file help">?</span>
+                        </div>
                         <input id="convert-file" name="file" type="file">
-                        <p class="helper">Use this for OpenAPI specs, Postman exports, PDFs, schemas, or source notes already on disk.</p>
                     </div>
                     <div class="field">
-                        <label for="convert-content">Raw content</label>
-                        <textarea id="convert-content" name="content" placeholder="# Skill title&#10;&#10;Paste source material here"></textarea>
-                        <p class="helper">Paste the raw source directly. If you paste a URL here, the backend treats it as a link import.</p>
+                        <div class="field-head">
+                            <label for="convert-content">Raw content</label>
+                            <span class="tooltip hint-chip" tabindex="0" data-tooltip="Paste source material directly. If the content is a URL, the backend treats it as a link import." aria-label="Raw content help">?</span>
+                        </div>
+                        <textarea id="convert-content" name="content" placeholder="Paste source material here"></textarea>
                     </div>
                 </div>
 
                 <div class="actions">
                     <button type="submit" class="btn btn--primary">Convert to a skill</button>
-                    <span class="inline-note">Leave unused inputs empty. The first valid source wins, and the result remains downloadable as `SKILL.md`.</span>
+                    <span class="inline-note tooltip" tabindex="0" data-tooltip="Leave the unused fields empty. The first valid input wins.">One input only.</span>
                 </div>
             </form>
         </section>
 
-        <aside class="panel panel--soft stack-md">
-            <p class="eyebrow">Rules</p>
+        <aside class="panel panel--soft stack-sm">
+            <p class="eyebrow">Flow</p>
             <ul class="protocol-list">
                 <li>
-                    <strong>Keep the source explicit.</strong>
-                    Do not search a registry first when you already know the source you want.
+                    <strong>1</strong> Pick the type.
                 </li>
                 <li>
-                    <strong>Normalize before editing.</strong>
-                    Generate the skill first, then decide whether it needs more work.
+                    <strong>2</strong> Use one input.
                 </li>
                 <li>
-                    <strong>Move to merge only after conversion.</strong>
-                    Use the merge page once you have multiple clean skill files.
+                    <strong>3</strong> Merge later if needed.
                 </li>
             </ul>
         </aside>
@@ -86,7 +93,7 @@
             <h2 class="section-title">Generated skill</h2>
         </div>
         <div id="convert-result" class="result-shell preview-shell">
-            <p class="helper">The generated skill will appear here.</p>
+            <p class="helper">Output appears here.</p>
         </div>
     </section>
 </div>
