@@ -19,11 +19,11 @@
         </button>
     </div>
 
-    {{if gt .MergeInputCount 0}}
+    {{if .MergeInputs}}
     <details class="details-panel mt-3 border border-terminal-border">
         <summary class="details-summary-row">
             <span>Merge inputs</span>
-            <span class="details-summary-row__hint">{{.MergeInputCount}} files</span>
+            <span class="details-summary-row__hint">{{len .MergeInputs}} files</span>
         </summary>
         <div class="details-content p-3 bg-terminal-bg border-t border-terminal-border">
             <p class="text-terminal-muted text-xs">

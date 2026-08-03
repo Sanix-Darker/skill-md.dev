@@ -49,28 +49,36 @@ Examples:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var content []byte
 		var sourcePath string
-		var format string
+		format := convertFormat
 
 		// Create converter manager
 		manager := converter.NewManager()
 
 		// Check if URL is provided
 		if convertURL != "" {
-			// URL conversion
-			content = []byte(convertURL)
-			sourcePath = convertURL
-			format = "url"
+			normalizedURL := converter.NormalizeRemoteURL(convertURL)
+			remoteInput, err := converter.ResolveRemoteInput(manager, normalizedURL, convertFormat)
+			if err != nil {
+				return fmt.Errorf("failed to fetch URL: %w", err)
+			}
+			content = remoteInput.Content
+			sourcePath = remoteInput.SourcePath
+			format = remoteInput.Format
 
-			fmt.Printf("Fetching URL: %s\n", convertURL)
+			fmt.Printf("Fetching URL: %s\n", normalizedURL)
 		} else if len(args) > 0 {
 			// File conversion
 			inputPath := args[0]
 
 			// Check if the argument is a URL
 			if strings.HasPrefix(inputPath, "http://") || strings.HasPrefix(inputPath, "https://") {
-				content = []byte(inputPath)
-				sourcePath = inputPath
-				format = "url"
+				remoteInput, err := converter.ResolveRemoteInput(manager, inputPath, convertFormat)
+				if err != nil {
+					return fmt.Errorf("failed to fetch URL: %w", err)
+				}
+				content = remoteInput.Content
+				sourcePath = remoteInput.SourcePath
+				format = remoteInput.Format
 				fmt.Printf("Fetching URL: %s\n", inputPath)
 			} else {
 				// Read input file
@@ -87,7 +95,7 @@ Examples:
 		}
 
 		// Determine format if not set
-		if format == "" {
+		if format == "" || format == "auto" {
 			format = manager.DetectFormat(sourcePath, content)
 		}
 

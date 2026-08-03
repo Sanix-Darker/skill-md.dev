@@ -55,18 +55,20 @@ func (h *ConvertHandler) Convert(w http.ResponseWriter, r *http.Request) {
 	// Get file, URL, or text content
 	var content []byte
 	var filename string
-	var format string
+	format := r.FormValue("format")
 
 	// Check for URL first
-	urlInput := r.FormValue("url")
+	urlInput := strings.TrimSpace(r.FormValue("url"))
 	if urlInput != "" {
-		// URL conversion
-		if !strings.HasPrefix(urlInput, "http://") && !strings.HasPrefix(urlInput, "https://") {
-			urlInput = "https://" + urlInput
+		remoteInput, err := converter.ResolveRemoteInput(h.app.ConverterManager, urlInput, format)
+		if err != nil {
+			h.app.Logger.Error("failed to resolve remote input", "url", urlInput, "format", format, "error", err)
+			h.renderError(w, r, "Failed to fetch the provided URL. Please check it and try again.")
+			return
 		}
-		content = []byte(urlInput)
-		filename = urlInput
-		format = "url"
+		content = remoteInput.Content
+		filename = remoteInput.SourcePath
+		format = remoteInput.Format
 	} else {
 		// Try file upload
 		file, header, err := r.FormFile("file")
@@ -95,9 +97,15 @@ func (h *ConvertHandler) Convert(w http.ResponseWriter, r *http.Request) {
 			// Check if text is a URL
 			text = strings.TrimSpace(text)
 			if strings.HasPrefix(text, "http://") || strings.HasPrefix(text, "https://") {
-				content = []byte(text)
-				filename = text
-				format = "url"
+				remoteInput, err := converter.ResolveRemoteInput(h.app.ConverterManager, text, format)
+				if err != nil {
+					h.app.Logger.Error("failed to resolve remote input from content", "url", text, "format", format, "error", err)
+					h.renderError(w, r, "Failed to fetch the provided URL. Please check it and try again.")
+					return
+				}
+				content = remoteInput.Content
+				filename = remoteInput.SourcePath
+				format = remoteInput.Format
 			} else {
 				content = []byte(text)
 				filename = "input.txt"
@@ -106,11 +114,8 @@ func (h *ConvertHandler) Convert(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get format (auto-detect if not specified)
-	if format == "" {
-		format = r.FormValue("format")
-		if format == "" || format == "auto" {
-			format = h.app.ConverterManager.DetectFormat(filename, content)
-		}
+	if format == "" || format == "auto" {
+		format = h.app.ConverterManager.DetectFormat(filename, content)
 	}
 
 	// Get optional name
@@ -151,8 +156,9 @@ func (h *ConvertHandler) Convert(w http.ResponseWriter, r *http.Request) {
 // ConvertURL handles URL conversion via JSON API.
 func (h *ConvertHandler) ConvertURL(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		URL  string `json:"url"`
-		Name string `json:"name,omitempty"`
+		URL    string `json:"url"`
+		Name   string `json:"name,omitempty"`
+		Format string `json:"format,omitempty"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -166,18 +172,21 @@ func (h *ConvertHandler) ConvertURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Ensure URL has scheme
-	if !strings.HasPrefix(req.URL, "http://") && !strings.HasPrefix(req.URL, "https://") {
-		req.URL = "https://" + req.URL
+	req.URL = converter.NormalizeRemoteURL(req.URL)
+
+	remoteInput, err := converter.ResolveRemoteInput(h.app.ConverterManager, req.URL, req.Format)
+	if err != nil {
+		h.app.Logger.Error("URL conversion failed", "url", req.URL, "format", req.Format, "error", err)
+		http.Error(w, "Conversion failed. Please check the URL and try again.", http.StatusInternalServerError)
+		return
 	}
 
-	// Convert
-	result, err := h.app.ConverterManager.Convert("url", []byte(req.URL), &converter.Options{
+	result, err := h.app.ConverterManager.Convert(remoteInput.Format, remoteInput.Content, &converter.Options{
 		Name:       req.Name,
-		SourcePath: req.URL,
+		SourcePath: remoteInput.SourcePath,
 	})
 	if err != nil {
-		h.app.Logger.Error("URL conversion failed", "url", req.URL, "error", err)
+		h.app.Logger.Error("URL conversion failed", "url", req.URL, "format", remoteInput.Format, "error", err)
 		http.Error(w, "Conversion failed. Please check the URL and try again.", http.StatusInternalServerError)
 		return
 	}
@@ -190,7 +199,7 @@ func (h *ConvertHandler) ConvertURL(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"content": output,
 		"name":    result.Frontmatter.Name,
-		"format":  "url",
+		"format":  remoteInput.Format,
 		"url":     req.URL,
 	})
 }
@@ -211,9 +220,22 @@ func (h *ConvertHandler) DetectFormat(w http.ResponseWriter, r *http.Request) {
 		content, _ = io.ReadAll(file)
 		filename = header.Filename
 	} else {
-		contentStr := r.FormValue("content")
-		// Check if it's a URL
-		if strings.HasPrefix(contentStr, "http://") || strings.HasPrefix(contentStr, "https://") {
+		contentStr := strings.TrimSpace(r.FormValue("content"))
+		urlStr := strings.TrimSpace(r.FormValue("url"))
+		isURLInput := urlStr != ""
+		if !isURLInput {
+			urlStr = contentStr
+			isURLInput = strings.HasPrefix(urlStr, "http://") || strings.HasPrefix(urlStr, "https://")
+		}
+
+		if isURLInput {
+			remoteInput, err := converter.ResolveRemoteInput(h.app.ConverterManager, urlStr, "auto")
+			if err == nil {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(map[string]string{"format": remoteInput.Format})
+				return
+			}
+
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]string{"format": "url"})
 			return
