@@ -1,12 +1,12 @@
 #!/bin/bash
-# Skill MD Installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/sanixdarker/skill-md/main/scripts/install.sh | bash
+# skillf installer
+# Usage: curl -fsSL https://raw.githubusercontent.com/Sanix-Darker/skill-md.dev/main/scripts/install.sh | bash
 
 set -e
 
 # Configuration
-REPO="sanixdarker/skill-md"
-BINARY_NAME="skillmd"
+REPO="Sanix-Darker/skill-md.dev"
+BINARY_NAME="skillf"
 INSTALL_DIR="/usr/local/bin"
 
 # Colors
@@ -57,7 +57,7 @@ install() {
         VERSION="latest"
     fi
 
-    echo -e "${GREEN}Installing Skill MD ${VERSION} for ${PLATFORM}...${NC}"
+    echo -e "${GREEN}Installing skillf ${VERSION} for ${PLATFORM}...${NC}"
 
     # Construct download URL
     if [ "$OS" = "windows" ]; then
@@ -74,32 +74,41 @@ install() {
 
     # Download
     echo "Downloading from ${DOWNLOAD_URL}..."
-    if ! curl -fsSL "$DOWNLOAD_URL" -o "$TMP_DIR/$BINARY_NAME"; then
+    if ! curl -fsSL "$DOWNLOAD_URL" -o "$TMP_DIR/$FILENAME"; then
         echo -e "${RED}Download failed. Trying to build from source...${NC}"
         install_from_source
         return
     fi
 
     # Verify checksum if available
-    CHECKSUM_URL="${DOWNLOAD_URL}.sha256"
+    CHECKSUM_URL="https://github.com/${REPO}/releases/download/${VERSION}/checksums.txt"
     echo "Verifying checksum..."
-    if curl -fsSL "$CHECKSUM_URL" -o "$TMP_DIR/${BINARY_NAME}.sha256" 2>/dev/null; then
+    if curl -fsSL "$CHECKSUM_URL" -o "$TMP_DIR/checksums.txt" 2>/dev/null; then
         cd "$TMP_DIR"
+        grep " ${FILENAME}\$" checksums.txt > "${FILENAME}.sha256" || true
         if command -v sha256sum &> /dev/null; then
-            if ! sha256sum -c "${BINARY_NAME}.sha256" 2>/dev/null; then
+            if [ -s "${FILENAME}.sha256" ] && ! sha256sum -c "${FILENAME}.sha256" 2>/dev/null; then
                 echo -e "${RED}Checksum verification failed!${NC}"
                 echo -e "${RED}The downloaded file may be corrupted or tampered with.${NC}"
                 exit 1
             fi
-            echo -e "${GREEN}Checksum verified successfully.${NC}"
+            if [ -s "${FILENAME}.sha256" ]; then
+                echo -e "${GREEN}Checksum verified successfully.${NC}"
+            else
+                echo -e "${YELLOW}Warning: No checksum entry found for ${FILENAME}, skipping verification${NC}"
+            fi
         elif command -v shasum &> /dev/null; then
             # macOS fallback
-            if ! shasum -a 256 -c "${BINARY_NAME}.sha256" 2>/dev/null; then
+            if [ -s "${FILENAME}.sha256" ] && ! shasum -a 256 -c "${FILENAME}.sha256" 2>/dev/null; then
                 echo -e "${RED}Checksum verification failed!${NC}"
                 echo -e "${RED}The downloaded file may be corrupted or tampered with.${NC}"
                 exit 1
             fi
-            echo -e "${GREEN}Checksum verified successfully.${NC}"
+            if [ -s "${FILENAME}.sha256" ]; then
+                echo -e "${GREEN}Checksum verified successfully.${NC}"
+            else
+                echo -e "${YELLOW}Warning: No checksum entry found for ${FILENAME}, skipping verification${NC}"
+            fi
         else
             echo -e "${YELLOW}Warning: sha256sum not available, skipping verification${NC}"
         fi
@@ -109,20 +118,20 @@ install() {
     fi
 
     # Make executable
-    chmod +x "$TMP_DIR/$BINARY_NAME"
+    chmod +x "$TMP_DIR/$FILENAME"
 
     # Install
     if [ -w "$INSTALL_DIR" ]; then
-        mv "$TMP_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+        mv "$TMP_DIR/$FILENAME" "$INSTALL_DIR/$BINARY_NAME"
     else
         echo "Installing to $INSTALL_DIR (requires sudo)..."
-        sudo mv "$TMP_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+        sudo mv "$TMP_DIR/$FILENAME" "$INSTALL_DIR/$BINARY_NAME"
     fi
 
-    echo -e "${GREEN}Skill MD installed successfully!${NC}"
+    echo -e "${GREEN}skillf installed successfully!${NC}"
     echo ""
-    echo "Run 'skillmd --help' to get started."
-    echo "Start the server with 'skillmd serve'"
+    echo "Run 'skillf --help' to get started."
+    echo "Start the server with 'skillf serve'"
 }
 
 # Install from source
@@ -134,9 +143,26 @@ install_from_source() {
         exit 1
     fi
 
-    go install github.com/${REPO}/cmd/skillmd@latest
+    if ! command -v git &> /dev/null; then
+        echo -e "${RED}git is required to build from source fallback.${NC}"
+        exit 1
+    fi
 
-    echo -e "${GREEN}Skill MD installed from source!${NC}"
+    SRC_DIR="$TMP_DIR/src"
+    git clone --depth 1 "https://github.com/${REPO}.git" "$SRC_DIR" >/dev/null 2>&1
+    (
+        cd "$SRC_DIR"
+        go build -trimpath -ldflags="-s -w" -o "$TMP_DIR/$BINARY_NAME" ./cmd/skillf
+    )
+
+    if [ -w "$INSTALL_DIR" ]; then
+        mv "$TMP_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+    else
+        echo "Installing to $INSTALL_DIR (requires sudo)..."
+        sudo mv "$TMP_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+    fi
+
+    echo -e "${GREEN}skillf installed from source!${NC}"
 }
 
 # Main

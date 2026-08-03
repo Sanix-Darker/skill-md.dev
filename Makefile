@@ -1,24 +1,25 @@
 .PHONY: build run test clean docker docker-run install dev fmt lint
 
 # Variables
-BINARY_NAME=skillmd
+BINARY_NAME=skillf
 VERSION?=dev
 COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-LDFLAGS=-ldflags "-X github.com/sanixdarker/skill-md/internal/cli.Version=$(VERSION) -X github.com/sanixdarker/skill-md/internal/cli.Commit=$(COMMIT)"
+GOFLAGS?=-buildvcs=false
+LDFLAGS=-ldflags "-X github.com/sanixdarker/skillf/internal/cli.Version=$(VERSION) -X github.com/sanixdarker/skillf/internal/cli.Commit=$(COMMIT)"
 
 # Build
 build:
-	go build $(LDFLAGS) -o $(BINARY_NAME) ./cmd/skillmd
+	go build $(GOFLAGS) $(LDFLAGS) -o $(BINARY_NAME) ./cmd/skillf
 
 build-linux:
-	GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY_NAME)-linux-amd64 ./cmd/skillmd
+	GOOS=linux GOARCH=amd64 go build $(GOFLAGS) $(LDFLAGS) -o $(BINARY_NAME)-linux-amd64 ./cmd/skillf
 
 build-darwin:
-	GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY_NAME)-darwin-amd64 ./cmd/skillmd
-	GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o $(BINARY_NAME)-darwin-arm64 ./cmd/skillmd
+	GOOS=darwin GOARCH=amd64 go build $(GOFLAGS) $(LDFLAGS) -o $(BINARY_NAME)-darwin-amd64 ./cmd/skillf
+	GOOS=darwin GOARCH=arm64 go build $(GOFLAGS) $(LDFLAGS) -o $(BINARY_NAME)-darwin-arm64 ./cmd/skillf
 
 build-windows:
-	GOOS=windows GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY_NAME)-windows-amd64.exe ./cmd/skillmd
+	GOOS=windows GOARCH=amd64 go build $(GOFLAGS) $(LDFLAGS) -o $(BINARY_NAME)-windows-amd64.exe ./cmd/skillf
 
 build-all: build-linux build-darwin build-windows
 
@@ -27,28 +28,28 @@ run: build
 	./$(BINARY_NAME) serve
 
 dev:
-	go run ./cmd/skillmd serve --debug
+	go run $(GOFLAGS) ./cmd/skillf serve --debug
 
 # Test
 test:
-	go test -v ./...
+	go test $(GOFLAGS) -v ./...
 
 test-coverage:
-	go test -v -coverprofile=coverage.out ./...
+	go test $(GOFLAGS) -v -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
 
 # Clean
 clean:
 	rm -f $(BINARY_NAME) $(BINARY_NAME)-*
 	rm -f coverage.out coverage.html
-	rm -f skill-md.db
+	rm -f skillf.db
 
 # Docker
 docker:
-	docker build -t skill-md:$(VERSION) .
+	docker build -t skillf:$(VERSION) .
 
 docker-run:
-	docker run -p 8080:8080 -v skill-md_data:/data skill-md:$(VERSION)
+	docker run -p 8080:8080 -v skillf_data:/data skillf:$(VERSION)
 
 docker-compose:
 	docker compose up -d

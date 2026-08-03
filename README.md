@@ -27,13 +27,15 @@ Convert, merge, browse, and operate SKILL.md workflows from the web UI, CLI, or 
 ### Quick Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sanixdarker/skillf/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Sanix-Darker/skill-md.dev/main/scripts/install.sh | bash
 ```
 
 ### From Source
 
 ```bash
-go install github.com/sanixdarker/skillf/cmd/skillf@latest
+git clone https://github.com/Sanix-Darker/skill-md.dev.git
+cd skill-md.dev
+go build -trimpath -ldflags='-s -w' -o skillf ./cmd/skillf
 ```
 
 ### Docker
