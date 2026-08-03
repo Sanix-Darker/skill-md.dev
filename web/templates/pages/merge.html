@@ -1,27 +1,35 @@
 {{define "merge.html"}}
-<div class="page-shell stack-xl">
+<div class="page-shell page-shell--dense stack-xl">
     <section class="section-heading">
         <p class="eyebrow">Merge</p>
         <h1 class="section-title">Combine clean skills.</h1>
-        <p class="section-copy">Upload two or more existing skill files, choose the conflict strategy, and generate one consolidated result.</p>
+        <p class="section-copy">Upload clean skills and pick one policy.</p>
     </section>
 
     <div class="workspace">
         <section class="panel">
             <form hx-post="/api/merge" hx-encoding="multipart/form-data" hx-target="#merge-result" hx-swap="innerHTML" class="form-stack">
                 <div class="field">
-                    <label for="merge-files">Skill file inputs</label>
+                    <div class="field-head">
+                        <label for="merge-files">Skill files</label>
+                        <span class="tooltip hint-chip" tabindex="0" data-tooltip="Select at least two existing skill files." aria-label="Skill files help">?</span>
+                    </div>
                     <input id="merge-files" name="files" type="file" multiple required>
-                    <p class="helper">Select at least two files. Merge only works with explicit uploads now.</p>
                 </div>
 
                 <div class="info-grid">
                     <div class="field">
-                        <label for="merge-name">Merged skill name</label>
+                        <div class="field-head">
+                            <label for="merge-name">Merged name</label>
+                            <span class="tooltip hint-chip" tabindex="0" data-tooltip="Optional override for the merged skill name." aria-label="Merged name help">?</span>
+                        </div>
                         <input id="merge-name" name="name" type="text" placeholder="Combined workflow">
                     </div>
                     <div class="field">
-                        <label for="merge-strategy">Conflict strategy</label>
+                        <div class="field-head">
+                            <label for="merge-strategy">Conflict strategy</label>
+                            <span class="tooltip hint-chip" tabindex="0" data-tooltip="Choose how conflicting frontmatter and section values should resolve." aria-label="Conflict strategy help">?</span>
+                        </div>
                         <select id="merge-strategy" name="strategy">
                             <option value="keep_first">keep_first (safe default)</option>
                             <option value="keep_last">keep_last</option>
@@ -32,36 +40,36 @@
                 </div>
 
                 <div class="field">
-                    <label for="merge-description">Description override</label>
+                    <div class="field-head">
+                        <label for="merge-description">Description override</label>
+                        <span class="tooltip hint-chip" tabindex="0" data-tooltip="Optional replacement description for the merged output." aria-label="Description override help">?</span>
+                    </div>
                     <textarea id="merge-description" name="description" placeholder="Optional merged description"></textarea>
                 </div>
 
-                <label class="checkbox-row">
+                <label class="checkbox-row tooltip" tabindex="0" data-tooltip="Remove repeated sections before conflict resolution.">
                     <input type="checkbox" name="dedupe" value="true">
                     <span>Deduplicate repeated sections before resolving conflicts.</span>
                 </label>
 
                 <div class="actions">
                     <button type="submit" class="btn btn--primary">Merge skills</button>
-                    <span class="inline-note">Need raw content first? Convert each source into a skill before merging.</span>
+                    <span class="inline-note tooltip" tabindex="0" data-tooltip="Merge works on converted skill files, not raw specs.">Needs clean inputs.</span>
                 </div>
             </form>
         </section>
 
-        <aside class="panel panel--soft stack-md">
-            <p class="eyebrow">Sequence</p>
+        <aside class="panel panel--soft stack-sm">
+            <p class="eyebrow">Flow</p>
             <ul class="protocol-list">
                 <li>
-                    <strong>Convert each source first.</strong>
-                    The merge step expects files that are already normalized into skills.
+                    <strong>1</strong> Convert first.
                 </li>
                 <li>
-                    <strong>Pick one conflict policy.</strong>
-                    Treat the merge strategy as an explicit editorial choice, not a hidden default.
+                    <strong>2</strong> Pick one policy.
                 </li>
                 <li>
-                    <strong>Keep the set small.</strong>
-                    Upload the exact skills you want in the final result instead of building a discovery queue.
+                    <strong>3</strong> Keep the set small.
                 </li>
             </ul>
         </aside>
@@ -73,7 +81,7 @@
             <h2 class="section-title">Merged skill</h2>
         </div>
         <div id="merge-result" class="result-shell preview-shell">
-            <p class="helper">Upload at least two skill files to generate a merged result.</p>
+            <p class="helper">Merged output appears here.</p>
         </div>
     </section>
 </div>
