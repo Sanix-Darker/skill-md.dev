@@ -3,10 +3,9 @@
     <section class="section-heading">
         <p class="eyebrow">Merge</p>
         <h1 class="section-title">Combine clean skills.</h1>
-        <p class="section-copy">Upload clean skills and pick one policy.</p>
     </section>
 
-    <div class="workspace">
+    <div class="workspace workspace--single">
         <section class="panel">
             <form hx-post="/api/merge" hx-encoding="multipart/form-data" hx-target="#merge-result" hx-swap="innerHTML" class="form-stack">
                 <div class="field">
@@ -49,39 +48,23 @@
 
                 <label class="checkbox-row tooltip" tabindex="0" data-tooltip="Remove repeated sections before conflict resolution.">
                     <input type="checkbox" name="dedupe" value="true">
-                    <span>Deduplicate repeated sections before resolving conflicts.</span>
+                    <span>Deduplicate repeats.</span>
                 </label>
 
                 <div class="actions">
                     <button type="submit" class="btn btn--primary">Merge skills</button>
-                    <span class="inline-note tooltip" tabindex="0" data-tooltip="Merge works on converted skill files, not raw specs.">Needs clean inputs.</span>
                 </div>
             </form>
         </section>
-
-        <aside class="panel panel--soft stack-sm">
-            <p class="eyebrow">Flow</p>
-            <ul class="protocol-list">
-                <li>
-                    <strong>1</strong> Convert first.
-                </li>
-                <li>
-                    <strong>2</strong> Pick one policy.
-                </li>
-                <li>
-                    <strong>3</strong> Keep the set small.
-                </li>
-            </ul>
-        </aside>
     </div>
 
     <section>
         <div class="section-heading">
             <p class="eyebrow">Result</p>
-            <h2 class="section-title">Merged skill</h2>
+            <h2 class="section-title">Output</h2>
         </div>
         <div id="merge-result" class="result-shell preview-shell">
-            <p class="helper">Merged output appears here.</p>
+            <p class="helper">Waiting.</p>
         </div>
     </section>
 </div>

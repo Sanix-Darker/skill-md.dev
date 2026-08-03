@@ -20,26 +20,24 @@
     </div>
 
     {{if gt .MergeInputCount 0}}
-    <div class="mt-3 border border-terminal-border">
-        <div class="px-3 py-2 bg-terminal-surface text-sm text-terminal-muted">
-            <span class="text-terminal-accent">$</span> Merge Session
-        </div>
-        <div class="p-3 text-xs space-y-2 bg-terminal-bg border-t border-terminal-border">
-            <p class="text-terminal-muted">
-                {{.MergeInputCount}} input(s) merged · strategy: {{if .MergeStrategyLabel}}{{.MergeStrategyLabel}}{{else}}{{.ConflictStrategy}}{{end}} · dedupe: {{if .MergeDedupe}}on{{else}}off{{end}} · conflicts: {{.ConflictCount}}
+    <details class="details-panel mt-3 border border-terminal-border">
+        <summary class="details-summary-row">
+            <span>Merge inputs</span>
+            <span class="details-summary-row__hint">{{.MergeInputCount}} files</span>
+        </summary>
+        <div class="details-content p-3 bg-terminal-bg border-t border-terminal-border">
+            <p class="text-terminal-muted text-xs">
+                {{if .MergeStrategyLabel}}{{.MergeStrategyLabel}}{{else}}{{.ConflictStrategy}}{{end}} · dedupe {{if .MergeDedupe}}on{{else}}off{{end}} · conflicts {{.ConflictCount}}
             </p>
-            {{if .MergeSourceSummary}}
-            <p class="text-terminal-muted">Sources: {{join .MergeSourceSummary ", "}}</p>
-            {{end}}
             <div class="flex flex-wrap gap-2">
                 {{range .MergeInputs}}
                 <span class="px-2 py-1 border border-terminal-border text-terminal-muted text-[11px]">
-                    {{.Source}} · {{.Name}}{{if .Version}} · v{{.Version}}{{end}} ({{.Type}})
+                    {{.Name}}{{if .Version}} · v{{.Version}}{{end}}
                 </span>
                 {{end}}
             </div>
         </div>
-    </div>
+    </details>
     {{end}}
     <pre class="text-sm whitespace-pre-wrap overflow-auto max-h-[600px] bg-terminal-bg p-3 border border-terminal-border"><code class="language-yaml">{{.Content}}</code></pre>
 
@@ -103,30 +101,16 @@
     </details>
     {{end}}
 
-    <!-- AI Enhancement Controls -->
-    {{template "enhance-button.html" .}}
-
-    <!-- CLI Usage Hints -->
-    <details class="mt-4 border border-terminal-border">
-        <summary class="px-3 py-2 bg-terminal-surface text-sm text-terminal-muted cursor-pointer hover:text-terminal-accent transition-colors">
-            <span class="text-terminal-accent">$</span> CLI Usage Tips
+    <details class="details-panel mt-4 border border-terminal-border">
+        <summary class="details-summary-row">
+            <span>Extras</span>
+            <span class="details-summary-row__hint">Enhance / CLI</span>
         </summary>
-        <div class="p-3 bg-terminal-bg text-xs font-mono space-y-3">
-            <div>
-                <p class="text-terminal-muted mb-1"># Convert from URL and save:</p>
-                <pre class="text-terminal-accent"><code class="language-bash">skillf convert https://api.example.com/openapi.json -o skill.md</code></pre>
-            </div>
-            <div>
-                <p class="text-terminal-muted mb-1"># Pipe directly to Claude:</p>
-                <pre class="text-terminal-accent"><code class="language-bash">skillf convert api.yaml | claude</code></pre>
-            </div>
-            <div>
-                <p class="text-terminal-muted mb-1"># Fetch from URL and pipe to agent:</p>
-                <pre class="text-terminal-accent"><code class="language-bash">skillf convert --url https://docs.example.com/api | claude "Use this skill"</code></pre>
-            </div>
-            <div>
-                <p class="text-terminal-muted mb-1"># Merge multiple skills:</p>
-                <pre class="text-terminal-accent"><code class="language-bash">skillf merge skill1.md skill2.md --dedupe | claude</code></pre>
+        <div class="details-content p-3 bg-terminal-bg border-t border-terminal-border">
+            {{template "enhance-button.html" .}}
+            <div class="stack-sm font-mono text-xs">
+                <pre class="text-terminal-accent"><code class="language-bash">skillf convert source.json -o skill.md</code></pre>
+                <pre class="text-terminal-accent"><code class="language-bash">skillf merge skill1.md skill2.md --dedupe</code></pre>
             </div>
         </div>
     </details>

@@ -3,10 +3,9 @@
     <section class="section-heading">
         <p class="eyebrow">Import</p>
         <h1 class="section-title">Convert a source into a skill.</h1>
-        <p class="section-copy">Pick a type. Import one input.</p>
     </section>
 
-    <div class="workspace">
+    <div class="workspace workspace--single">
         <section class="panel">
             <form hx-post="/api/convert" hx-encoding="multipart/form-data" hx-target="#convert-result" hx-swap="innerHTML" class="form-stack">
                 <div class="form-grid-2">
@@ -66,34 +65,18 @@
 
                 <div class="actions">
                     <button type="submit" class="btn btn--primary">Convert to a skill</button>
-                    <span class="inline-note tooltip" tabindex="0" data-tooltip="Leave the unused fields empty. The first valid input wins.">One input only.</span>
                 </div>
             </form>
         </section>
-
-        <aside class="panel panel--soft stack-sm">
-            <p class="eyebrow">Flow</p>
-            <ul class="protocol-list">
-                <li>
-                    <strong>1</strong> Pick the type.
-                </li>
-                <li>
-                    <strong>2</strong> Use one input.
-                </li>
-                <li>
-                    <strong>3</strong> Merge later if needed.
-                </li>
-            </ul>
-        </aside>
     </div>
 
     <section>
         <div class="section-heading">
             <p class="eyebrow">Result</p>
-            <h2 class="section-title">Generated skill</h2>
+            <h2 class="section-title">Output</h2>
         </div>
         <div id="convert-result" class="result-shell preview-shell">
-            <p class="helper">Output appears here.</p>
+            <p class="helper">Waiting.</p>
         </div>
     </section>
 </div>
