@@ -81,7 +81,7 @@ jobs:
           go build -ldflags="-s -w" -o dist/skillf-${{ matrix.goos }}-${{ matrix.goarch }}${ext} ./cmd/skillf
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: skillf-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/
