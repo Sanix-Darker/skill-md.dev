@@ -20,7 +20,7 @@ require (
 	github.com/pb33f/libopenapi v0.31.2
 	github.com/spf13/cobra v1.10.2
 	github.com/vektah/gqlparser/v2 v2.5.31
-	github.com/yuin/goldmark v1.7.16
+	github.com/yuin/goldmark v1.8.2
 	golang.org/x/time v0.14.0
 	gopkg.in/yaml.v2 v2.3.0
 	modernc.org/sqlite v1.44.2
